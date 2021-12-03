@@ -18,4 +18,4 @@ for i in trange(start * n, (start+1) * n):
     except IndexError as _:
         continue
     collection_m = df.join(docnos, "docno", "inner")
-    collection_m.to_parquet("Collection_M/" + files[i].split("/")[-1], index="docno")
+    collection_m.to_parquet("Top1kBM25/" + files[i].split("/")[-1], index="docno")
