@@ -8,9 +8,10 @@ n = int(sys.argv[2])
 start = int(sys.argv[1])
 
 docnos = pd.read_csv("/project/6004803/smucker/group-data/runs/trec2021-misinfo/automatic/run.c4.noclean.bm25.topics.2021.10K.fixed_docno.txt",
-                     names="topic iter docno score ranks tag".split(), index_col="docno", sep=" ")
+                      names="topic iter docno ranks score tag".split(), index_col="docno", sep=" ")
 
-docnos = docnos[["docno", "topic", "score"]]
+docnos =docnos[docnos.ranks <= 1000][["topic", "score"]]
+
 
 for i in trange(start * n, (start+1) * n):
     try:
