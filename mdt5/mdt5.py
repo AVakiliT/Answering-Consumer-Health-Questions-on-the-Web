@@ -1,5 +1,6 @@
 # input file - topic
 # output
+print("Importing...")
 import argparse
 from random import sample
 from timeit import default_timer as timer
