@@ -26,5 +26,5 @@ module load arrow
 ~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
  --topic_file /project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml \
  --model_type base \
- --bm25run /project/6004803/avakilit/Trec21_Data/part-00000-2bef8f95-53dc-49f9-8b45-31f5deaf0be1-c000.snappy.parquet
+ --bm25run /project/6004803/avakilit/Trec21_Data/Top1kbm25_1p_passages/part-00000-2bef8f95-53dc-49f9-8b45-31f5deaf0be1-c000.snappy.parquet
 
