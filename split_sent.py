@@ -11,8 +11,8 @@ schema = ArrayType(StringType())
 
 def lol(s):
     seq = sent_tokenize(s)
-    if seq < window_size:
-        return s
+    if len(seq) <= window_size:
+        return [s]
     return [' '.join(seq[i: i + window_size]) for i in range(0, len(seq) - window_size + 1, step)]
 
 

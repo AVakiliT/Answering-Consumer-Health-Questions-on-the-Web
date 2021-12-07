@@ -1,11 +1,10 @@
 # input file - topic
 # output
 import argparse
-import sys
+from timeit import default_timer as timer
 
 import pandas as pd
 import xmltodict
-
 from pygaggle.rerank.base import Query, Text
 from pygaggle.rerank.transformer import MonoT5, DuoT5
 
@@ -35,7 +34,10 @@ query = Query(topic["query"])
 texts = [Text(p.passage, {'docid': p.docno}, 0) for p in
          df[df.topic == topic_no].itertuples()]
 
+start = timer()
 reranked = reranker.rerank(query, texts)
+end = timer()
+print(f"monot5-{type}-med-msmarco took {end-start} seconds.")
 reranked = sorted(reranked, key=lambda x: x.score, reverse=True)
 
 top_passage_per_doc = sorted(list({x.metadata['docid']: x for x in sorted(reranked, key=lambda i: i.score)}.values()),
@@ -44,11 +46,11 @@ top_passage_per_doc = sorted(list({x.metadata['docid']: x for x in sorted(rerank
 del reranked
 reranker = DuoT5(model=DuoT5.get_model(f"castorini/duot5-{type}-msmarco"))
 
-from timeit import default_timer as timer
+
 start = timer()
 reranked2 = reranker.rerank(query, top_passage_per_doc)
 end = timer()
-print(f"Duot5-{type}-msmarco took {end-start} seconds.")
+print(f"duot5-{type}-msmarco took {end-start} seconds.")
 reranked2 = sorted(reranked2, key=lambda x: x.score, reverse=True)
 run = [(topic_no, 0, x.metadata["docid"], x.score, i + 1, type) for i, x in enumerate(reranked2)]
 
