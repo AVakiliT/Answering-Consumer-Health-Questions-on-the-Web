@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --account=rrg-smucker
 #SBATCH --time=0-12:0:0
-#SBATCH --array=101-150
+#SBATCH --array=101
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --gres=gpu:1
@@ -15,13 +15,16 @@
 #pip install git+https://github.com/castorini/pygaggle.git
 #pip install faiss-gpu
 
+module load StdEnv  gcc  cuda/11
+module load faiss
+echo "Loaded Faiss"
+module load arrow
+echo "Loaded Arrow"
 module load python
 source ~/PYGAGGLE/bin/activate
 pip install --upgrade pip
 module load java
-module load StdEnv/2020  gcc/9.3.0  cuda/11.4
-module load faiss
-module load arrow
+
 
 ~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
  --topic_file /project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml \
