@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --account=rrg-smucker
 #SBATCH --time=0-12:0:0
-#SBATCH --array=101,110,111,122,126,127,129,134,137,146,149
+#SBATCH --array=101-150
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=16G
 #SBATCH --gres=gpu:1
@@ -26,5 +26,5 @@ module load arrow
 ~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
  --topic_file /project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml \
  --model_type base \
- --bm25run /project/6004803/avakilit/Trec21_Data/Top1kbm25_1p_passages/part-00000-2bef8f95-53dc-49f9-8b45-31f5deaf0be1-c000.snappy.parquet
+ --bm25run /project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages/part-00000-0da9fef6-fd3a-48a8-96d8-f05f4d9e9da2-c000.snappy.parquet
 

@@ -1,6 +1,7 @@
 # input file - topic
 # output
 import argparse
+from random import sample
 from timeit import default_timer as timer
 
 import pandas as pd
@@ -14,15 +15,17 @@ parser.add_argument("--topic_file", default="/project/6004803/smucker/group-data
                     required=False)
 parser.add_argument("--model_type", default="base", required=False)
 parser.add_argument("--bm25run",
-                    default="/project/6004803/avakilit/Trec21_Data/Top1kbm25_1p_passages/"
-                            "part-00000-2bef8f95-53dc-49f9-8b45-31f5deaf0be1-c000.snappy.parquet",
+                    default="/project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages/"
+                            "part-00000-0da9fef6-fd3a-48a8-96d8-f05f4d9e9da2-c000.snappy.parquet",
                     required=False)
 args = parser.parse_known_args()
 
 type = args[0].model_type
 topic_no = args[0].topic_no
 topic_file = args[0].topic_file
+print("Reading Passages Dataframe...")
 df = pd.read_parquet(args[0].bm25run)
+print("Done.")
 
 
 print("Loading topic file...")
@@ -37,6 +40,7 @@ print(topic["query"])
 texts = [Text(p.passage, {'docid': p.docno}, 0) for p in
          df[df.topic == topic_no].itertuples()]
 
+# texts = sample(texts, 100)
 print("Loading MonoT5...")
 reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-{type}-med-msmarco")
 print("Done.")
@@ -44,7 +48,7 @@ print("Reranking with MonoT5...")
 start = timer()
 reranked = reranker.rerank(query, texts)
 end = timer()
-print(f"Done. reraking {len(text)} passages with monot5-{type}-med-msmarco took {end-start} seconds.")
+print(f"Done. reraking {len(texts)} passages with monot5-{type}-med-msmarco took {end-start} seconds.")
 reranked = sorted(reranked, key=lambda x: x.score, reverse=True)
 
 top_passage_per_doc = sorted(list({x.metadata['docid']: x for x in sorted(reranked, key=lambda i: i.score)}.values()),
