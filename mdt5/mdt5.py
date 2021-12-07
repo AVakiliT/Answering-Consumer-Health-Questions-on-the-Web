@@ -24,37 +24,48 @@ topic_no = args[0].topic_no
 topic_file = args[0].topic_file
 df = pd.read_parquet(args[0].bm25run)
 
-reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-{type}-med-msmarco")
 
+print("Loading topic file...")
 with open(topic_file) as f:
     topics = xmltodict.parse(f.read())['topics']['topic']
 
 topic = filter(lambda x: x["number"] == str(topic_no), topics).__next__()
 query = Query(topic["query"])
 
+print("Topic query is:")
 print(topic["query"])
 texts = [Text(p.passage, {'docid': p.docno}, 0) for p in
          df[df.topic == topic_no].itertuples()]
 
+print("Loading MonoT5...")
+reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-{type}-med-msmarco")
+print("Done.")
+print("Reranking with MonoT5...")
 start = timer()
 reranked = reranker.rerank(query, texts)
 end = timer()
-print(f"monot5-{type}-med-msmarco took {end-start} seconds.")
+print(f"Done. reraking {len(text)} passages with monot5-{type}-med-msmarco took {end-start} seconds.")
 reranked = sorted(reranked, key=lambda x: x.score, reverse=True)
 
 top_passage_per_doc = sorted(list({x.metadata['docid']: x for x in sorted(reranked, key=lambda i: i.score)}.values()),
                              key=lambda i: i.score, reverse=True)
 
 del reranked
+
+print("Loading DuoT5...")
 reranker = DuoT5(model=DuoT5.get_model(f"castorini/duot5-{type}-msmarco"))
+print("Done.")
 
-
+print("Reranking with DuoT5...")
 start = timer()
 reranked2 = reranker.rerank(query, top_passage_per_doc)
 end = timer()
-print(f"duot5-{type}-msmarco took {end-start} seconds.")
+
+print(f"Done. Reranking {len(top_passage_per_doc)} with duot5-{type}-msmarco took {end-start} seconds.")
 reranked2 = sorted(reranked2, key=lambda x: x.score, reverse=True)
 run = [(topic_no, 0, x.metadata["docid"], x.score, i + 1, type) for i, x in enumerate(reranked2)]
 
+print("Writing Run file...")
 run_df = pd.DataFrame(run)
 run_df.to_csv(f"output/mdt5-topic-{2021 if '2021' in topic_file else 2019}-{topic_no}-{type}.run", sep=" ", index=False)
+print("Done.")
