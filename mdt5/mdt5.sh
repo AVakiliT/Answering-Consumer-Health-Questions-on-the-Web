@@ -23,7 +23,7 @@ module load StdEnv/2020  gcc/9.3.0  cuda/11.4
 module load faiss
 module load arrow
 
-python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
+ipython mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
  --topic_file /project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml \
  --model_type base \
  --bm25run /project/6004803/avakilit/Trec21_Data/part-00000-2bef8f95-53dc-49f9-8b45-31f5deaf0be1-c000.snappy.parquet
