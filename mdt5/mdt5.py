@@ -9,6 +9,7 @@ import xmltodict
 from pygaggle.rerank.base import Query, Text
 from pygaggle.rerank.transformer import MonoT5, DuoT5
 
+print("Parsing args...")
 parser = argparse.ArgumentParser()
 parser.add_argument("--topic_no", default=122, required=False, type=int)
 parser.add_argument("--topic_file", default="/project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml",
