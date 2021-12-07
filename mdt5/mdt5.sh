@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --account=rrg-smucker
 #SBATCH --time=0-12:0:0
-#SBATCH --array=5-10
+#SBATCH --array=101-150
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=16G
 #SBATCH --gres=gpu:1

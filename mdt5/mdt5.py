@@ -32,6 +32,7 @@ with open(topic_file) as f:
 topic = filter(lambda x: x["number"] == str(topic_no), topics).__next__()
 query = Query(topic["query"])
 
+print(topic["query"])
 texts = [Text(p.passage, {'docid': p.docno}, 0) for p in
          df[df.topic == topic_no].itertuples()]
 
