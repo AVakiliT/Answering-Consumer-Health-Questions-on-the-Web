@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #SBATCH --account=rrg-smucker
 #SBATCH --time=0-12:0:0
-#SBATCH --array=101
+#SBATCH --array=103
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --gres=gpu:1
-#SBATCH --output=slurm/slurm-%A_%a.out
+#SBATCH --output=slurm/%A_%a.out
 
 #need these build environment
 #virtualenv ~/PYGAGGLE
@@ -22,9 +22,10 @@ module load arrow
 echo "Loaded Arrow"
 module load python
 source ~/PYGAGGLE/bin/activate
-pip install --upgrade pip
+#pip install --upgrade pip
 module load java
 
+echo "Starting script..."
 
 ~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
  --topic_file /project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml \
