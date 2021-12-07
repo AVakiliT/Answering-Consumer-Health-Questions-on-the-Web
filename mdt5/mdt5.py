@@ -49,11 +49,11 @@ reranker = DuoT5(model=DuoT5.get_model(f"castorini/duot5-{type}-msmarco"))
 
 
 start = timer()
-reranked2 = reranker.rerank(query, top_passage_per_doc[:100])
+reranked2 = reranker.rerank(query, top_passage_per_doc)
 end = timer()
 print(f"duot5-{type}-msmarco took {end-start} seconds.")
 reranked2 = sorted(reranked2, key=lambda x: x.score, reverse=True)
 run = [(topic_no, 0, x.metadata["docid"], x.score, i + 1, type) for i, x in enumerate(reranked2)]
 
 run_df = pd.DataFrame(run)
-run_df.to_csv(f"output/{2021 if '2021' in topic_file else 2019}-{topic_no}--{type}.run", sep=" ", index=False)
+run_df.to_csv(f"output/mdt5-topic-{2021 if '2021' in topic_file else 2019}-{topic_no}-{type}.run", sep=" ", index=False)
