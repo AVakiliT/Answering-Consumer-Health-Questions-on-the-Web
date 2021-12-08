@@ -6,8 +6,8 @@ from tqdm import trange
 files = sorted(glob.glob("/project/6004803/avakilit/c4_parquet/*.parquet"))
 n = int(sys.argv[2])
 start = int(sys.argv[1])
-
-docnos = pd.read_csv("/project/6004803/smucker/group-data/runs/trec2021-misinfo/automatic/run.c4.noclean.bm25.topics.2021.10K.fixed_docno.txt",
+output_dir = sys.argv[3]
+docnos = pd.read_csv(sys.argv[4],
                       names="topic iter docno ranks score tag".split(), index_col="docno", sep=" ")
 
 docnos =docnos[docnos.ranks <= 1000][["topic", "score"]]
@@ -19,4 +19,4 @@ for i in trange(start * n, (start+1) * n):
     except IndexError as _:
         continue
     collection_m = df.join(docnos, "docno", "inner")
-    collection_m.to_parquet("Top1kBM25/" + files[i].split("/")[-1], index="docno")
+    collection_m.to_parquet(output_dir + "/" + files[i].split("/")[-1], index="docno")

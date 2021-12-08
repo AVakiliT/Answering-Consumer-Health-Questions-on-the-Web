@@ -12,7 +12,7 @@ from pygaggle.rerank.transformer import MonoT5, DuoT5
 
 print("Parsing args...", flush=True)
 parser = argparse.ArgumentParser()
-parser.add_argument("--topic_no", default=122, required=False, type=int)
+parser.add_argument("--topic_no", default=101, required=False, type=int)
 parser.add_argument("--topic_file", default="/project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml",
                     required=False)
 parser.add_argument("--model_type", default="base", required=False)
@@ -66,8 +66,8 @@ print("Reranking with DuoT5...", flush=True)
 start = timer()
 reranked2 = reranker.rerank(query, top_passage_per_doc)
 end = timer()
-
 print(f"Done. Reranking {len(top_passage_per_doc)} with duot5-{type}-msmarco took {end-start} seconds.", flush=True)
+
 reranked2 = sorted(reranked2, key=lambda x: x.score, reverse=True)
 run = [(topic_no, 0, x.metadata["docid"], x.score, i + 1, type) for i, x in enumerate(reranked2)]
 
