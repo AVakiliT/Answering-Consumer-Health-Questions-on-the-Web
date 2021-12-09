@@ -27,8 +27,8 @@ parser.add_argument("--bm25run",
                     default="/project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages/part-00000-0da9fef6-fd3a-48a8-96d8-f05f4d9e9da2-c000.snappy.parquet")
 
 feature_parser = parser.add_mutually_exclusive_group(required=False)
-feature_parser.add_argument('--feature', dest='duo', action='store_true')
-feature_parser.add_argument('--no-feature', dest='duo', action='store_false')
+feature_parser.add_argument('--duo', dest='duo', action='store_true')
+feature_parser.add_argument('--no-duo', dest='duo', action='store_false')
 parser.set_defaults(feature=True)
 
 args = parser.parse_known_args()
