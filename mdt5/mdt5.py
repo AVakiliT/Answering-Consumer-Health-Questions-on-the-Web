@@ -12,11 +12,7 @@ import xmltodict
 from pygaggle.rerank.base import Query, Text
 from pygaggle.rerank.transformer import MonoT5, DuoT5
 
-output_dir = f"output_{2021 if '2021' in topic_file else '2019'}_{type}"
-try:
-    os.mkdir(output_dir)
-except FileExistsError:
-    pass
+
 
 print("Parsing args...", flush=True)
 parser = argparse.ArgumentParser()
@@ -40,6 +36,12 @@ print("Reading Passages Dataframe...", flush=True)
 df = pd.read_parquet(args[0].bm25run)
 duo = args[0].duo
 print("Done.", flush=True)
+
+output_dir = f"output_{2021 if '2021' in topic_file else '2019'}_{type}"
+try:
+    os.mkdir(output_dir)
+except FileExistsError:
+    pass
 
 print("Loading topic file...", flush=True)
 with open(topic_file) as f:
