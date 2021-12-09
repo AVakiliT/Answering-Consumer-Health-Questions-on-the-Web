@@ -12,13 +12,12 @@ from pygaggle.rerank.transformer import MonoT5, DuoT5
 
 print("Parsing args...", flush=True)
 parser = argparse.ArgumentParser()
-parser.add_argument("--topic_no", default=101, required=False, type=int)
-parser.add_argument("--topic_file", default="/project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml",
+parser.add_argument("--topic_no", default=1, required=False, type=int)
+parser.add_argument("--topic_file", default="/project/6004803/smucker/group-data/topics/2019topics.xml",
                     required=False)
 parser.add_argument("--model_type", default="base", required=False)
 parser.add_argument("--bm25run",
-                    default="/project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages/"
-                            "part-00000-0da9fef6-fd3a-48a8-96d8-f05f4d9e9da2-c000.snappy.parquet",
+                    default="/project/6004803/avakilit/Trec21_Data/Top1kBM25_2019_1p_passages/part-00000-a697cfb9-9405-449d-8548-e4ddc6ca9f7a-c000.snappy.parquet",
                     required=False)
 args = parser.parse_known_args()
 
