@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #SBATCH --account=rrg-smucker
-#SBATCH --time=0-12:0:0
-#SBATCH --array=1-51
-#SBATCH --cpus-per-task=4
+#SBATCH --time=0-2:0:0
+#SBATCH --array=101-150
+#SBATCH --cpus-per-task=2
 #SBATCH --mem=16G
-#SBATCH --gres=gpu:v100l:1
+#SBATCH --gres=gpu:1
 #SBATCH --output=slurm/%A_%a.out
 
 #need these build environment
