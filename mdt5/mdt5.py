@@ -12,6 +12,12 @@ import xmltodict
 from pygaggle.rerank.base import Query, Text
 from pygaggle.rerank.transformer import MonoT5, DuoT5
 
+output_dir = f"output_{2021 if '2021' in topic_file else '2019'}_{type}"
+try:
+    os.mkdir(output_dir)
+except FileExistsError:
+    pass
+
 print("Parsing args...", flush=True)
 parser = argparse.ArgumentParser()
 parser.add_argument("--topic_no", default=1, type=int)
@@ -20,8 +26,9 @@ parser.add_argument("--model_type", default="3b")
 parser.add_argument("--bm25run",
                     default="/project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages/part-00000-0da9fef6-fd3a-48a8-96d8-f05f4d9e9da2-c000.snappy.parquet")
 
-parser.add_argument('--duo', dest='feature', action='store_true')
-parser.add_argument('--no-duo', dest='feature', action='store_false')
+feature_parser = parser.add_mutually_exclusive_group(required=False)
+feature_parser.add_argument('--feature', dest='duo', action='store_true')
+feature_parser.add_argument('--no-feature', dest='duo', action='store_false')
 parser.set_defaults(feature=True)
 
 args = parser.parse_known_args()
@@ -77,11 +84,7 @@ if duo:
 top_passage_per_doc = sorted(top_passage_per_doc, key=lambda x: x.score, reverse=True)
 run = [(topic_no, 0, x.metadata["docid"], i + 1, x.score, type) for i, x in enumerate(top_passage_per_doc)]
 
-output_dir = f"output_{2021 if '2021' in topic_file else '2019'}_{type}"
-try:
-    os.mkdir(output_dir)
-except FileExistsError:
-    pass
+
 
 print("Writing Run file...", flush=True)
 run_df = pd.DataFrame(run)
