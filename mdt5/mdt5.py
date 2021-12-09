@@ -73,5 +73,5 @@ run = [(topic_no, 0, x.metadata["docid"], x.score, i + 1, type) for i, x in enum
 
 print("Writing Run file...", flush=True)
 run_df = pd.DataFrame(run)
-run_df.to_csv(f"output{'' if '2021' in topic_file else '_2019'}/mdt5-topic-{2021 if '2021' in topic_file else 2019}-{topic_no}-{type}.run", sep=" ", index=False)
+run_df.to_csv(f"output_{2021 if '2021' in topic_file else '2019'}/mdt5-topic-{2021 if '2021' in topic_file else 2019}-{topic_no}-{type}.run", sep=" ", index=False)
 print("Done.", flush=True)
