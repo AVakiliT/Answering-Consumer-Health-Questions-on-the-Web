@@ -8,7 +8,7 @@ import pyspark.sql.functions as f
 
 window_size, step = 6, 3
 
-year = 2019
+year = 2021
 suffix = "_2019" if year == 2019 else ""
 
 df = spark.read.load(f"Top1kBM25{suffix}")
