@@ -2,6 +2,8 @@
 # output
 import os
 
+from torch.cuda import amp
+
 print("Importing...", flush=True)
 import argparse
 from random import sample
@@ -16,7 +18,7 @@ from pygaggle.rerank.transformer import MonoT5, DuoT5
 
 print("Parsing args...", flush=True)
 parser = argparse.ArgumentParser()
-parser.add_argument("--topic_no", default=1, type=int)
+parser.add_argument("--topic_no", default=101, type=int)
 parser.add_argument("--topic_file", default="/project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml")
 parser.add_argument("--model_type", default="3b")
 parser.add_argument("--bm25run",
@@ -25,7 +27,7 @@ parser.add_argument("--bm25run",
 feature_parser = parser.add_mutually_exclusive_group(required=False)
 feature_parser.add_argument('--duo', dest='duo', action='store_true')
 feature_parser.add_argument('--no-duo', dest='duo', action='store_false')
-parser.set_defaults(feature=True)
+parser.set_defaults(duo=False)
 
 args = parser.parse_known_args()
 
@@ -37,7 +39,7 @@ df = pd.read_parquet(args[0].bm25run)
 duo = args[0].duo
 print("Done.", flush=True)
 
-output_dir = f"output_{2021 if '2021' in topic_file else '2019'}_{type}"
+output_dir = f"output_m{'d' if duo else ''}t5_{2021 if '2021' in topic_file else '2019'}_{type}"
 try:
     os.mkdir(output_dir)
 except FileExistsError:
@@ -52,16 +54,20 @@ query = Query(topic["query"])
 
 print("Topic query is:", flush=True)
 print(topic["query"], flush=True)
-texts = [Text(p.passage, {'docid': p.docno}, 0) for p in
-         df[df.topic == topic_no].itertuples()]
 
-# texts = sample(texts, 100)
-print("Loading MonoT5...", flush=True)
+
+
+print(f"Loading MonoT5 ...", flush=True)
 reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-{type}-med-msmarco")
 print("Done.", flush=True)
+
+texts = [Text(p.passage, {'docid': p.docno}, 0) for p in
+         df[df.topic == topic_no].itertuples()]
+texts = sample(texts, 1000)
 print("Reranking with MonoT5...", flush=True)
 start = timer()
-reranked = reranker.rerank(query, texts)
+with amp.autocast():
+    reranked = reranker.rerank(query, texts)
 end = timer()
 print(f"Done. reraking {len(texts)} passages with monot5-{type}-med-msmarco took {end - start} seconds.", flush=True)
 reranked = sorted(reranked, key=lambda x: x.score, reverse=True)
