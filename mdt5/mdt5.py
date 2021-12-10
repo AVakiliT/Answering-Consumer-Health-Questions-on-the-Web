@@ -58,7 +58,7 @@ print(topic["query"], flush=True)
 
 
 print(f"Loading MonoT5 ...", flush=True)
-reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-{type}-med-msmarco")
+reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-{type}-msmarco")
 print("Done.", flush=True)
 
 texts = [Text(p.passage, {'docid': p.docno}, 0) for p in

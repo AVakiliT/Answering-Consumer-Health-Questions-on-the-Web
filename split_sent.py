@@ -1,3 +1,6 @@
+import re
+
+import spacy
 from nltk import sent_tokenize
 from pyspark.sql.functions import udf
 from pyspark.sql.types import *
@@ -13,12 +16,16 @@ print(df.count())
 
 schema = ArrayType(StringType())
 
+nlp = spacy.blank("en")
+nlp.add_pipe("sentencizer")
+
 
 def lol(s):
-    seq = sent_tokenize(s)
+    s = re.sub('\s+', " ", s.strip())
+    seq = [sent.sent.text.strip() for sent in nlp(s).sents]
     if len(seq) <= window_size:
         return [s]
-    return [' '.join(seq[i: i + window_size]) for i in range(0, len(seq) - window_size + 1, step)]
+    return [' '.join(seq[i: i + window_size]) for i in range(0, len(seq), step)]
 
 
 lol_udf = udf(lol, schema)
