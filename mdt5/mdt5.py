@@ -20,7 +20,7 @@ print("Parsing args...", flush=True)
 parser = argparse.ArgumentParser()
 parser.add_argument("--topic_no", default=101, type=int)
 parser.add_argument("--topic_file", default="/project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml")
-parser.add_argument("--model_type", default="3b")
+parser.add_argument("--model_type", default="base")
 parser.add_argument("--bm25run",
                     default="/project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages/part-00000-0da9fef6-fd3a-48a8-96d8-f05f4d9e9da2-c000.snappy.parquet")
 
@@ -70,9 +70,10 @@ with amp.autocast():
     reranked = reranker.rerank(query, texts)
 end = timer()
 print(f"Done. reraking {len(texts)} passages with monot5-{type}-med-msmarco took {end - start} seconds.", flush=True)
-reranked = sorted(reranked, key=lambda x: x.score, reverse=True)
 
-top_passage_per_doc = sorted(list({x.metadata['docid']: x for x in sorted(reranked, key=lambda i: i.score)}.values()),
+top_passage_per_doc = sorted(list(
+    {x.metadata['docid']: x for x in sorted(reranked, key=lambda i: i.score)}
+        .values()),
                              key=lambda i: i.score, reverse=True)
 
 # del reranked
@@ -89,13 +90,14 @@ if duo:
     print(f"Done. Reranking {len(top_passage_per_doc)} with duot5-{type}-msmarco took {end - start} seconds.",
           flush=True)
 
-top_passage_per_doc = sorted(top_passage_per_doc, key=lambda x: x.score, reverse=True)
 run = [(topic_no, 0, x.metadata["docid"], i + 1, x.score, type) for i, x in enumerate(top_passage_per_doc)]
+run_df = pd.DataFrame(run)
 
-
+for i in top_passage_per_doc:
+    print(i.metadata['docid'], i.score, i.text[:200])
 
 print("Writing Run file...", flush=True)
-run_df = pd.DataFrame(run)
+
 run_df.to_csv(f"{output_dir}/topic-{topic_no}.run", sep=" ",
               index=False, header=False)
 print("Done.", flush=True)
