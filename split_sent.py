@@ -11,7 +11,7 @@ window_size, step = 6, 3
 year = 2021
 suffix = "_2019" if year == 2019 else ""
 
-df = spark.read.load(f"Top1kBM25{suffix}")
+df = spark.read.load(f"Top1kBM25{suffix}_32p")
 print(df.count())
 
 schema = ArrayType(StringType())
@@ -22,7 +22,7 @@ nlp.add_pipe("sentencizer")
 
 def lol(s):
     s = re.sub('\s+', " ", s.strip())
-    seq = [sent.sent.text.strip() for sent in nlp(s).sents]
+    seq = [sent.sent.text.strip() for sent in nlp(s).sents if len(sent) > 3]
     if len(seq) <= window_size:
         return [s]
     return [' '.join(seq[i: i + window_size]) for i in range(0, len(seq), step)]

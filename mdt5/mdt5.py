@@ -22,7 +22,8 @@ parser.add_argument("--topic_no", default=101, type=int)
 parser.add_argument("--topic_file", default="/project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml")
 parser.add_argument("--model_type", default="base-med")
 parser.add_argument("--bm25run",
-                    default="/project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages/part-00000-0da9fef6-fd3a-48a8-96d8-f05f4d9e9da2-c000.snappy.parquet")
+                    default="/project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages/"
+                            "part-00000-8cdffdcf-9bb6-4cbe-9e9a-2eee62ce40c8-c000.snappy.parquet")
 
 feature_parser = parser.add_mutually_exclusive_group(required=False)
 feature_parser.add_argument('--duo', dest='duo', action='store_true')
@@ -50,7 +51,7 @@ with open(topic_file) as f:
     topics = xmltodict.parse(f.read())['topics']['topic']
 
 topic = filter(lambda x: x["number"] == str(topic_no), topics).__next__()
-query = Query(topic["query"])
+query = Query(topic["description"])
 
 print("Topic query is:", flush=True)
 print(topic["query"], flush=True)
