@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #SBATCH --account=rrg-smucker
-#SBATCH --time=0-1:0:0
+#SBATCH --time=0-6:0:0
 #SBATCH --array=101-150
 #SBATCH --cpus-per-task=2
-#SBATCH --mem=16G
-#SBATCH --gres=gpu:1
+#SBATCH --mem=32G
+#SBATCH --gres=gpu:v100l:1
 #SBATCH --output=slurm/%A_%a.out
 
 #need these build environment
@@ -27,7 +27,7 @@ echo "Starting script..."
 
 ~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
  --topic_file /project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml \
- --model_type base-med \
+ --model_type 3b-med \
  --no-duo \
  --bm25run /project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages/part-00000-8cdffdcf-9bb6-4cbe-9e9a-2eee62ce40c8-c000.snappy.parquet
 
