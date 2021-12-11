@@ -27,8 +27,8 @@ echo "Starting script..."
 
 ~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
  --topic_file /project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml \
- --model_type 3b-med \
- --no-duo \
+ --model_type base-med \
+ --duo \
  --bm25run /project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages/part-00000-8cdffdcf-9bb6-4cbe-9e9a-2eee62ce40c8-c000.snappy.parquet
 
 #~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \

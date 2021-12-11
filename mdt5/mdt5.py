@@ -94,11 +94,12 @@ if duo:
 run = [(topic_no, 0, x.metadata["docid"], i + 1, x.score, type) for i, x in enumerate(top_passage_per_doc)]
 run_df = pd.DataFrame(run)
 
-for i in top_passage_per_doc:
+# run_df[2] = run_df[2].map(lambda x: f"en.noclean.c4-train.0{x[3:7]}-of-07168.{int(x[8:])}")
+
+for i in top_passage_per_doc[:20]:
     print(i.metadata['docid'], i.score, i.text[:200])
 
 print("Writing Run file...", flush=True)
 
-run_df.to_csv(f"{output_dir}/topic-{topic_no}.run", sep=" ",
-              index=False, header=False)
+run_df.to_csv(f"{output_dir}/topic-{topic_no}.run", sep=" ",index=False, header=False)
 print("Done.", flush=True)
