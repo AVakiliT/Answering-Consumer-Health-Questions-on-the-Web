@@ -7,13 +7,12 @@
 #SBATCH --gres=gpu:v100l:1
 #SBATCH --output=slurm/%A_%a.out
 
-#need these build environment
+#build environment
 #virtualenv ~/PYGAGGLE
 #source ~/PYGAGGLE/bin/activate
 #module load rust
 #module load swig
 #pip install git+https://github.com/castorini/pygaggle.git
-#pip install faiss-gpu
 
 module load StdEnv  gcc  cuda/11
 module load faiss
@@ -28,7 +27,7 @@ echo "Starting script..."
 ~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
  --topic_file /project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml \
  --model_type base-med \
- --duo \
+ --no-duo \
  --bm25run /project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages/part-00000-8cdffdcf-9bb6-4cbe-9e9a-2eee62ce40c8-c000.snappy.parquet
 
 #~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
