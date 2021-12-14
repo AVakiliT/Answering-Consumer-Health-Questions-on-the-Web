@@ -28,7 +28,7 @@ echo "Starting script..."
  --topic_file /project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml \
  --model_type base-med \
  --no-duo \
- --bm25run /project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages
+ --bm25run Top1kBM25_no_sub
 
 #~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
 # --topic_file /project/6004803/smucker/group-data/topics/2019topics.xml \

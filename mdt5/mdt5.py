@@ -35,13 +35,13 @@ type = args[0].model_type
 topic_no = args[0].topic_no
 topic_file = args[0].topic_file
 print("Reading Passages Dataframe...", flush=True)
-for file in os.listdir(args[0].bm25run):
+for file in os.listdir(f"/project/6004803/avakilit/Trec21_Data/{args[0].bm25run}_1p_passages"):
     if file.endswith(".snappy.parquet") and file.startswith("part-00000"):
         df = pd.read_parquet(args[0].bm25run + "/" + file)
 duo = args[0].duo
 print("Done.", flush=True)
 
-output_dir = f"output_m{'d' if duo else ''}t5_{2021 if '2021' in topic_file else '2019'}_{type}"
+output_dir = f"output_{args[0].bm25run}_m{'d' if duo else ''}t5_{2021 if '2021' in topic_file else '2019'}_{type}"
 try:
     os.mkdir(output_dir)
 except FileExistsError:
