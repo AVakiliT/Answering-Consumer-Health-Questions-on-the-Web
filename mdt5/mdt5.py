@@ -35,9 +35,10 @@ type = args[0].model_type
 topic_no = args[0].topic_no
 topic_file = args[0].topic_file
 print("Reading Passages Dataframe...", flush=True)
-for file in os.listdir(f"/project/6004803/avakilit/Trec21_Data/{args[0].bm25run}_1p_passages"):
+run_dir = f"/project/6004803/avakilit/Trec21_Data/{args[0].bm25run}_1p_passages"
+for file in os.listdir(run_dir):
     if file.endswith(".snappy.parquet") and file.startswith("part-00000"):
-        df = pd.read_parquet(args[0].bm25run + "/" + file)
+        df = pd.read_parquet(run_dir + "/" + file)
 duo = args[0].duo
 print("Done.", flush=True)
 
