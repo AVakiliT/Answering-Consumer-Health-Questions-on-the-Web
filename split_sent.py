@@ -3,6 +3,7 @@ import sys
 
 import spacy
 from nltk import sent_tokenize
+from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf
 from pyspark.sql.types import *
 import pyspark.sql.functions as f
