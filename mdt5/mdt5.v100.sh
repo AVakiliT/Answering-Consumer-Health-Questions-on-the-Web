@@ -3,7 +3,7 @@
 #SBATCH --time=0-12:0:0
 #SBATCH --array=101-150
 #SBATCH --cpus-per-task=2
-#SBATCH --mem=24G
+#SBATCH --mem=32G
 #SBATCH --gres=gpu:v100l:1
 #SBATCH --output=slurm/%A_%a.out
 
