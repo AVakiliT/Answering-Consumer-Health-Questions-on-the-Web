@@ -22,8 +22,7 @@ parser.add_argument("--topic_no", default=101, type=int)
 parser.add_argument("--topic_file", default="/project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml")
 parser.add_argument("--model_type", default="base-med")
 parser.add_argument("--bm25run",
-                    default="/project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages/"
-                            "part-00000-8cdffdcf-9bb6-4cbe-9e9a-2eee62ce40c8-c000.snappy.parquet")
+                    default="/project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages")
 
 feature_parser = parser.add_mutually_exclusive_group(required=False)
 feature_parser.add_argument('--duo', dest='duo', action='store_true')
@@ -36,7 +35,9 @@ type = args[0].model_type
 topic_no = args[0].topic_no
 topic_file = args[0].topic_file
 print("Reading Passages Dataframe...", flush=True)
-df = pd.read_parquet(args[0].bm25run)
+for file in os.listdir(args[0].bm25run):
+    if file.endswith(".snappy.parquet") and file.startswith("part-00000"):
+        df = pd.read_parquet(args[0].bm25run + "/" + file)
 duo = args[0].duo
 print("Done.", flush=True)
 
