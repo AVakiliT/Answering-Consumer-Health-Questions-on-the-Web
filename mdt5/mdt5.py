@@ -84,13 +84,13 @@ top_passage_per_doc = sorted(list(
 
 if duo:
     print("Loading DuoT5...", flush=True)
-    reranker = DuoT5(model=DuoT5.get_model(f"castorini/duot5-{type}-msmarco"))
+    reranker = DuoT5(model=DuoT5.get_model(f"castorini/duot5-base-msmarco"))
     print("Done.", flush=True)
     print("Reranking with DuoT5...", flush=True)
     start = timer()
     top_passage_per_doc = reranker.rerank(query, top_passage_per_doc)
     end = timer()
-    print(f"Done. Reranking {len(top_passage_per_doc)} with duot5-{type}-msmarco took {end - start} seconds.",
+    print(f"Done. Reranking {len(top_passage_per_doc)} with duot5-base-msmarco took {end - start} seconds.",
           flush=True)
 
 run = [(topic_no, 0, x.metadata["docid"], i + 1, x.score, type) for i, x in enumerate(top_passage_per_doc)]
