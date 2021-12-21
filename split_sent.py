@@ -12,7 +12,7 @@ window_size, step = 6, 3
 
 spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
-df = spark.read.load(f"{sys.argv[1]}_32p")
+df = spark.read.load(f"{sys.argv[1]}")
 print(df.count())
 
 schema = ArrayType(StringType())
