@@ -7,9 +7,9 @@
 #SBATCH --output=slurm/slurm-%A_%a.out
 
 
-module load gcc arrow python scipy-stack
-python gettop1kdocs.py $SLURM_ARRAY_TASK_ID 128 Top1kBM25 \
-  /project/6004803/smucker/group-data/runs/trec2021-misinfo/automatic/run.c4.noclean.bm25.topics.2021.10K.fixed_docno.txt
+#module load gcc arrow python scipy-stack
+#python gettop1kdocs.py $SLURM_ARRAY_TASK_ID 128 Top1kBM25 \
+#  /project/6004803/smucker/group-data/runs/trec2021-misinfo/automatic/run.c4.noclean.bm25.topics.2021.10K.fixed_docno.txt
 
 module load gcc arrow python scipy-stack
 python gettop1kdocs.py $SLURM_ARRAY_TASK_ID 128 Top1kEBM25 \
