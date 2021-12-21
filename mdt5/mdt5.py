@@ -22,7 +22,7 @@ parser.add_argument("--topic_no", default=101, type=int)
 parser.add_argument("--topic_file", default="/project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml")
 parser.add_argument("--model_type", default="base-med")
 parser.add_argument("--bm25run",
-                    default="/project/6004803/avakilit/Trec21_Data/Top1kBM25_1p_passages")
+                    default="Top1kBM25")
 
 feature_parser = parser.add_mutually_exclusive_group(required=False)
 feature_parser.add_argument('--duo', dest='duo', action='store_true')
