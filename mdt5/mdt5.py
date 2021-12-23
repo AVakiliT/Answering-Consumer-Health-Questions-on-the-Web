@@ -105,5 +105,5 @@ run_df_with_passage[2] = run_df_with_passage[2].map(lambda x: f"en.noclean.c4-tr
 print("Writing Run file...", flush=True)
 
 run_df.to_csv(f"{output_dir}/topic-{topic_no}.run", sep=" ", index=False, header=False)
-run_df.to_csv(f"{output_dir}_with_text/topic-{topic_no}.run", sep=" ", index=False, header=False)
+run_df_with_passage.to_csv(f"{output_dir}_with_text/topic-{topic_no}.run", sep=" ", index=False, header=False)
 print("Done.", flush=True)
