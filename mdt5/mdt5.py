@@ -14,8 +14,6 @@ import xmltodict
 from pygaggle.rerank.base import Query, Text
 from pygaggle.rerank.transformer import MonoT5, DuoT5
 
-
-
 print("Parsing args...", flush=True)
 parser = argparse.ArgumentParser()
 parser.add_argument("--topic_no", default=101, type=int)
@@ -45,6 +43,7 @@ print("Done.", flush=True)
 output_dir = f"output_{args[0].bm25run}_m{'d' if duo else ''}t5_{2021 if '2021' in topic_file else '2019'}_{type}"
 try:
     os.mkdir(output_dir)
+    os.mkdir(output_dir + '_with_text')
 except FileExistsError:
     pass
 
@@ -57,8 +56,6 @@ query = Query(topic["description"])
 
 print("Topic query is:", flush=True)
 print(topic["query"], flush=True)
-
-
 
 print(f"Loading MonoT5 ...", flush=True)
 reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-{type}-msmarco")
@@ -77,7 +74,7 @@ print(f"Done. reraking {len(texts)} passages with monot5-{type}-med-msmarco took
 top_passage_per_doc = sorted(list(
     {x.metadata['docid']: x for x in sorted(reranked, key=lambda i: i.score)}
         .values()),
-                             key=lambda i: i.score, reverse=True)
+    key=lambda i: i.score, reverse=True)
 
 # del reranked
 
@@ -95,13 +92,18 @@ if duo:
 
 run = [(topic_no, 0, x.metadata["docid"], i + 1, x.score, type) for i, x in enumerate(top_passage_per_doc)]
 run_df = pd.DataFrame(run)
+run_df[2] = run_df[2].map(lambda x: f"en.noclean.c4-train.0{x[3:7]}-of-07168.{int(x[8:])}")
 
-# run_df[2] = run_df[2].map(lambda x: f"en.noclean.c4-train.0{x[3:7]}-of-07168.{int(x[8:])}")
+run_with_passage = [(topic_no, 0, x.metadata["docid"], i + 1, x.score, type, x.text) for i, x in
+                    enumerate(top_passage_per_doc)]
+run_df_with_passage = pd.DataFrame(run_with_passage)
+run_df_with_passage[2] = run_df_with_passage[2].map(lambda x: f"en.noclean.c4-train.0{x[3:7]}-of-07168.{int(x[8:])}")
 
-for i in top_passage_per_doc[:20]:
-    print(i.metadata['docid'], i.score, i.text[:200])
+# for i in top_passage_per_doc[:20]:
+#     print(i.metadata['docid'], i.score, i.text[:200])
 
 print("Writing Run file...", flush=True)
 
-run_df.to_csv(f"{output_dir}/topic-{topic_no}.run", sep=" ",index=False, header=False)
+run_df.to_csv(f"{output_dir}/topic-{topic_no}.run", sep=" ", index=False, header=False)
+run_df.to_csv(f"{output_dir}_with_text/topic-{topic_no}.run", sep=" ", index=False, header=False)
 print("Done.", flush=True)
