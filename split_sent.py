@@ -8,7 +8,7 @@ from pyspark.sql.functions import udf
 from pyspark.sql.types import *
 import pyspark.sql.functions as f
 
-window_size, step = 6, 3
+window_size, step = 128, 64
 
 spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
