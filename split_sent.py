@@ -10,7 +10,7 @@ import pyspark.sql.functions as f
 from spacy.tokens import Span
 from typing import List
 
-window_size, step = 256, 128
+window_size, step = 128, 64
 
 spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
