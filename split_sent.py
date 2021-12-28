@@ -31,7 +31,7 @@ def tokenize_windows(s):
 
     if len(tokens) <= window_size:
         return tokens.text.strip()
-    return [' '.join(tokens[i: i + window_size]) for i in range(0, len(tokens), step)]
+    return [tokens[i: i + window_size].text.strip() for i in range(0, len(tokens), step)]
 
 
 def sentencize(s):
