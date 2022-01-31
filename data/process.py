@@ -52,7 +52,7 @@ ds = load_dataset("parquet",
                       "train": "data/Top1kBM25_1p_passages/*.parquet"
                   },
                   split='train')\
-    .filter(lambda e: e['topic'] == 101)
+    # .filter(lambda e: e['topic'] == 101)
 #%%
 # ds = ds.shard(num_shards=8, index=0, contiguous=True)
 with torch.cuda.amp.autocast():
