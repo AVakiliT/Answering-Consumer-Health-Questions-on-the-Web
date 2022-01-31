@@ -68,9 +68,9 @@ from transformers import DPRQuestionEncoder, DPRQuestionEncoderTokenizer
 q_encoder = DPRQuestionEncoder.from_pretrained("facebook/dpr-question_encoder-single-nq-base")
 q_tokenizer = DPRQuestionEncoderTokenizer.from_pretrained("facebook/dpr-question_encoder-single-nq-base")
 #%%
-question = "Can cranberries prevent urinary tract infections?"
-question = "Will wearing an ankle brace help heal achilles tendonitis?"
-question_embedding = q_encoder(**q_tokenizer(question, return_tensors="pt"))[0][0].numpy()
-scores, retrieved_examples = ds_with_embeddings.get_nearest_examples('epoch_0', question_embedding, k=10)
+# question = "Can cranberries prevent urinary tract infections?"
+# question = "Will wearing an ankle brace help heal achilles tendonitis?"
+# question_embedding = q_encoder(**q_tokenizer(question, return_tensors="pt"))[0][0].numpy()
+# scores, retrieved_examples = ds_with_embeddings.get_nearest_examples('epoch_0', question_embedding, k=10)
 #%%
 ds_with_embeddings.save_faiss_index("epoch_0", "data/faiss_index/2021/epoch_0")
