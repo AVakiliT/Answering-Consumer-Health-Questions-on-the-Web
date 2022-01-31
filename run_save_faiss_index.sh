@@ -1,3 +1,4 @@
+#!/bin/sh
 #SBATCH --account=rrg-smucker
 #SBATCH --time=0-05:00:00
 #SBATCH --cpus-per-task=12
