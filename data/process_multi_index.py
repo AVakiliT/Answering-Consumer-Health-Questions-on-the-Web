@@ -7,7 +7,7 @@ import xml.etree.cElementTree as et
 from torch.nn import DataParallel
 from tqdm import trange
 
-
+df1 = pd.read_parquet("data/Top1kBM25_1p_passages")
 
 topics = pd.read_csv("data/topics.csv", index_col="topic", sep="\t")
 
@@ -44,7 +44,7 @@ ds = load_dataset("parquet",
                       "train": f"data/Top1kBM25_{'' if year == 2021 else '2019'}1p_passages/*.parquet"
                   },
                   split='train')\
-    .filter(lambda e: e['topic'] == 101)
+    # .filter(lambda e: e['topic'] == 101)
 #%%
 # ds = ds.shard(num_shards=8, index=0, contiguous=True)
 with torch.cuda.amp.autocast():
@@ -68,7 +68,7 @@ import torch
 torch.set_grad_enabled(False)
 q_encoder = DPRQuestionEncoder.from_pretrained("facebook/dpr-question_encoder-single-nq-base")
 q_tokenizer = DPRQuestionEncoderTokenizer.from_pretrained("facebook/dpr-question_encoder-single-nq-base")
-ds_with_embeddings.save_faiss_index("epoch_0", "data/faiss_index/epoch_0")
+ds_with_embeddings.save_faiss_index("epoch_0", "data/faiss_index/2021/epoch_0")
 
 #%%
 
