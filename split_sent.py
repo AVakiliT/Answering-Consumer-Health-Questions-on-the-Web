@@ -10,7 +10,7 @@ window_size, step = 6, 3
 
 spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
-df = spark.read.load(f"{sys.argv[1]}")
+df = spark.read.load(f"./data/{sys.argv[1]}")
 print(df.count())
 
 schema = ArrayType(StringType())
@@ -42,4 +42,4 @@ lol_udf = udf(tokenize_windows, schema)
 df_new = df.withColumn("passage", lol_udf("text")).selectExpr("docno", "topic", "score as bm25",
                                                               "explode(passage) as passage", "url")
 
-df_new.repartition(1).write.mode("overwrite").save(f"{sys.argv[2]}_1p_passages")
+df_new.repartition(1).write.mode("overwrite").save(f"./data/{sys.argv[2]}_1p_passages")
