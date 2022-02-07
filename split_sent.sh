@@ -11,4 +11,4 @@ export PYSPARK_DRIVER_PYTHON=ipython;
 export _JAVA_OPTIONS="-Xms256m -Xmx180G";
 source ~/ENV/bin/activate
 
-spark-submit split_sent.py Top1kBM25 Top1kBM25_128l
+spark-submit split_sent.py Top1kBM25 Top1kBM25
