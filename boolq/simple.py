@@ -28,7 +28,7 @@ if __name__ == '__main__':
     dataloader_num_workers=1
     early_stopping_patience_epochs=0
     logger = "default"
-    max_epochs = 1
+    max_epochs = 2
     precision=32
 
     tokenizer = AutoTokenizer.from_pretrained('t5-base')
