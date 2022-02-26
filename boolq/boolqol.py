@@ -26,7 +26,7 @@ AVAIL_GPUS = min(1, torch.cuda.device_count())
 #     "target_text": dataset['train'].data.to_pandas().label.map({0: "no", 1: "yes"}),
 #     }, axis=1) for sub in "train validation test".split()]
 #%%
-class GLUEDataModule(LightningDataModule):
+class MyDataModule(LightningDataModule):
     #
     # task_text_field_map = {
     #     "boolq": ["question", "passage"],
@@ -270,7 +270,7 @@ class LitProgressBar(ProgressBar):
 #%%
 seed_everything(42)
 
-dm = GLUEDataModule(model_name_or_path="albert-base-v2", task_name="boolq")
+dm = MyDataModule(model_name_or_path="albert-base-v2", task_name="boolq")
 dm.setup("fit")
 model = GLUETransformer(
     model_name_or_path="albert-base-v2",
