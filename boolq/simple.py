@@ -13,7 +13,7 @@ if __name__ == '__main__':
     dataset = load_dataset('super_glue', 'boolq')
     df_train, df_validation = [pd.concat({
         "source_text": dataset[sub].data.to_pandas().apply(
-            lambda row: f"question: {row.question} passage: {row.passage}", axis=1
+            lambda row: f"question: {row.question} passage: {row.passage} answer:", axis=1
         ),
         "target_text": dataset[sub].data.to_pandas().label.map({0: "no", 1: "yes"}),
         "target_class": dataset[sub].data.to_pandas().label
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     precision=32
 
     tokenizer = AutoTokenizer.from_pretrained('t5-base')
-    model = T5ForConditionalGeneration.from_pretrained('t5-base').to(0)
+    model = T5ForConditionalGeneration.from_pretrained('castorini/monot5-base-msmarco').to(0)
 
     lightning_module = MyLightningModel(
         tokenizer=tokenizer,
