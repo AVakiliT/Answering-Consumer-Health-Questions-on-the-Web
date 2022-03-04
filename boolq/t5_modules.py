@@ -182,7 +182,7 @@ class MyLightningModel(pl.LightningModule):
             outputdir: str = "outputs",
             save_only_last_epoch: bool = False,
             num_classes=2
-    ):
+    , labels_text=None):
         """
         initiates a PyTorch Lightning Model
         Args:
@@ -212,9 +212,9 @@ class MyLightningModel(pl.LightningModule):
         self.train_loss = torchmetrics.MeanMetric()
         self.valid_loss = torchmetrics.MeanMetric()
         if num_classes == 2:
-            self.label_token_mapping = self.tokenizer.convert_tokens_to_ids(['▁no', '▁yes'])
+            self.label_token_mapping = self.tokenizer.convert_tokens_to_ids(labels_text)
         else:
-            self.label_token_mapping = self.tokenizer.convert_tokens_to_ids(['▁no', '▁yes', '▁irrelevant'])
+            self.label_token_mapping = self.tokenizer.convert_tokens_to_ids(labels_text)
 
     def forward(self, input_ids, attention_mask, decoder_attention_mask, labels=None):
         """ forward step """
