@@ -109,7 +109,7 @@ if __name__ == '__main__':
 
 #%%
     num_classes = 3
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_BASE)
+    tokenizer = AutoTokenizer.from_pretrained("t5-base")
     model = T5ForConditionalGeneration.from_pretrained(MODEL_BASE).to(0)
     lightning_module = MyLightningModel(
         tokenizer=tokenizer,
