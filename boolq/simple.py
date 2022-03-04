@@ -54,9 +54,9 @@ if __name__ == '__main__':
                 )
             }, axis=1) for sub in "train validation".split()]
 
-            df_train_neg["target_text"] = "unsure"
+            df_train_neg["target_text"] = "irrelevant"
             df_train_neg["target_class"] = 1
-            df_validation_neg["target_text"] = "unsure"
+            df_validation_neg["target_text"] = "irrelevant"
             df_validation_neg["target_class"] = 1
 
             df_train = pd.concat([df_train, df_train_neg])
