@@ -1,3 +1,5 @@
+from typing import List
+
 import torch
 import numpy as np
 import pandas as pd
@@ -20,6 +22,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks.progress import TQDMProgressBar
 import torch.nn.functional as F
+
 torch.cuda.empty_cache()
 pl.seed_everything(42)
 
@@ -55,7 +58,6 @@ class MyDataset(Dataset):
         """ returns dictionary of input tensors to feed into T5/MT5 model"""
 
         data_row = self.data.iloc[index]
-
         source_text_encoding = self.tokenizer(
             data_row["source_text"],
             max_length=self.source_max_token_len,
@@ -65,6 +67,7 @@ class MyDataset(Dataset):
             add_special_tokens=True,
             return_tensors="pt",
         )
+
 
         target_text_encoding = self.tokenizer(
             data_row["target_text"],
@@ -174,8 +177,11 @@ class MyLightningModel(pl.LightningModule):
             self,
             tokenizer,
             model,
+            train_metrics,
+            val_metrics,
             outputdir: str = "outputs",
             save_only_last_epoch: bool = False,
+            num_classes=2
     ):
         """
         initiates a PyTorch Lightning Model
@@ -186,18 +192,29 @@ class MyLightningModel(pl.LightningModule):
             save_only_last_epoch (bool, optional): If True, save just the last epoch else models are saved for every epoch
         """
         super().__init__()
+        if val_metrics is None:
+            val_metrics = {
+                "ACC": torchmetrics.Accuracy,
+                "AUROC": torchmetrics.AUROC
+            }
+        self.val_metrics = val_metrics
+        self.train_metrics = train_metrics
         self.model = model
-        self.tokenizer : PreTrainedTokenizer = tokenizer
+        self.tokenizer: PreTrainedTokenizer = tokenizer
         self.outputdir = outputdir
         self.average_training_loss = None
         self.average_validation_loss = None
+        self.num_classes = num_classes
         self.save_only_last_epoch = save_only_last_epoch
-        self.train_acc = torchmetrics.Accuracy(num_classes=2)
-        self.valid_acc = torchmetrics.Accuracy(num_classes=2)
-        self.valid_auroc = torchmetrics.AUROC(num_classes=2)
+        self.train_acc = torchmetrics.Accuracy(num_classes=self.num_classes)
+        self.valid_acc = torchmetrics.Accuracy(num_classes=self.num_classes)
+        self.valid_auroc = torchmetrics.AUROC(num_classes=self.num_classes)
         self.train_loss = torchmetrics.MeanMetric()
         self.valid_loss = torchmetrics.MeanMetric()
-        self.label_token_mapping = self.tokenizer.convert_tokens_to_ids(['▁no', '▁yes'])
+        if num_classes == 2:
+            self.label_token_mapping = self.tokenizer.convert_tokens_to_ids(['▁no', '▁yes'])
+        else:
+            self.label_token_mapping = self.tokenizer.convert_tokens_to_ids(['▁no', '▁yes', '▁irrelevant'])
 
     def forward(self, input_ids, attention_mask, decoder_attention_mask, labels=None):
         """ forward step """
@@ -228,26 +245,33 @@ class MyLightningModel(pl.LightningModule):
         label_logits = logits[:, 1, self.label_token_mapping].detach().cpu()
         prediction = np.argmax(label_logits, axis=1).flatten()
         targets = batch['target_class'].cpu().flatten()
-        self.train_acc(F.softmax(label_logits), targets)
-        self.train_loss(outputs.loss * input_ids.shape[0])
-        self.log('train_acc', self.train_acc.compute(), prog_bar=True, on_step=True, on_epoch=False)
 
+        self.log_metrics(self.train_metrics, F.softmax(label_logits, dim=-1), targets, is_end=False)
+
+        self.train_loss(outputs.loss * input_ids.shape[0])
         self.log(
             "train_loss", self.train_loss.compute(), prog_bar=True, logger=True, on_epoch=False, on_step=True
         )
         return outputs.loss
 
     def training_epoch_end(self, training_step_outputs):
-        self.log('train_epoch_accuracy', self.train_acc.compute())
-        self.log('train_epoch_loss', self.train_loss.compute())
-        self.train_acc.reset()
-        self.train_loss.reset()
-
+        self.log_metrics(self.train_metrics, is_end=True)
+        # self.log('train_epoch_accuracy', self.train_acc.compute())
+        # self.log('train_epoch_loss', self.train_loss.compute())
+        # self.train_acc.reset()
+        # self.train_loss.reset()
 
     def configure_optimizers(self):
         """ configure optimizers """
         return AdamW(self.parameters(), lr=0.0001)
 
+    def log_metrics(self, metrics, pred=None, target=None, is_end=True):
+        for i, metric in metrics.items():
+            if not is_end:
+                metric(pred, target)
+            self.log(i, metric.compute(), prog_bar=True, logger=True, on_step=not is_end, on_epoch=is_end)
+            if is_end:
+                metric.reset()
 
 
     def validation_step(self, batch, batch_size):
@@ -272,21 +296,18 @@ class MyLightningModel(pl.LightningModule):
         label_logits = logits[:, self.label_token_mapping].detach().cpu()
         prediction = np.argmax(label_logits, axis=1).flatten()
         targets = batch['target_class'].cpu().flatten()
-        self.valid_acc(F.softmax(label_logits), targets)
-        self.valid_auroc(F.softmax(label_logits), targets)
-        self.log('valid_acc', self.valid_acc.compute(), prog_bar=True, on_step=True, on_epoch=False)
-        self.log('valid_auroc', self.valid_auroc.compute(), prog_bar=True, on_step=True, on_epoch=False)
+        self.log_metrics(self.val_metrics, F.softmax(label_logits, dim=-1), targets, is_end=False)
         # self.log(
         #     "val_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True
         # )
         return {'prediction': prediction, "target": targets}
 
     def validation_epoch_end(self, validation_step_outputs):
-        self.log('valid_epoch_accuracy', self.valid_acc.compute())
-        self.log('valid_epoch_auroc', self.valid_auroc.compute())
-        self.valid_acc.reset()
-        self.valid_auroc.reset()
-
+        self.log_metrics(self.val_metrics, is_end=True)
+        # self.log('valid_epoch_accuracy', self.valid_acc.compute())
+        # self.log('valid_epoch_auroc', self.valid_auroc.compute())
+        # self.valid_acc.reset()
+        # self.valid_auroc.reset()
 
 # class SimpleT5:
 #     """ Custom SimpleT5 class """
