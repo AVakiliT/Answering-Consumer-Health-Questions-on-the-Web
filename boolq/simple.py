@@ -16,8 +16,9 @@ parser = ArgumentParser()
 # parser.add_argument("--notification_email", type=str, default="will@email.com")
 # add model specific args
 # parser = MyLightningModel.add_model_specific_args(parser)
-parser = pl.Trainer.add_argparse_args(parser)
+# parser = pl.Trainer.add_argparse_args(parser)
 parser.add_argument("--batch_size", default=4, type=int)
+parser.add_argument("--max_epochs", default=1, type=int)
 args = parser.parse_known_args()
 # YES = "▁5.0"
 # NO = "▁1.0"
@@ -70,10 +71,10 @@ if __name__ == '__main__':
         return df_train, df_validation
 
 
-    df_train, df_validation = prep_boolq_dataset(prep_sentence=prep_t5_sentence, neg_sampling=False)
+    df_train, df_validation = prep_boolq_dataset(prep_sentence=prep_t5_sentence, neg_sampling=True)
     # %%
-    # df_validation = df_validation[:100]
-    # df_train = df_train[:100]
+    df_validation = df_validation[:100]
+    df_train = df_train[:100]
 
     # %%
 
@@ -83,7 +84,7 @@ if __name__ == '__main__':
     dataloader_num_workers = 4
     early_stopping_patience_epochs = 0
     logger = "default"
-    max_epochs = 3
+    max_epochs = args[0].max_epochs
     precision = 32
     MODEL_BASE = "t5-base"
 
@@ -108,7 +109,7 @@ if __name__ == '__main__':
     # )
 
     # %%
-    num_classes = 2
+    num_classes = 3
     tokenizer = AutoTokenizer.from_pretrained("t5-base")
     model = T5ForConditionalGeneration.from_pretrained("t5-base").to(0)
     lightning_module = MyLightningModel(
@@ -118,7 +119,7 @@ if __name__ == '__main__':
         num_classes=num_classes,
         labels_text=[NO, IRRELEVANT, YES],
         train_metrics="Accuracy".split(),
-        valid_metrics="Accuracy F1 AUROC".split(),
+        valid_metrics="Accuracy F1".split(),
         # train_metrics={
         #     "TACC": torchmetrics.Accuracy(num_classes=num_classes, multiclass=True),
         # },
@@ -129,8 +130,18 @@ if __name__ == '__main__':
         #
         # }
     )
+    lightning_module.load_from_checkpoint("./checkpoints/lightning_logs/version_121/checkpoints/epoch=0-step=2356.ckpt",
+                                          tokenizer=tokenizer,
+                                          model=model,
+                                          save_only_last_epoch=True,
+                                          num_classes=num_classes,
+                                          labels_text=[NO, IRRELEVANT, YES],
+                                          train_metrics="Accuracy".split(),
+                                          valid_metrics="Accuracy F1 AUROC".split())
     # lightning_module.load_from_checkpoint("./checkpoints/lightning_logs/version_35/checkpoints/epoch=0-step=2356.ckpt",
     #                                       model=model, tokenizer=tokenizer)
+
+
     # %%
     data_module = MyLightningDataModule(
         df_train,
@@ -162,6 +173,8 @@ if __name__ == '__main__':
     #
     #         # prepare trainer
 
+
+
     trainer = pl.Trainer(
         logger=loggers,
         callbacks=callbacks,
@@ -174,8 +187,9 @@ if __name__ == '__main__':
     )
     #
     # # fit trainer
-    trainer.fit(lightning_module, data_module)
-    # trainer.validate(lightning_module, data_module)
+    # lightning_module.fix_stupid_metric_device_bs()
+    # trainer.fit(lightning_module, data_module)
+    trainer.validate(lightning_module, data_module)
 
 # %%
 

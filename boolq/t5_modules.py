@@ -195,9 +195,11 @@ class MyLightningModel(pl.LightningModule):
         super().__init__()
         for m in train_metrics:
             setattr(self, "train_" + m, getattr(torchmetrics, m)(num_classes=num_classes))
+            # getattr(self, "train_" + m).device = "cpu"
         self.train_metrics = train_metrics
         for m in valid_metrics:
             setattr(self, "valid_" + m, getattr(torchmetrics, m)(num_classes=num_classes))
+            # getattr(self, "valid_" + m).device = "cpu"
         self.valid_metrics = valid_metrics
         self.model = model
         self.tokenizer: PreTrainedTokenizer = tokenizer
@@ -215,6 +217,13 @@ class MyLightningModel(pl.LightningModule):
             self.label_token_mapping = np.array(self.tokenizer.convert_tokens_to_ids(labels_text))[[0, 2]]
         else:
             self.label_token_mapping = self.tokenizer.convert_tokens_to_ids(labels_text)
+
+    # def fix_stupid_metric_device_bs(self):
+    #     for m in self.train_metrics:
+    #         getattr(self, "train_" + m).to("cpu")
+    #     for m in self.valid_metrics:
+    #         getattr(self, "valid_" + m).to("cpu")
+    #         # getattr(self, "valid_" + m).device = "cpu"
 
     def forward(self, input_ids, attention_mask, decoder_attention_mask, labels=None):
         """ forward step """
@@ -259,7 +268,7 @@ class MyLightningModel(pl.LightningModule):
         self.log_metrics(self.train_metrics, is_end=True, train=True)
         prediction = np.hstack([output['prediction'] for output in training_step_outputs])
         target = np.hstack([output['target'] for output in training_step_outputs])
-        print(f'\n{classification_report(target, prediction, zero_division=1)}\n')
+        print(f'TRAIN \n{classification_report(target, prediction, zero_division=1)}\n')
 
     def configure_optimizers(self):
         """ configure optimizers """
@@ -309,7 +318,7 @@ class MyLightningModel(pl.LightningModule):
         self.log_metrics(self.valid_metrics, is_end=True, train=False)
         prediction = np.hstack([output['prediction'] for output in validation_step_outputs])
         target = np.hstack([output['target'] for output in validation_step_outputs])
-        print('Epoch:', self.current_epoch)
+        print('VALID Epoch:', self.current_epoch)
         print(f'\n{classification_report(target, prediction, zero_division=1)}\n')
 
 # class SimpleT5:
