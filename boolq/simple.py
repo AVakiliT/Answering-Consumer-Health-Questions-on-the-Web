@@ -83,7 +83,7 @@ if __name__ == '__main__':
     dataloader_num_workers = 4
     early_stopping_patience_epochs = 0
     logger = "default"
-    max_epochs = 1
+    max_epochs = 3
     precision = 32
     MODEL_BASE = "t5-base"
 
