@@ -130,14 +130,14 @@ if __name__ == '__main__':
         #
         # }
     )
-    lightning_module.load_from_checkpoint("./checkpoints/lightning_logs/version_121/checkpoints/epoch=0-step=2356.ckpt",
-                                          tokenizer=tokenizer,
-                                          model=model,
-                                          save_only_last_epoch=True,
-                                          num_classes=num_classes,
-                                          labels_text=[NO, IRRELEVANT, YES],
-                                          train_metrics="Accuracy".split(),
-                                          valid_metrics="Accuracy F1 AUROC".split())
+    # lightning_module.load_from_checkpoint("./checkpoints/lightning_logs/version_121/checkpoints/epoch=0-step=2356.ckpt",
+    #                                       tokenizer=tokenizer,
+    #                                       model=model,
+    #                                       save_only_last_epoch=True,
+    #                                       num_classes=num_classes,
+    #                                       labels_text=[NO, IRRELEVANT, YES],
+    #                                       train_metrics="Accuracy".split(),
+    #                                       valid_metrics="Accuracy F1 AUROC".split())
     # lightning_module.load_from_checkpoint("./checkpoints/lightning_logs/version_35/checkpoints/epoch=0-step=2356.ckpt",
     #                                       model=model, tokenizer=tokenizer)
 
