@@ -212,7 +212,7 @@ class MyLightningModel(pl.LightningModule):
         self.train_loss = torchmetrics.MeanMetric()
         self.valid_loss = torchmetrics.MeanMetric()
         if num_classes == 2:
-            self.label_token_mapping = self.tokenizer.convert_tokens_to_ids(labels_text)
+            self.label_token_mapping = np.array(self.tokenizer.convert_tokens_to_ids(labels_text))[[0, 2]]
         else:
             self.label_token_mapping = self.tokenizer.convert_tokens_to_ids(labels_text)
 
@@ -245,7 +245,8 @@ class MyLightningModel(pl.LightningModule):
         label_logits = logits[:, 1, self.label_token_mapping].detach().cpu()
         prediction = np.argmax(label_logits, axis=1).flatten()
         targets = batch['target_class'].cpu().flatten()
-
+        if self.num_classes == 2:
+            targets = targets.float().divide(2).long()
         self.log_metrics(self.train_metrics, F.softmax(label_logits, dim=-1), targets, is_end=False)
 
         self.train_loss(outputs.loss * input_ids.shape[0])
@@ -296,6 +297,8 @@ class MyLightningModel(pl.LightningModule):
         label_logits = logits[:, self.label_token_mapping].detach().cpu()
         prediction = np.argmax(label_logits, axis=1).flatten()
         targets = batch['target_class'].cpu().flatten()
+        if self.num_classes == 2:
+            targets = targets.float().divide(2).long()
         self.log_metrics(self.val_metrics, F.softmax(label_logits, dim=-1), targets, is_end=False)
         # self.log(
         #     "val_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True

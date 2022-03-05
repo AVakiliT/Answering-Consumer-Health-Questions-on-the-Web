@@ -46,7 +46,7 @@ if __name__ == '__main__':
             "source_text": dataset[sub].data.to_pandas().apply(
                 lambda row: prep_sentence(row.question, row.passage), axis=1
             ),
-            "target_text": dataset[sub].data.to_pandas().label.map({0: NO.replace("▁", ""), 1: NO.replace("▁", "")}),
+            "target_text": dataset[sub].data.to_pandas().label.map({0: NO.replace("▁", ""), 1: YES.replace("▁", "")}),
             "target_class": dataset[sub].data.to_pandas().label.map({0: 0, 1: 2})
         }, axis=1) for sub in "train validation".split()]
 
@@ -72,7 +72,7 @@ if __name__ == '__main__':
         return df_train, df_validation
 
 
-    df_train, df_validation = prep_boolq_dataset(prep_sentence=prep_bert_sentence, neg_sampling=False)
+    df_train, df_validation = prep_boolq_dataset(prep_sentence=prep_t5_sentence, neg_sampling=True)
 
     # %%
 
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     logger = "default"
     max_epochs = 1
     precision = 32
-    MODEL_BASE = "castorini/monot5-base-msmarco"
+    MODEL_BASE = "t5-base"
 
 
 #%%
@@ -110,12 +110,12 @@ if __name__ == '__main__':
 #%%
     num_classes = 3
     tokenizer = AutoTokenizer.from_pretrained("t5-base")
-    model = T5ForConditionalGeneration.from_pretrained(MODEL_BASE).to(0)
+    model = T5ForConditionalGeneration.from_pretrained("t5-base").to(0)
     lightning_module = MyLightningModel(
         tokenizer=tokenizer,
         model=model,
         save_only_last_epoch=True,
-        num_classes=3,
+        num_classes=num_classes,
         labels_text=[NO, IRRELEVANT, YES],
         train_metrics={
             "TACC": torchmetrics.Accuracy(num_classes=num_classes, multiclass=True),
