@@ -70,7 +70,7 @@ if __name__ == '__main__':
         return df_train, df_validation
 
 
-    df_train, df_validation = prep_boolq_dataset(prep_sentence=prep_t5_sentence, neg_sampling=True)
+    df_train, df_validation = prep_boolq_dataset(prep_sentence=prep_t5_sentence, neg_sampling=False)
     # %%
     # df_validation = df_validation[:100]
     # df_train = df_train[:100]
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     # )
 
     # %%
-    num_classes = 3
+    num_classes = 2
     tokenizer = AutoTokenizer.from_pretrained("t5-base")
     model = T5ForConditionalGeneration.from_pretrained("t5-base").to(0)
     lightning_module = MyLightningModel(
