@@ -19,6 +19,9 @@ parser = ArgumentParser()
 # parser = pl.Trainer.add_argparse_args(parser)
 parser.add_argument("--batch_size", default=4, type=int)
 parser.add_argument("--max_epochs", default=1, type=int)
+parser.add_argument("--num_classes", default=2, type=int)
+parser.add_argument("--neg_sample", default=True, type=bool)
+# parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
 # YES = "▁5.0"
 # NO = "▁1.0"
@@ -71,7 +74,7 @@ if __name__ == '__main__':
         return df_train, df_validation
 
 
-    df_train, df_validation = prep_boolq_dataset(prep_sentence=prep_t5_sentence, neg_sampling=False)
+    df_train, df_validation = prep_boolq_dataset(prep_sentence=prep_t5_sentence, neg_sampling=args[0].neg_sample)
     # %%
     # df_validation = df_validation[:100]
     # df_train = df_train[:100]
@@ -86,7 +89,7 @@ if __name__ == '__main__':
     logger = "default"
     max_epochs = args[0].max_epochs
     precision = 32
-    MODEL_BASE = "t5-base"
+    # MODEL_BASE = "t5-base"
 
     # %%
     # num_classes = 2
@@ -109,9 +112,9 @@ if __name__ == '__main__':
     # )
 
     # %%
-    num_classes = 2
+    num_classes = args[0].num_classes
     tokenizer = AutoTokenizer.from_pretrained("t5-base")
-    model = T5ForConditionalGeneration.from_pretrained("t5-base").to(0)
+    model = T5ForConditionalGeneration.from_pretrained("castorini/monot5-base-msmarco").to(0)
     lightning_module = MyLightningModel(
         tokenizer=tokenizer,
         model=model,
