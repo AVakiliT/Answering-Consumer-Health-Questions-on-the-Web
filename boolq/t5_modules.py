@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import torchmetrics
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
+from sklearn.metrics import classification_report
 from transformers import (
     T5ForConditionalGeneration,
     MT5ForConditionalGeneration,
@@ -252,14 +253,13 @@ class MyLightningModel(pl.LightningModule):
         self.log(
             "train_loss", self.train_loss.compute(), prog_bar=True, logger=True, on_epoch=False, on_step=True
         )
-        return outputs.loss
+        return {'loss': outputs.loss, 'prediction': prediction, 'target': targets}
 
     def training_epoch_end(self, training_step_outputs):
         self.log_metrics(self.train_metrics, is_end=True)
-        # self.log('train_epoch_accuracy', self.train_acc.compute())
-        # self.log('train_epoch_loss', self.train_loss.compute())
-        # self.train_acc.reset()
-        # self.train_loss.reset()
+        prediction = np.hstack([output['prediction'] for output in training_step_outputs])
+        target = np.hstack([output['target'] for output in training_step_outputs])
+        print(f'\n{classification_report(target, prediction, zero_division=1)}\n')
 
     def configure_optimizers(self):
         """ configure optimizers """
@@ -307,10 +307,10 @@ class MyLightningModel(pl.LightningModule):
 
     def validation_epoch_end(self, validation_step_outputs):
         self.log_metrics(self.valid_metrics, is_end=True)
-        # self.log('valid_epoch_accuracy', self.valid_acc.compute())
-        # self.log('valid_epoch_auroc', self.valid_auroc.compute())
-        # self.valid_acc.reset()
-        # self.valid_auroc.reset()
+        prediction = np.hstack([output['prediction'] for output in validation_step_outputs])
+        target = np.hstack([output['target'] for output in validation_step_outputs])
+        print('Epoch:', self.current_epoch)
+        print(f'\n{classification_report(target, prediction, zero_division=1)}\n')
 
 # class SimpleT5:
 #     """ Custom SimpleT5 class """
