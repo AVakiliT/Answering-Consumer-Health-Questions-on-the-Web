@@ -256,7 +256,7 @@ class MyLightningModel(pl.LightningModule):
         return {'loss': outputs.loss, 'prediction': prediction, 'target': targets}
 
     def training_epoch_end(self, training_step_outputs):
-        self.log_metrics(self.train_metrics, is_end=True)
+        self.log_metrics(self.train_metrics, is_end=True, train=True)
         prediction = np.hstack([output['prediction'] for output in training_step_outputs])
         target = np.hstack([output['target'] for output in training_step_outputs])
         print(f'\n{classification_report(target, prediction, zero_division=1)}\n')
@@ -306,7 +306,7 @@ class MyLightningModel(pl.LightningModule):
         return {'prediction': prediction, "target": targets}
 
     def validation_epoch_end(self, validation_step_outputs):
-        self.log_metrics(self.valid_metrics, is_end=True)
+        self.log_metrics(self.valid_metrics, is_end=True, train=False)
         prediction = np.hstack([output['prediction'] for output in validation_step_outputs])
         target = np.hstack([output['target'] for output in validation_step_outputs])
         print('Epoch:', self.current_epoch)
