@@ -73,8 +73,8 @@ if __name__ == '__main__':
 
     df_train, df_validation = prep_boolq_dataset(prep_sentence=prep_t5_sentence, neg_sampling=True)
     # %%
-    df_validation = df_validation[:100]
-    df_train = df_train[:100]
+    # df_validation = df_validation[:100]
+    # df_train = df_train[:100]
 
     # %%
 
