@@ -178,7 +178,7 @@ class MyLightningModel(pl.LightningModule):
             tokenizer,
             model,
             train_metrics,
-            val_metrics,
+            valid_metrics,
             outputdir: str = "outputs",
             save_only_last_epoch: bool = False,
             num_classes=2
@@ -192,13 +192,12 @@ class MyLightningModel(pl.LightningModule):
             save_only_last_epoch (bool, optional): If True, save just the last epoch else models are saved for every epoch
         """
         super().__init__()
-        if val_metrics is None:
-            val_metrics = {
-                "ACC": torchmetrics.Accuracy,
-                "AUROC": torchmetrics.AUROC
-            }
-        self.val_metrics = val_metrics
+        for m in train_metrics:
+            setattr(self, "train_" + m, getattr(torchmetrics, m)(num_classes=num_classes))
         self.train_metrics = train_metrics
+        for m in valid_metrics:
+            setattr(self, "valid_" + m, getattr(torchmetrics, m)(num_classes=num_classes))
+        self.valid_metrics = valid_metrics
         self.model = model
         self.tokenizer: PreTrainedTokenizer = tokenizer
         self.outputdir = outputdir
@@ -206,9 +205,9 @@ class MyLightningModel(pl.LightningModule):
         self.average_validation_loss = None
         self.num_classes = num_classes
         self.save_only_last_epoch = save_only_last_epoch
-        self.train_acc = torchmetrics.Accuracy(num_classes=self.num_classes)
-        self.valid_acc = torchmetrics.Accuracy(num_classes=self.num_classes)
-        self.valid_auroc = torchmetrics.AUROC(num_classes=self.num_classes)
+        # self.train_acc = torchmetrics.Accuracy(num_classes=self.num_classes)
+        # self.valid_acc = torchmetrics.Accuracy(num_classes=self.num_classes)
+        # self.valid_auroc = torchmetrics.AUROC(num_classes=self.num_classes)
         self.train_loss = torchmetrics.MeanMetric()
         self.valid_loss = torchmetrics.MeanMetric()
         if num_classes == 2:
@@ -247,7 +246,7 @@ class MyLightningModel(pl.LightningModule):
         targets = batch['target_class'].cpu().flatten()
         if self.num_classes == 2:
             targets = targets.float().divide(2).long()
-        self.log_metrics(self.train_metrics, F.softmax(label_logits, dim=-1), targets, is_end=False)
+        self.log_metrics(self.train_metrics, F.softmax(label_logits, dim=-1), targets, is_end=False, train=True)
 
         self.train_loss(outputs.loss * input_ids.shape[0])
         self.log(
@@ -266,13 +265,14 @@ class MyLightningModel(pl.LightningModule):
         """ configure optimizers """
         return AdamW(self.parameters(), lr=0.0001)
 
-    def log_metrics(self, metrics, pred=None, target=None, is_end=True):
-        for i, metric in metrics.items():
+    def log_metrics(self, metrics, pred=None, target=None, is_end=True, train=False):
+        prefix = "train_" if train else "valid_"
+        for metric_name in metrics:
             if not is_end:
-                metric(pred, target)
-            self.log(i, metric.compute(), prog_bar=True, logger=True, on_step=not is_end, on_epoch=is_end)
-            if is_end:
-                metric.reset()
+                getattr(self, prefix + metric_name)(pred, target)
+            self.log(prefix + metric_name, getattr(self, prefix + metric_name), logger=True, prog_bar=True)
+            # if is_end:
+            #     metric_name.reset()
 
 
     def validation_step(self, batch, batch_size):
@@ -299,14 +299,14 @@ class MyLightningModel(pl.LightningModule):
         targets = batch['target_class'].cpu().flatten()
         if self.num_classes == 2:
             targets = targets.float().divide(2).long()
-        self.log_metrics(self.val_metrics, F.softmax(label_logits, dim=-1), targets, is_end=False)
+        self.log_metrics(self.valid_metrics, F.softmax(label_logits, dim=-1), targets, is_end=False, train=False)
         # self.log(
         #     "val_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True
         # )
         return {'prediction': prediction, "target": targets}
 
     def validation_epoch_end(self, validation_step_outputs):
-        self.log_metrics(self.val_metrics, is_end=True)
+        self.log_metrics(self.valid_metrics, is_end=True)
         # self.log('valid_epoch_accuracy', self.valid_acc.compute())
         # self.log('valid_epoch_auroc', self.valid_auroc.compute())
         # self.valid_acc.reset()

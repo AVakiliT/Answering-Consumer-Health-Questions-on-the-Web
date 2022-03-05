@@ -67,12 +67,13 @@ if __name__ == '__main__':
             df_train = pd.concat([df_train, df_train_neg])
             df_validation = pd.concat([df_validation, df_validation_neg])
 
-
-
         return df_train, df_validation
 
 
     df_train, df_validation = prep_boolq_dataset(prep_sentence=prep_t5_sentence, neg_sampling=True)
+    # %%
+    # df_validation = df_validation[:100]
+    # df_train = df_train[:100]
 
     # %%
 
@@ -86,8 +87,7 @@ if __name__ == '__main__':
     precision = 32
     MODEL_BASE = "t5-base"
 
-
-#%%
+    # %%
     # num_classes = 2
 
     # tokenizer = AutoTokenizer.from_pretrained('roberta-base')
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     #     }
     # )
 
-#%%
+    # %%
     num_classes = 3
     tokenizer = AutoTokenizer.from_pretrained("t5-base")
     model = T5ForConditionalGeneration.from_pretrained("t5-base").to(0)
@@ -117,19 +117,21 @@ if __name__ == '__main__':
         save_only_last_epoch=True,
         num_classes=num_classes,
         labels_text=[NO, IRRELEVANT, YES],
-        train_metrics={
-            "TACC": torchmetrics.Accuracy(num_classes=num_classes, multiclass=True),
-        },
-        val_metrics={
-            "VACC": torchmetrics.Accuracy(num_classes=num_classes, multiclass=True),
-            "VF1": torchmetrics.F1(num_classes=num_classes, multiclass=True),
-            "VAUC": torchmetrics.AUROC(num_classes=num_classes)
-
-        }
+        train_metrics="Accuracy".split(),
+        valid_metrics="Accuracy F1 AUROC".split(),
+        # train_metrics={
+        #     "TACC": torchmetrics.Accuracy(num_classes=num_classes, multiclass=True),
+        # },
+        # val_metrics={
+        #     "VACC": torchmetrics.Accuracy(num_classes=num_classes, multiclass=True),
+        #     "VF1": torchmetrics.F1(num_classes=num_classes, multiclass=True),
+        #     "VAUC": torchmetrics.AUROC(num_classes=num_classes)
+        #
+        # }
     )
     # lightning_module.load_from_checkpoint("./checkpoints/lightning_logs/version_35/checkpoints/epoch=0-step=2356.ckpt",
     #                                       model=model, tokenizer=tokenizer)
-#%%
+    # %%
     data_module = MyLightningDataModule(
         df_train,
         df_validation,
