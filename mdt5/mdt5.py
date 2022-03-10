@@ -61,7 +61,7 @@ print(f"Loading MonoT5 ...", flush=True)
 reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-{type}-msmarco")
 print("Done.", flush=True)
 
-texts = [Text(p.passage, {'docid': p.docno}, 0) for p in
+texts = [Text(p.passage, {'docid': p.docno, 'url': p.url}, 0) for p in
          df[df.topic == topic_no].itertuples()]
 # texts = sample(texts, 1000)
 print("Reranking with MonoT5...", flush=True)
@@ -94,7 +94,7 @@ run = [(topic_no, 0, x.metadata["docid"], i + 1, x.score, type) for i, x in enum
 run_df = pd.DataFrame(run)
 run_df[2] = run_df[2].map(lambda x: f"en.noclean.c4-train.0{x[3:7]}-of-07168.{int(x[8:])}")
 
-run_with_passage = [(topic_no, 0, x.metadata["docid"], i + 1, x.score, type, x.text) for i, x in
+run_with_passage = [(topic_no, 0, x.metadata["docid"], i + 1, x.score, type, x.text, x.metadata["url"]) for i, x in
                     enumerate(top_passage_per_doc)]
 run_df_with_passage = pd.DataFrame(run_with_passage)
 run_df_with_passage[2] = run_df_with_passage[2].map(lambda x: f"en.noclean.c4-train.0{x[3:7]}-of-07168.{int(x[8:])}")
