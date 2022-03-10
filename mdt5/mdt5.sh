@@ -25,10 +25,10 @@ module load java
 echo "Starting script..."
 
 ~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
- --topic_file /project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml \
+ --topic_file /project/6004803/avakilit/Trec21_Data/data/2019topics.xml \
  --model_type base-med \
  --no-duo \
- --bm25run Top1kBM25_128l
+ --bm25run Top1kBM25_2019
 
 #~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
 # --topic_file /project/6004803/smucker/group-data/topics/2019topics.xml \
