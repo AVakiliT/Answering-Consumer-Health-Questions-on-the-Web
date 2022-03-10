@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --account=rrg-smucker
-#SBATCH --time=0-1:0:0
+#SBATCH --time=0-2:0:0
 #SBATCH --array=1-51
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=24G
