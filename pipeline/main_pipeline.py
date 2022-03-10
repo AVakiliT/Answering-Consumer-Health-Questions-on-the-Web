@@ -11,6 +11,7 @@ class PipelineModule(pl.LightningModule):
         super().__init__()
         self.qamodel = model
         self.tokenizer = tokenizer
+        self.host_emb = nn.Embedding(num_embeddings=0,embedding_dim=32)
         self.host_weight = nn.Linear(32, 1)
 
 
