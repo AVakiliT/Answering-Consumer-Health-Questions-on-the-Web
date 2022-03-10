@@ -16,7 +16,12 @@ class PipelineModule(pl.LightningModule):
 
 
     def forward(self, *args, **kwargs) -> Any:
-        return super().forward(*args, **kwargs)
+        output = self.model(
+            input_ids,
+            attention_mask=attention_mask,
+            labels=labels,
+            decoder_attention_mask=decoder_attention_mask,
+        )
 
     def training_step(self, *args, **kwargs) -> STEP_OUTPUT:
         return super().training_step(*args, **kwargs)
@@ -41,3 +46,9 @@ class PipelineModule(pl.LightningModule):
 
     def predict_dataloader(self) -> EVAL_DATALOADERS:
         pass
+
+#%%
+import pandas as pd
+df = pd.read_csv("./mdt5/output_Top1kBM25_mt5_2021_base-med_with_text.run", names="topic _ docno rank score tag text".split(), sep=" ", header=None)
+
+df.
