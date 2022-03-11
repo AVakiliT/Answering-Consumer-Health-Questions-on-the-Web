@@ -36,7 +36,7 @@ weighted avg       0.80      0.80      0.80      3270
 
 
 Epoch 0: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1588/1588 [14:44<00:00,  1.80it/s, loss=0.219, v_num=2.83e+7, train_Accuracy=0.000, train_loss=2.420, valid_Accuracy=0.798, valid_F1=0.798TRAIN
-              precision    recall  f1-score   support
+              precision    recall  f1-sscpcore   support
 
            0       0.39      1.00      0.56      3553
            1       0.98      0.07      0.13      5874

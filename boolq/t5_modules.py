@@ -69,7 +69,6 @@ class MyDataset(Dataset):
             return_tensors="pt",
         )
 
-
         target_text_encoding = self.tokenizer(
             data_row["target_text"],
             max_length=self.target_max_token_len,
@@ -183,7 +182,7 @@ class MyLightningModel(pl.LightningModule):
             outputdir: str = "outputs",
             save_only_last_epoch: bool = False,
             num_classes=2
-    , labels_text=None):
+            , labels_text=None):
         """
         initiates a PyTorch Lightning Model
         Args:
@@ -226,7 +225,7 @@ class MyLightningModel(pl.LightningModule):
     #         getattr(self, "valid_" + m).to("cpu")
     #         # getattr(self, "valid_" + m).device = "cpu"
 
-    def forward(self, input_ids, attention_mask, decoder_attention_mask, labels=None):
+    def forward(self, input_ids, attention_mask, decoder_attention_mask=None, labels=None, targets=None):
         """ forward step """
         output = self.model(
             input_ids,
@@ -235,7 +234,10 @@ class MyLightningModel(pl.LightningModule):
             decoder_attention_mask=decoder_attention_mask,
         )
 
-        return output.loss, output.logits
+        return output
+
+    def get_class_logits(self, outputs):
+        return outputs.logits[:, 1, self.label_token_mapping].detach().cpu()
 
     def training_step(self, batch, batch_size):
         """ training step """
@@ -243,27 +245,27 @@ class MyLightningModel(pl.LightningModule):
         attention_mask = batch["source_text_attention_mask"]
         labels = batch["labels"]
         labels_attention_mask = batch["labels_attention_mask"]
-
-        outputs = self.model(
+        targets = batch['target_class']
+        if self.num_classes == 2:
+            targets = targets.float().divide(2).long()
+        outputs = self.forward(
             input_ids=input_ids,
             attention_mask=attention_mask,
             decoder_attention_mask=labels_attention_mask,
             labels=labels,
+            targets=targets.flatten()
         )
 
-        logits = outputs.logits
-        label_logits = logits[:, 1, self.label_token_mapping].detach().cpu()
+        label_logits = self.get_class_logits(outputs)
         prediction = np.argmax(label_logits, axis=1).flatten()
-        targets = batch['target_class'].cpu().flatten()
-        if self.num_classes == 2:
-            targets = targets.float().divide(2).long()
-        self.log_metrics(self.train_metrics, F.softmax(label_logits, dim=-1), targets, is_end=False, train=True)
+
+        self.log_metrics(self.train_metrics, F.softmax(label_logits, dim=-1), targets.cpu().flatten(), is_end=False, train=True)
 
         self.train_loss(outputs.loss * input_ids.shape[0])
         self.log(
             "train_loss", self.train_loss.compute(), prog_bar=True, logger=True, on_epoch=False, on_step=True
         )
-        return {'loss': outputs.loss, 'prediction': prediction, 'target': targets}
+        return {'loss': outputs.loss, 'prediction': prediction, 'target': targets.cpu().flatten()}
 
     def training_epoch_end(self, training_step_outputs):
         self.log_metrics(self.train_metrics, is_end=True, train=True)
@@ -284,27 +286,34 @@ class MyLightningModel(pl.LightningModule):
             # if is_end:
             #     metric_name.reset()
 
-
-    def validation_step(self, batch, batch_size):
-        """ validation step """
-        input_ids = batch["source_text_input_ids"]
-        attention_mask = batch["source_text_attention_mask"]
-        labels = batch["labels"]
-        labels_attention_mask = batch["labels_attention_mask"]
-
+    def forward_v(self, input_ids, attention_mask):
         outputs = self.model.generate(
             input_ids=input_ids,
             attention_mask=attention_mask, max_length=self.max_len,
             return_dict_in_generate=True, output_scores=True
         )
+        return outputs
+
+    def get_class_logits_v(self, outputs):
+        logits = outputs.scores[0]
+        label_logits = logits[:, self.label_token_mapping].detach().cpu()
+        return label_logits
+
+    def validation_step(self, batch, batch_size):
+        """ validation step """
+        input_ids = batch["source_text_input_ids"]
+        attention_mask = batch["source_text_attention_mask"]
+
+        outputs = self.forward_v(input_ids=input_ids,
+                       attention_mask=attention_mask)
 
         # encoder_outputs = self.model.encoder(input_ids, return_dict=True,
         #                                output_hidden_states=True)
         # decoder_input_ids = torch.tensor([[self.model._get_decoder_start_token_id()]], device=self.device)
         # generated = self.model.greedy_search(decoder_input_ids, encoder_outputs=encoder_outputs,
         #                                return_dict_in_generate=True, output_scores=True)
-        logits = outputs.scores[0]
-        label_logits = logits[:, self.label_token_mapping].detach().cpu()
+
+        label_logits = self.get_class_logits_v(outputs)
         prediction = np.argmax(label_logits, axis=1).flatten()
         targets = batch['target_class'].cpu().flatten()
         if self.num_classes == 2:

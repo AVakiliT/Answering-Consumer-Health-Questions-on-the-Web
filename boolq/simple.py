@@ -1,7 +1,7 @@
 import torchmetrics
 from datasets import load_dataset
 from pytorch_lightning.callbacks import TQDMProgressBar, EarlyStopping
-from transformers import T5ForConditionalGeneration, AutoTokenizer, AutoModel
+from transformers import T5ForConditionalGeneration, AutoTokenizer, AutoModel, AutoModelForSequenceClassification
 import pandas as pd
 import torch
 
@@ -19,17 +19,17 @@ parser = ArgumentParser()
 # parser = pl.Trainer.add_argparse_args(parser)
 parser.add_argument("--batch_size", default=4, type=int)
 parser.add_argument("--max_epochs", default=1, type=int)
-parser.add_argument("--num_classes", default=2, type=int)
+parser.add_argument("--num_classes", default=3, type=int)
 parser.add_argument("--neg_sample", default=True, type=bool)
-parser.add_argument("--t_type", default="t5", type=str)
+parser.add_argument("--t_type", default="bert", type=str)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
-YES = "▁5.0"
-NO = "▁1.0"
-IRRELEVANT = "▁3.0"
-# YES = "▁yes"
-# NO = "▁no"
-# IRRELEVANT = "▁irrelevant"
+# YES = "▁5.0"
+# NO = "▁1.0"
+# IRRELEVANT = "▁3.0"
+YES = "▁yes"
+NO = "▁no"
+IRRELEVANT = "▁irrelevant"
 # %%
 if __name__ == '__main__':
     # %%
@@ -119,37 +119,32 @@ if __name__ == '__main__':
     if args[0].t_type == "t5":
         tokenizer = AutoTokenizer.from_pretrained("t5-base")
         model = T5ForConditionalGeneration.from_pretrained("t5-base").to(0)
+
+        lightning_module = MyLightningModel(
+            tokenizer=tokenizer,
+            model=model,
+            save_only_last_epoch=True,
+            num_classes=num_classes,
+            labels_text=[NO, IRRELEVANT, YES],
+            train_metrics="Accuracy".split(),
+            valid_metrics="Accuracy F1".split(),
+
+        )
     else:
-        tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-        model = T5ForConditionalGeneration.from_pretrained("bert-base-uncased").to(0)
-    lightning_module = MyLightningModel(
-        tokenizer=tokenizer,
-        model=model,
-        save_only_last_epoch=True,
-        num_classes=num_classes,
-        labels_text=[NO, IRRELEVANT, YES],
-        train_metrics="Accuracy".split(),
-        valid_metrics="Accuracy F1".split(),
-        # train_metrics={
-        #     "TACC": torchmetrics.Accuracy(num_classes=num_classes, multiclass=True),
-        # },
-        # val_metrics={
-        #     "VACC": torchmetrics.Accuracy(num_classes=num_classes, multiclass=True),
-        #     "VF1": torchmetrics.F1(num_classes=num_classes, multiclass=True),
-        #     "VAUC": torchmetrics.AUROC(num_classes=num_classes)
-        #
-        # }
-    )
-    # lightning_module.load_from_checkpoint("./checkpoints/lightning_logs/version_121/checkpoints/epoch=0-step=2356.ckpt",
-    #                                       tokenizer=tokenizer,
-    #                                       model=model,
-    #                                       save_only_last_epoch=True,
-    #                                       num_classes=num_classes,
-    #                                       labels_text=[NO, IRRELEVANT, YES],
-    #                                       train_metrics="Accuracy".split(),
-    #                                       valid_metrics="Accuracy F1 AUROC".split())
-    # lightning_module.load_from_checkpoint("./checkpoints/lightning_logs/version_35/checkpoints/epoch=0-step=2356.ckpt",
-    #                                       model=model, tokenizer=tokenizer)
+
+        tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
+        model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=num_classes).to(0)
+        lightning_module = BertLightningModel(
+            tokenizer=tokenizer,
+            model=model,
+            save_only_last_epoch=True,
+            num_classes=num_classes,
+            labels_text=[NO, IRRELEVANT, YES],
+            train_metrics="Accuracy".split(),
+            valid_metrics="Accuracy F1".split(),
+
+        )
+
 
     # %%
     data_module = MyLightningDataModule(
