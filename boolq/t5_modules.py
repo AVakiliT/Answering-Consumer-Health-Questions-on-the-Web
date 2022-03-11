@@ -208,6 +208,7 @@ class MyLightningModel(pl.LightningModule):
         self.average_validation_loss = None
         self.num_classes = num_classes
         self.save_only_last_epoch = save_only_last_epoch
+        self.max_len = 3
         # self.train_acc = torchmetrics.Accuracy(num_classes=self.num_classes)
         # self.valid_acc = torchmetrics.Accuracy(num_classes=self.num_classes)
         # self.valid_auroc = torchmetrics.AUROC(num_classes=self.num_classes)
@@ -293,7 +294,7 @@ class MyLightningModel(pl.LightningModule):
 
         outputs = self.model.generate(
             input_ids=input_ids,
-            attention_mask=attention_mask, max_length=2,
+            attention_mask=attention_mask, max_length=self.max_len,
             return_dict_in_generate=True, output_scores=True
         )
 

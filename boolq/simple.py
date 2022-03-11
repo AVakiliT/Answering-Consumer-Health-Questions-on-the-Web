@@ -21,14 +21,15 @@ parser.add_argument("--batch_size", default=4, type=int)
 parser.add_argument("--max_epochs", default=1, type=int)
 parser.add_argument("--num_classes", default=2, type=int)
 parser.add_argument("--neg_sample", default=True, type=bool)
+parser.add_argument("--t_type", default="t5", type=str)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
-# YES = "▁5.0"
-# NO = "▁1.0"
-# IRRELEVANT = "▁3.0"
-YES = "▁yes"
-NO = "▁no"
-IRRELEVANT = "▁irrelevant"
+YES = "▁5.0"
+NO = "▁1.0"
+IRRELEVANT = "▁3.0"
+# YES = "▁yes"
+# NO = "▁no"
+# IRRELEVANT = "▁irrelevant"
 # %%
 if __name__ == '__main__':
     # %%
@@ -74,7 +75,9 @@ if __name__ == '__main__':
         return df_train, df_validation
 
 
-    df_train, df_validation = prep_boolq_dataset(prep_sentence=prep_t5_sentence, neg_sampling=args[0].neg_sample)
+    df_train, df_validation = prep_boolq_dataset(
+        prep_sentence=prep_t5_sentence if args[0].t_type == "t5" else prep_bert_sentence,
+        neg_sampling=args[0].neg_sample)
     # %%
     # df_validation = df_validation[:100]
     # df_train = df_train[:100]
@@ -113,8 +116,12 @@ if __name__ == '__main__':
 
     # %%
     num_classes = args[0].num_classes
-    tokenizer = AutoTokenizer.from_pretrained("t5-base")
-    model = T5ForConditionalGeneration.from_pretrained("castorini/monot5-base-msmarco").to(0)
+    if args[0].t_type == "t5":
+        tokenizer = AutoTokenizer.from_pretrained("t5-base")
+        model = T5ForConditionalGeneration.from_pretrained("t5-base").to(0)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+        model = T5ForConditionalGeneration.from_pretrained("bert-base-uncased").to(0)
     lightning_module = MyLightningModel(
         tokenizer=tokenizer,
         model=model,
@@ -143,7 +150,6 @@ if __name__ == '__main__':
     #                                       valid_metrics="Accuracy F1 AUROC".split())
     # lightning_module.load_from_checkpoint("./checkpoints/lightning_logs/version_35/checkpoints/epoch=0-step=2356.ckpt",
     #                                       model=model, tokenizer=tokenizer)
-
 
     # %%
     data_module = MyLightningDataModule(
@@ -176,8 +182,6 @@ if __name__ == '__main__':
     #
     #         # prepare trainer
 
-
-
     trainer = pl.Trainer(
         logger=loggers,
         callbacks=callbacks,
@@ -186,7 +190,7 @@ if __name__ == '__main__':
         precision=precision,
         log_every_n_steps=1,
         default_root_dir="checkpoints",
-        enable_checkpointing=True
+        enable_checkpointing=True,
     )
     #
     # # fit trainer
