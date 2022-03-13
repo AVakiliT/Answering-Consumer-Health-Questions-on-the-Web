@@ -4,7 +4,7 @@
 #SBATCH --array=101-150
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=24G
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:v100l:1
 #SBATCH --output=slurm/%A_%a.out
 
 #build environment
