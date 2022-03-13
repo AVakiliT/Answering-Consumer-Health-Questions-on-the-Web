@@ -19,8 +19,8 @@ parser = ArgumentParser()
 # parser = pl.Trainer.add_argparse_args(parser)
 parser.add_argument("--batch_size", default=4, type=int)
 parser.add_argument("--max_epochs", default=1, type=int)
-parser.add_argument("--num_classes", default=3, type=int)
-parser.add_argument("--neg_sample", default=True, type=bool)
+parser.add_argument("--num_classes", default=2, type=int)
+parser.add_argument("--neg_sample", default=False, type=bool)
 parser.add_argument("--t_type", default="bert", type=str)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
@@ -78,6 +78,8 @@ if __name__ == '__main__':
     df_train, df_validation = prep_boolq_dataset(
         prep_sentence=prep_t5_sentence if args[0].t_type == "t5" else prep_bert_sentence,
         neg_sampling=args[0].neg_sample)
+
+    weights = torch.tensor((1 / (df_train.target_class.value_counts() / df_train.shape[0]).sort_index()).to_list())
     # %%
     # df_validation = df_validation[:100]
     # df_train = df_train[:100]
@@ -128,7 +130,7 @@ if __name__ == '__main__':
             labels_text=[NO, IRRELEVANT, YES],
             train_metrics="Accuracy".split(),
             valid_metrics="Accuracy F1".split(),
-
+            weights=weights
         )
     else:
 
@@ -142,7 +144,7 @@ if __name__ == '__main__':
             labels_text=[NO, IRRELEVANT, YES],
             train_metrics="Accuracy".split(),
             valid_metrics="Accuracy F1".split(),
-
+            weights=weights
         )
 
 

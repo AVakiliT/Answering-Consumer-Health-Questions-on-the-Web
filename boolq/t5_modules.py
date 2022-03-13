@@ -179,6 +179,7 @@ class MyLightningModel(pl.LightningModule):
             model,
             train_metrics,
             valid_metrics,
+            weights=None,
             outputdir: str = "outputs",
             save_only_last_epoch: bool = False,
             num_classes=2
@@ -192,6 +193,7 @@ class MyLightningModel(pl.LightningModule):
             save_only_last_epoch (bool, optional): If True, save just the last epoch else models are saved for every epoch
         """
         super().__init__()
+        self.weights = weights
         for m in train_metrics:
             setattr(self, "train_" + m, getattr(torchmetrics, m)(num_classes=num_classes))
             # getattr(self, "train_" + m).device = "cpu"
@@ -224,6 +226,11 @@ class MyLightningModel(pl.LightningModule):
     #     for m in self.valid_metrics:
     #         getattr(self, "valid_" + m).to("cpu")
     #         # getattr(self, "valid_" + m).device = "cpu"
+
+
+
+    def get_loss(self, outputs, target):
+        return outputs.loss
 
     def forward(self, input_ids, attention_mask, decoder_attention_mask=None, labels=None, targets=None):
         """ forward step """
@@ -261,11 +268,13 @@ class MyLightningModel(pl.LightningModule):
 
         self.log_metrics(self.train_metrics, F.softmax(label_logits, dim=-1), targets.cpu().flatten(), is_end=False, train=True)
 
-        self.train_loss(outputs.loss * input_ids.shape[0])
+        loss = self.get_loss(outputs, targets)
+
+        self.train_loss(loss * input_ids.shape[0])
         self.log(
             "train_loss", self.train_loss.compute(), prog_bar=True, logger=True, on_epoch=False, on_step=True
         )
-        return {'loss': outputs.loss, 'prediction': prediction, 'target': targets.cpu().flatten()}
+        return {'loss': loss, 'prediction': prediction, 'target': targets.cpu().flatten()}
 
     def training_epoch_end(self, training_step_outputs):
         self.log_metrics(self.train_metrics, is_end=True, train=True)
