@@ -82,8 +82,9 @@ if __name__ == '__main__':
         neg_sampling=args[0].neg_sample)
 
     weights = torch.tensor((1 / (df_train.target_class.value_counts() / df_train.shape[0]).sort_index()).to_list())
-    print(df_train.target_class.value_counts())
-    print(weights)
+    weights = weights / weights.sum()
+    # print(df_train.target_class.value_counts())
+    # print(weights)
     # %%
     # df_validation = df_validation[:100]
     # df_train = df_train[:100]
