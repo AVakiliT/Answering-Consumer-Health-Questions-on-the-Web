@@ -280,11 +280,11 @@ class MyLightningModel(pl.LightningModule):
         self.log_metrics(self.train_metrics, is_end=True, train=True)
         prediction = np.hstack([output['prediction'] for output in training_step_outputs])
         target = np.hstack([output['target'] for output in training_step_outputs])
-        print(f'TRAIN \n{classification_report(target, prediction, zero_division=1)}\n')
+        # print(f'TRAIN \n{classification_report(target, prediction, zero_division=1)}\n')
 
     def configure_optimizers(self):
         """ configure optimizers """
-        return AdamW(self.parameters(), lr=0.0001)
+        return AdamW(self.parameters(), lr=1e-5)
 
     def log_metrics(self, metrics, pred=None, target=None, is_end=True, train=False):
         prefix = "train_" if train else "valid_"
@@ -337,8 +337,8 @@ class MyLightningModel(pl.LightningModule):
         self.log_metrics(self.valid_metrics, is_end=True, train=False)
         prediction = np.hstack([output['prediction'] for output in validation_step_outputs])
         target = np.hstack([output['target'] for output in validation_step_outputs])
-        print('VALID Epoch:', self.current_epoch)
-        print(f'\n{classification_report(target, prediction, zero_division=1)}\n')
+        print()
+        print(f'\nVALID Epoch: [{self.current_epoch}]\n{classification_report(target, prediction, zero_division=1)}\n')
 
 # class SimpleT5:
 #     """ Custom SimpleT5 class """

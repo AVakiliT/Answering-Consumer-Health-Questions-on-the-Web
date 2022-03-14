@@ -17,12 +17,12 @@ parser = ArgumentParser()
 # add model specific args
 # parser = MyLightningModel.add_model_specific_args(parser)
 # parser = pl.Trainer.add_argparse_args(parser)
-parser.add_argument("--batch_size", default=4, type=int)
-parser.add_argument("--max_epochs", default=1, type=int)
+parser.add_argument("--batch_size", default=8, type=int)
+parser.add_argument("--max_epochs", default=2, type=int)
 parser.add_argument("--num_classes", default=2, type=int)
 parser.add_argument('--neg_sample', action='store_true')
 parser.add_argument('--no-neg_sample', action='store_false')
-parser.set_defaults(feature=True)
+parser.set_defaults(neg_sample=False)
 parser.add_argument("--t_type", default="bert", type=str)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
 
     def prep_bert_sentence(q, p):
-        return f"[CLS] {q} [SEP] {p} [SEP]"
+        return f"{q} [SEP] {p}"
 
 
     def prep_boolq_dataset(prep_sentence, neg_sampling=True):
@@ -83,6 +83,7 @@ if __name__ == '__main__':
 
     weights = torch.tensor((1 / (df_train.target_class.value_counts() / df_train.shape[0]).sort_index()).to_list())
     weights = weights / weights.sum()
+    # weights=torch.tensor([0.8, 0.2])
     # print(df_train.target_class.value_counts())
     # print(weights)
     # %%
@@ -139,10 +140,11 @@ if __name__ == '__main__':
         )
     else:
 
-        # tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
-        # model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=num_classes).to(0)
-        tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
-        model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=num_classes).to(0)
+        tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
+        model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=num_classes).to(0)
+        # tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+        # model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased",
+        #                                                            num_labels=num_classes).to(0)
         lightning_module = BertLightningModel(
             tokenizer=tokenizer,
             model=model,
@@ -153,7 +155,17 @@ if __name__ == '__main__':
             valid_metrics="Accuracy F1".split(),
             weights=weights
         )
-
+        # lightning_module.load_from_checkpoint(
+        #     "./checkpoints/lightning_logs/version_28266369/checkpoints/epoch=0-step=4713.ckpt",
+        #     tokenizer=tokenizer,
+        #     model=model,
+        #     save_only_last_epoch=True,
+        #     num_classes=num_classes,
+        #     labels_text=[NO, IRRELEVANT, YES],
+        #     train_metrics="Accuracy".split(),
+        #     valid_metrics="Accuracy F1".split(),
+        #     weights=weights
+        # )
 
     # %%
     data_module = MyLightningDataModule(
@@ -165,7 +177,6 @@ if __name__ == '__main__':
         target_max_token_len=target_max_token_len,
         num_workers=dataloader_num_workers
     )
-
     callbacks = [TQDMProgressBar(refresh_rate=1)]
     #
     if early_stopping_patience_epochs > 0:
