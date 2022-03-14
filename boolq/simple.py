@@ -214,7 +214,7 @@ if __name__ == '__main__':
         mode="min",
         every_n_epochs=1
     )
-    # callbacks.append(checkpoint_callback)
+    callbacks.append(checkpoint_callback)
 
 
     trainer = pl.Trainer(
