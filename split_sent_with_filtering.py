@@ -43,3 +43,17 @@ df_new = df.withColumn("passage", lol_udf("text")).selectExpr("docno", "topic", 
                                                               "explode(passage) as passage", "url")
 
 df_new.repartition(1).write.mode("overwrite").save(f"./data/{sys.argv[2]}_1p_passages")
+
+#%%
+from spacy.lang.en import English
+nlp = English()
+# Create a Tokenizer with the default settings for English
+# including punctuation rules and exceptions
+tokenizer = nlp.tokenizer
+
+
+f = udf(lambda s: [x.text for x in tokenizer(s)], ArrayType(StringType()))
+df = df.withColumn("tokenized_passage", f("passage"))
+word2Vec = Word2Vec(vectorSize=100, seed=42, inputCol="tokenized_passage", outputCol="w2v")
+word2Vec.setMaxIter(10)
+df2 = model.transform(df)
