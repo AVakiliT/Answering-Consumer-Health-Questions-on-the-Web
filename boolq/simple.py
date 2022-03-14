@@ -1,6 +1,6 @@
 import torchmetrics
 from datasets import load_dataset
-from pytorch_lightning.callbacks import TQDMProgressBar, EarlyStopping
+from pytorch_lightning.callbacks import TQDMProgressBar, EarlyStopping, ModelCheckpoint
 from transformers import T5ForConditionalGeneration, AutoTokenizer, AutoModel, AutoModelForSequenceClassification
 import pandas as pd
 import torch
@@ -9,7 +9,8 @@ from boolq.bert_modules import BertLightningModel
 from boolq.t5_modules import MyLightningDataModule, MyLightningModel
 import pytorch_lightning as pl
 from argparse import ArgumentParser
-
+import glob
+import os
 parser = ArgumentParser()
 # add PROGRAM level args
 # parser.add_argument("--conda_env", type=str, default="some_name")
@@ -20,10 +21,12 @@ parser = ArgumentParser()
 parser.add_argument("--batch_size", default=8, type=int)
 parser.add_argument("--max_epochs", default=2, type=int)
 parser.add_argument("--num_classes", default=2, type=int)
+parser.add_argument("--lr", default=2e-5, type=float)
 parser.add_argument('--neg_sample', action='store_true')
 parser.add_argument('--no-neg_sample', action='store_false')
 parser.set_defaults(neg_sample=False)
 parser.add_argument("--t_type", default="bert", type=str)
+parser.add_argument("--resume_version", default=None, type=int)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
 # YES = "▁5.0"
@@ -32,6 +35,13 @@ args = parser.parse_known_args()
 YES = "▁yes"
 NO = "▁no"
 IRRELEVANT = "▁irrelevant"
+if args[0].resume_version!=None:
+    list_of_files = glob.glob(f'checkpoints/lightning_logs/version_{args[0].resume_version}/checkpoints/*.ckpt')  # * means all if need specific format then *.csv
+    resume_checkpoint = max(list_of_files, key=os.path.getctime)
+    print(f"resuming from version {args[0].resume_version}")
+else:
+    resume_checkpoint=None
+
 # %%
 if __name__ == '__main__':
     # %%
@@ -140,11 +150,11 @@ if __name__ == '__main__':
         )
     else:
 
-        tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
-        model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=num_classes).to(0)
-        # tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
-        # model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased",
-        #                                                            num_labels=num_classes).to(0)
+        # tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
+        # model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=num_classes).to(0)
+        tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+        model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased",
+                                                                   num_labels=num_classes).to(0)
         lightning_module = BertLightningModel(
             tokenizer=tokenizer,
             model=model,
@@ -153,7 +163,8 @@ if __name__ == '__main__':
             labels_text=[NO, IRRELEVANT, YES],
             train_metrics="Accuracy".split(),
             valid_metrics="Accuracy F1".split(),
-            weights=weights
+            weights=weights,
+            lr=args[0].lr
         )
         # lightning_module.load_from_checkpoint(
         #     "./checkpoints/lightning_logs/version_28266369/checkpoints/epoch=0-step=4713.ckpt",
@@ -196,6 +207,15 @@ if __name__ == '__main__':
     loggers = True if logger == "default" else logger
     #
     #         # prepare trainer
+    checkpoint_callback = ModelCheckpoint(
+        monitor="valid_F1",
+        dirpath="checkpoints",
+        filename=f"{args[0].t_type}-"+"{epoch:02d}-{valid_F1:.2f}",
+        mode="min",
+        every_n_epochs=1
+    )
+    callbacks.append(checkpoint_callback)
+
 
     trainer = pl.Trainer(
         logger=loggers,
@@ -210,7 +230,7 @@ if __name__ == '__main__':
     #
     # # fit trainer
     # lightning_module.fix_stupid_metric_device_bs()
-    trainer.fit(lightning_module, data_module)
+    trainer.fit(lightning_module, data_module, ckpt_path=resume_checkpoint)
     # trainer.validate(lightning_module, data_module)
 
 # %%

@@ -183,7 +183,8 @@ class MyLightningModel(pl.LightningModule):
             outputdir: str = "outputs",
             save_only_last_epoch: bool = False,
             num_classes=2
-            , labels_text=None):
+            , labels_text=None,
+    lr=1e-5):
         """
         initiates a PyTorch Lightning Model
         Args:
@@ -193,6 +194,7 @@ class MyLightningModel(pl.LightningModule):
             save_only_last_epoch (bool, optional): If True, save just the last epoch else models are saved for every epoch
         """
         super().__init__()
+        self.save_hyperparameters()
         self.weights = weights
         for m in train_metrics:
             setattr(self, "train_" + m, getattr(torchmetrics, m)(num_classes=num_classes))
@@ -210,6 +212,7 @@ class MyLightningModel(pl.LightningModule):
         self.num_classes = num_classes
         self.save_only_last_epoch = save_only_last_epoch
         self.max_len = 3
+        self.lr = lr
         # self.train_acc = torchmetrics.Accuracy(num_classes=self.num_classes)
         # self.valid_acc = torchmetrics.Accuracy(num_classes=self.num_classes)
         # self.valid_auroc = torchmetrics.AUROC(num_classes=self.num_classes)
@@ -284,7 +287,7 @@ class MyLightningModel(pl.LightningModule):
 
     def configure_optimizers(self):
         """ configure optimizers """
-        return AdamW(self.parameters(), lr=1e-5)
+        return AdamW(self.parameters(), lr=self.lr)
 
     def log_metrics(self, metrics, pred=None, target=None, is_end=True, train=False):
         prefix = "train_" if train else "valid_"
