@@ -150,11 +150,11 @@ if __name__ == '__main__':
         )
     else:
 
-        # tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
-        # model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=num_classes).to(0)
-        tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
-        model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased",
-                                                                   num_labels=num_classes).to(0)
+        tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
+        model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=num_classes).to(0)
+        # tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+        # model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased",
+        #                                                            num_labels=num_classes).to(0)
         lightning_module = BertLightningModel(
             tokenizer=tokenizer,
             model=model,
@@ -214,7 +214,7 @@ if __name__ == '__main__':
         mode="min",
         every_n_epochs=1
     )
-    callbacks.append(checkpoint_callback)
+    # callbacks.append(checkpoint_callback)
 
 
     trainer = pl.Trainer(
