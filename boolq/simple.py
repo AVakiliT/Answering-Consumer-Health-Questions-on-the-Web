@@ -97,8 +97,8 @@ if __name__ == '__main__':
     # print(df_train.target_class.value_counts())
     # print(weights)
     # %%
-    df_validation = df_validation[:100]
-    df_train = df_train[:100]
+    # df_validation = df_validation[:100]
+    # df_train = df_train[:100]
 
     # %%
 
