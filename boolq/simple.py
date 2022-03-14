@@ -97,8 +97,8 @@ if __name__ == '__main__':
     # print(df_train.target_class.value_counts())
     # print(weights)
     # %%
-    # df_validation = df_validation[:100]
-    # df_train = df_train[:100]
+    df_validation = df_validation[:100]
+    df_train = df_train[:100]
 
     # %%
 
@@ -189,16 +189,16 @@ if __name__ == '__main__':
         num_workers=dataloader_num_workers
     )
     callbacks = [TQDMProgressBar(refresh_rate=1)]
-    #
-    if early_stopping_patience_epochs > 0:
-        early_stop_callback = EarlyStopping(
-            monitor="val_loss",
-            min_delta=0.00,
-            patience=early_stopping_patience_epochs,
-            verbose=True,
-            mode="min",
-        )
-        callbacks.append(early_stop_callback)
+    # #
+    # if early_stopping_patience_epochs > 0:
+    #     early_stop_callback = EarlyStopping(
+    #         monitor="val_loss",
+    #         min_delta=0.00,
+    #         patience=early_stopping_patience_epochs,
+    #         verbose=True,
+    #         mode="min",
+    #     )
+    #     callbacks.append(early_stop_callback)
 
     #         # add gpu support
     gpus = 1
@@ -209,10 +209,10 @@ if __name__ == '__main__':
     #         # prepare trainer
     checkpoint_callback = ModelCheckpoint(
         monitor="valid_F1",
-        dirpath="checkpoints",
-        filename=f"{args[0].t_type}-"+"{epoch:02d}-{valid_F1:.2f}",
-        mode="min",
-        every_n_epochs=1
+        filename=f"{args[0].t_type}-"+"{epoch:02d}-{valid_F1:.3f}-{valid_Accuracy:.3f}",
+        mode="max",
+        every_n_epochs=1,
+        save_top_k=2
     )
     callbacks.append(checkpoint_callback)
 

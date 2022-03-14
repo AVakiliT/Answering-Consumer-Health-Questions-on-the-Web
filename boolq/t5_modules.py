@@ -194,7 +194,7 @@ class MyLightningModel(pl.LightningModule):
             save_only_last_epoch (bool, optional): If True, save just the last epoch else models are saved for every epoch
         """
         super().__init__()
-        # self.save_hyperparameters()
+        self.save_hyperparameters("num_classes", "lr")
         self.weights = weights
         for m in train_metrics:
             setattr(self, "train_" + m, getattr(torchmetrics, m)(num_classes=num_classes))
