@@ -63,7 +63,7 @@ print("Done.", flush=True)
 
 texts = [Text(p.passage, {'docid': p.docno, 'url': p.url}, 0) for p in
          df[df.topic == topic_no].itertuples()]
-texts = sample(texts, 1000)
+# texts = sample(texts, 1000)
 print("Reranking with MonoT5...", flush=True)
 start = timer()
 with amp.autocast():
