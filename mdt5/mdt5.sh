@@ -15,6 +15,8 @@
 #module load rust
 #module load swig
 #pip install git+https://github.com/castorini/pygaggle.git
+#','.join(map(str,set(range(101,151)).difference(set([int(re.search('topic-(.*).run', s).group(1)) for s in glob.glob("./output_Top1kBM25_mt5_2021_base-med/*")]))))
+
 
 module load StdEnv  gcc  cuda/11
 module load faiss
