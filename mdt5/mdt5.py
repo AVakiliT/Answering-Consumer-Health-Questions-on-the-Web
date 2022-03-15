@@ -63,7 +63,7 @@ print("Done.", flush=True)
 
 texts = [Text(p.passage, {'docid': p.docno, 'url': p.url}, 0) for p in
          df[df.topic == topic_no].itertuples()]
-# texts = sample(texts, 1000)
+texts = sample(texts, 1000)
 print("Reranking with MonoT5...", flush=True)
 start = timer()
 with amp.autocast():
@@ -105,5 +105,5 @@ run_df_with_passage[2] = run_df_with_passage[2].map(lambda x: f"en.noclean.c4-tr
 print("Writing Run file...", flush=True)
 
 run_df.to_csv(f"{output_dir}/topic-{topic_no}.run", sep=" ", index=False, header=False)
-run_df_with_passage.to_csv(f"{output_dir}_with_text/topic-{topic_no}.run", sep=" ", index=False, header=False)
+run_df_with_passage.to_parquet(f"{output_dir}_with_text/topic-{topic_no}.run", index=False)
 print("Done.", flush=True)
