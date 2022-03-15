@@ -91,13 +91,13 @@ top_passage_per_doc = sorted(list(
 #           flush=True)
 
 run = [(topic_no, 0, x.metadata["docid"], i + 1, x.score, type) for i, x in enumerate(top_passage_per_doc)]
-run_df = pd.DataFrame(run)
-run_df[2] = run_df[2].map(lambda x: f"en.noclean.c4-train.0{x[3:7]}-of-07168.{int(x[8:])}")
+run_df = pd.DataFrame(run, columns="topic iter docid rang score tag".split())
+run_df["docid"] = run_df["docid"].map(lambda x: f"en.noclean.c4-train.0{x[3:7]}-of-07168.{int(x[8:])}")
 
 run_with_passage = [(topic_no, 0, x.metadata["docid"], i + 1, x.score, type, x.text, x.metadata["url"]) for i, x in
                     enumerate(top_passage_per_doc)]
-run_df_with_passage = pd.DataFrame(run_with_passage)
-run_df_with_passage[2] = run_df_with_passage[2].map(lambda x: f"en.noclean.c4-train.0{x[3:7]}-of-07168.{int(x[8:])}")
+run_df_with_passage = pd.DataFrame(run_with_passage, columns="topic iter docid rang score tag passage url".split())
+run_df_with_passage["docid"] = run_df_with_passage["docid"].map(lambda x: f"en.noclean.c4-train.0{x[3:7]}-of-07168.{int(x[8:])}")
 
 # for i in top_passage_per_doc[:20]:
 #     print(i.metadata['docid'], i.score, i.text[:200])
