@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #SBATCH --account=rrg-smucker
 #SBATCH --time=0-2:0:0
-#SBATCH --array=101-150
-# --array=1-51
+# --array=101-150
+#SBATCH --array=1-51
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=24G
 #SBATCH --gres=gpu:v100l:1
@@ -27,17 +27,17 @@ module load java
 
 echo "Starting script..."
 
-~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
- --topic_file /project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml \
- --model_type base-med \
- --no-duo \
- --bm25run Top1kBM25_2021
-
 #~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
-# --topic_file /project/6004803/smucker/group-data/topics/2019topics.xml \
+# --topic_file /project/6004803/smucker/group-data/topics/misinfo-2021-topics.xml \
 # --model_type base-med \
 # --no-duo \
-# --bm25run Top1kBM25_2019
+# --bm25run Top1kBM25_2021
+
+~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
+ --topic_file /project/6004803/smucker/group-data/topics/2019topics.xml \
+ --model_type base-med \
+ --no-duo \
+ --bm25run Top1kBM25_2019
 
 #~/PYGAGGLE/bin/python mdt5.py --topic_no $SLURM_ARRAY_TASK_ID \
 # --topic_file /project/6004803/smucker/group-data/topics/2019topics.xml \
