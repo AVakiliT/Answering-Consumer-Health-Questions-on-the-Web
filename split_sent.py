@@ -6,11 +6,13 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf
 from pyspark.sql.types import *
 
-window_size, step = 6, 3
-
 spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
 df = spark.read.load(f"./data/{sys.argv[1]}")
+
+window_size, step = 6, 3
+
+
 print(df.count())
 
 schema = ArrayType(StringType())
@@ -37,7 +39,7 @@ def sentencize(s):
         return [s]
     return [' '.join(sentences[i: i + window_size]) for i in range(0, len(sentences), step)]
 
-lol_udf = udf(tokenize_windows, schema)
+lol_udf = udf(sentencize, schema)
 
 df_new = df.withColumn("passage", lol_udf("text")).selectExpr("docno", "topic", "score as bm25",
                                                               "explode(passage) as passage", "url")
