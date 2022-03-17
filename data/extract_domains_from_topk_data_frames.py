@@ -31,5 +31,5 @@ x = v.merge(d, on="rdomain", how="inner")
 filtered_edges = e.merge(x, left_on="from_id", right_on="id")
 filtered_edges = filtered_edges.merge(x, left_on="to_id", right_on="id")
 filtered_edges[["from_id", "to_id"]].to_csv("./data/filtered_edges.tsv", sep="\t", index=False, header=False)
-x.to_csv("./data/filtered_certices.tsv", sep="\t",  index=False, header=False)
+x.to_csv("./data/filtered_vertices.tsv", sep="\t",  index=False, header=False)
 

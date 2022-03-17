@@ -105,5 +105,5 @@ run_df_with_passage["docid"] = run_df_with_passage["docid"].map(lambda x: f"en.n
 print("Writing Run file...", flush=True)
 
 run_df.to_csv(f"{output_dir}/topic-{topic_no}.run", sep=" ", index=False, header=False)
-run_df_with_passage.to_parquet(f"{output_dir}_with_text/topic-{topic_no}.run", index=False)
+run_df_with_passage.to_parquet(f"{output_dir}_with_text/topic-{topic_no}.run")
 print("Done.", flush=True)
