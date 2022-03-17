@@ -5,7 +5,7 @@ from transformers import T5ForConditionalGeneration, AutoTokenizer, AutoModel, A
 import pandas as pd
 import torch
 
-from boolq.bert_modules import BertLightningModel
+from boolq.bert_modules import BoolQBertModule
 from boolq.t5_modules import MyLightningDataModule, MyLightningModel
 import pytorch_lightning as pl
 from argparse import ArgumentParser
@@ -150,12 +150,12 @@ if __name__ == '__main__':
         )
     else:
 
-        # tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
-        # model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=num_classes).to(0)
-        tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/paraphrase-TinyBERT-L6-v2")
-        model = AutoModelForSequenceClassification.from_pretrained("sentence-transformers/paraphrase-TinyBERT-L6-v2",
-                                                                   num_labels=num_classes).to(0)
-        lightning_module = BertLightningModel(
+        tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
+        model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=num_classes).to(0)
+        # tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/paraphrase-TinyBERT-L6-v2")
+        # model = AutoModelForSequenceClassification.from_pretrained("sentence-transformers/paraphrase-TinyBERT-L6-v2",
+        #                                                            num_labels=num_classes).to(0)
+        lightning_module = BoolQBertModule(
             tokenizer=tokenizer,
             model=model,
             save_only_last_epoch=True,

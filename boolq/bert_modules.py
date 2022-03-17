@@ -8,12 +8,11 @@ from boolq.t5_modules import MyLightningModel
 from torch.nn import functional as F
 
 
-class BertLightningModel(MyLightningModel):
+class BoolQBertModule(MyLightningModel):
     """ PyTorch Lightning Model class"""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.final = nn.Linear(768, 1)
 
     def forward(self, input_ids, attention_mask, decoder_attention_mask=None, labels=None, targets=None):
         """ forward step """

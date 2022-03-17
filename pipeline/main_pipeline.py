@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from typing import Optional, Any
 
 import numpy as np
@@ -15,13 +16,17 @@ from transformers import PreTrainedTokenizer, AutoTokenizer, AutoModelForSequenc
 
 from boolq.BaseModules import ClassifierLightningModel
 from pytorch_lightning.callbacks import TQDMProgressBar, EarlyStopping, ModelCheckpoint
-
+parser = ArgumentParser()
+parser.add_argument("--boolq_checkpoint", default="checkpoints/lightning_logs/version_47/checkpoints/bert-epoch=00-valid_F1=0.668-valid_Accuracy=0.668.ckpt", type=str)
+# parser.add_argument("--transformer-type", default="t5", type=str)
+args = parser.parse_known_args()
 
 
 
 
 
 # %%
+from boolq.bert_modules import BoolQBertModule
 from pipeline.pipeline_modules import PipelineDataModule, PipelineModule
 
 
@@ -63,15 +68,16 @@ if __name__ == '__main__':
     df["domain_id"] = df.domain.map(domain2id)
     df = df.dropna()
     df["domain_id"] = df.domain_id.astype(int)
-    train_df = df.groupby("topic efficacy".split()).head(10).groupby("topic efficacy".split()).agg({"source_text": list, "domain_id": list}).reset_index()
+    train_df = df.groupby("topic efficacy".split()).head(3).groupby("topic efficacy".split()).agg({"source_text": list, "domain_id": list}).reset_index()
 
 
-    # pretrained_model = "microsoft/deberta-base"
-    pretrained_model = "bert-base-uncased"
+    pretrained_model = "microsoft/deberta-base"
+    # pretrained_model = "bert-base-uncased"
     # pretrained_model = "t5-base"
 
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
     model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base")
+    qa=BoolQBertModule.load_from_checkpoint(args[0].boolq_checkpoint, model)
     data_module = PipelineDataModule(
         train_df=train_df,
         val_df=train_df,
