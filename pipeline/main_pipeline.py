@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
     model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base")
-    qa=BoolQBertModule.load_from_checkpoint(args[0].boolq_checkpoint, model)
+    qa=BoolQBertModule.load_from_checkpoint(args[0].boolq_checkpoint, model=model, tokenizer=tokenizer)
     data_module = PipelineDataModule(
         train_df=train_df,
         val_df=train_df,

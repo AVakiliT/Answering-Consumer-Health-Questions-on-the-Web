@@ -194,7 +194,7 @@ class MyLightningModel(pl.LightningModule):
             save_only_last_epoch (bool, optional): If True, save just the last epoch else models are saved for every epoch
         """
         super().__init__()
-        self.save_hyperparameters("num_classes", "lr")
+        self.save_hyperparameters("num_classes", "lr", "num_classes")
         self.weights = weights
         for m in train_metrics:
             setattr(self, "train_" + m, getattr(torchmetrics, m)(num_classes=num_classes))
@@ -218,11 +218,13 @@ class MyLightningModel(pl.LightningModule):
         # self.valid_auroc = torchmetrics.AUROC(num_classes=self.num_classes)
         self.train_loss = torchmetrics.MeanMetric()
         self.valid_loss = torchmetrics.MeanMetric()
-        if num_classes == 2:
-            self.label_token_mapping = np.array(self.tokenizer.convert_tokens_to_ids(labels_text))[[0, 2]]
+        if labels_text:
+            if num_classes == 2:
+                self.label_token_mapping = np.array(self.tokenizer.convert_tokens_to_ids(labels_text))[[0, 2]]
+            else:
+                self.label_token_mapping = self.tokenizer.convert_tokens_to_ids(labels_text)
         else:
-            self.label_token_mapping = self.tokenizer.convert_tokens_to_ids(labels_text)
-
+            self.label_token_mapping = None
     # def fix_stupid_metric_device_bs(self):
     #     for m in self.train_metrics:
     #         getattr(self, "train_" + m).to("cpu")

@@ -27,6 +27,7 @@ parser.add_argument('--no-neg_sample', action='store_false')
 parser.set_defaults(neg_sample=False)
 parser.add_argument("--t_type", default="bert", type=str)
 parser.add_argument("--resume_version", default=None, type=int)
+parser.add_argument("--model_name", default="microsoft/deberta-base", type=str)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
 # YES = "▁5.0"
@@ -150,8 +151,8 @@ if __name__ == '__main__':
         )
     else:
 
-        tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
-        model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=num_classes).to(0)
+        tokenizer = AutoTokenizer.from_pretrained(args[0].model_name)
+        model = AutoModelForSequenceClassification.from_pretrained(args[0].model_name, num_labels=num_classes).to(0)
         # tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/paraphrase-TinyBERT-L6-v2")
         # model = AutoModelForSequenceClassification.from_pretrained("sentence-transformers/paraphrase-TinyBERT-L6-v2",
         #                                                            num_labels=num_classes).to(0)
@@ -209,7 +210,7 @@ if __name__ == '__main__':
     #         # prepare trainer
     checkpoint_callback = ModelCheckpoint(
         monitor="valid_F1",
-        filename=f"{args[0].t_type}-"+"{epoch:02d}-{valid_F1:.3f}-{valid_Accuracy:.3f}",
+        filename=f"{args[0].model_name.split('/')[-1]}-num_class={num_classes}-"+"{epoch:02d}-{valid_F1:.3f}-{valid_Accuracy:.3f}",
         mode="max",
         every_n_epochs=1,
         save_top_k=2
