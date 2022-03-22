@@ -1,3 +1,5 @@
+import glob
+import os
 from argparse import ArgumentParser
 from typing import Optional, Any
 
@@ -17,12 +19,19 @@ from transformers import PreTrainedTokenizer, AutoTokenizer, AutoModelForSequenc
 from boolq.BaseModules import ClassifierLightningModel
 from pytorch_lightning.callbacks import TQDMProgressBar, EarlyStopping, ModelCheckpoint
 parser = ArgumentParser()
-parser.add_argument("--boolq_checkpoint", default="checkpoints/lightning_logs/version_47/checkpoints/bert-epoch=00-valid_F1=0.668-valid_Accuracy=0.668.ckpt", type=str)
+parser.add_argument("--boolq_resume_version", default=52, type=int)
+parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
+parser.add_argument("--num_docs", default=10, type=str)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
+#%%
 
-
-
+if args[0].boolq_resume_version!=None:
+    list_of_files = glob.glob(f'checkpoints/lightning_logs/version_{args[0].boolq_resume_version}/checkpoints/*.ckpt')  # * means all if need specific format then *.csv
+    resume_checkpoint = max(list_of_files, key=os.path.getctime)
+    print(f"boolq resuming from version {resume_checkpoint}")
+else:
+    resume_checkpoint=None
 
 
 # %%
@@ -68,16 +77,16 @@ if __name__ == '__main__':
     df["domain_id"] = df.domain.map(domain2id)
     df = df.dropna()
     df["domain_id"] = df.domain_id.astype(int)
-    train_df = df.groupby("topic efficacy".split()).head(3).groupby("topic efficacy".split()).agg({"source_text": list, "domain_id": list}).reset_index()
+    train_df = df.groupby("topic efficacy".split()).head(args[0].num_docs).groupby("topic efficacy".split()).agg({"source_text": list, "domain_id": list}).reset_index()
 
 
-    pretrained_model = "microsoft/deberta-base"
+
     # pretrained_model = "bert-base-uncased"
     # pretrained_model = "t5-base"
 
-    tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
-    model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base")
-    qa=BoolQBertModule.load_from_checkpoint(args[0].boolq_checkpoint, model=model, tokenizer=tokenizer)
+    tokenizer = AutoTokenizer.from_pretrained(args[0].model_name)
+    model = AutoModelForSequenceClassification.from_pretrained(args[0].model_name)
+    qa=BoolQBertModule.load_from_checkpoint(resume_checkpoint, model=model, tokenizer=tokenizer)
     data_module = PipelineDataModule(
         train_df=train_df,
         val_df=train_df,
