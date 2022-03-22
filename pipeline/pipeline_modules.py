@@ -152,9 +152,9 @@ class PipelineModule(ClassifierLightningModel):
         )
         loss = F.binary_cross_entropy_with_logits(outputs, targets.float().flatten(), weight=self.weights.to(targets.device) if self.weights else None,
                         reduction="mean")
-        prediction = outputs.gt(0).int()
+        prediction = outputs.detach().cpu().gt(0).int()
 
-        self.log_metrics(self.train_metrics, torch.sigmoid(outputs), targets.cpu().flatten(), is_end=False,
+        self.log_metrics(self.train_metrics, torch.sigmoid(outputs.detach().cpu()), targets.cpu().flatten(), is_end=False,
                          train=True)
 
 
@@ -177,9 +177,9 @@ class PipelineModule(ClassifierLightningModel):
         )
         loss = F.binary_cross_entropy_with_logits(outputs, targets.float().flatten(), weight=self.weights.to(targets.device) if self.weights else None,
                         reduction="mean")
-        prediction = outputs.gt(0).int()
+        prediction = outputs.detach().cpu().gt(0).int()
 
-        self.log_metrics(self.valid_metrics, torch.sigmoid(outputs), targets.cpu().flatten(), is_end=False,
+        self.log_metrics(self.valid_metrics, torch.sigmoid(outputs.detach().cpu()), targets.cpu().flatten(), is_end=False,
                          train=False)
 
 

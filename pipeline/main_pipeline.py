@@ -21,8 +21,8 @@ from pytorch_lightning.callbacks import TQDMProgressBar, EarlyStopping, ModelChe
 parser = ArgumentParser()
 parser.add_argument("--boolq_resume_version", default=52, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
-parser.add_argument("--num_docs", default=10, type=int)
-parser.add_argument("--gpus", default=0, type=int)
+parser.add_argument("--num_docs", default=3, type=int)
+parser.add_argument("--gpus", default=1, type=int)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
 #%%
