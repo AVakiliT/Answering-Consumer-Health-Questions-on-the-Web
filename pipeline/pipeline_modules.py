@@ -128,8 +128,9 @@ class PipelineModule(ClassifierLightningModel):
             attention_mask=attention_mask,
         )
         qa_outs = output.logits[:, 1].reshape(b,k)
-        embd = self.host_emb(source_domain_id)
-        t = self.host_weight(embd).squeeze(-1)
+        # embd = self.host_emb(source_domain_id)
+        # t = self.host_weight(embd).squeeze(-1)
+        t = 1
         a = qa_outs*t
         a = a.sum(-1)
         return a
