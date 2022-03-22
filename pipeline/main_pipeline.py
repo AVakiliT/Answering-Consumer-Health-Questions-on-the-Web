@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
     #%%
     max_epochs =args[0].max_epochs
-    precision = 32
+    precision = 16
     callbacks = [TQDMProgressBar(refresh_rate=1)]
 
     gpus = args[0].gpus
