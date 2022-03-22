@@ -22,6 +22,7 @@ parser = ArgumentParser()
 parser.add_argument("--boolq_resume_version", default=52, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
 parser.add_argument("--num_docs", default=10, type=int)
+parser.add_argument("--gpus", default=0, type=int)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
 #%%
@@ -115,7 +116,7 @@ if __name__ == '__main__':
     precision = 32
     callbacks = [TQDMProgressBar(refresh_rate=1)]
 
-    gpus = 0
+    gpus = args[0].gpus
 
     loggers = True
 
