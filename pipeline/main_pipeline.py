@@ -21,7 +21,7 @@ from pytorch_lightning.callbacks import TQDMProgressBar, EarlyStopping, ModelChe
 parser = ArgumentParser()
 parser.add_argument("--boolq_resume_version", default=52, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
-parser.add_argument("--num_docs", default=10, type=str)
+parser.add_argument("--num_docs", default=10, type=int)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
 #%%
@@ -71,8 +71,7 @@ if __name__ == '__main__':
         # df_train = get_df(train_dir)
         # df_val = get_df(val_dir)
 
-        emb_weight = torch.load("./weights/domain_emb_graphsage.pt")['weight']
-        emb = nn.Embedding.from_pretrained(emb_weight)
+
         domain2id = torch.load("./weights/domain_emb_graphsage_w2i.pt")
         df["domain_id"] = df.domain.map(domain2id)
         df = df.dropna()
@@ -81,6 +80,9 @@ if __name__ == '__main__':
 
     train_df =get_df(train_dir)
     valid_df =get_df(val_dir)
+
+    emb_weight = torch.load("./weights/domain_emb_graphsage.pt")['weight']
+    emb = nn.Embedding.from_pretrained(emb_weight)
 
 
 
