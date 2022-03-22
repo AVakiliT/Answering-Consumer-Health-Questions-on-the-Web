@@ -23,6 +23,7 @@ parser.add_argument("--boolq_resume_version", default=52, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
 parser.add_argument("--num_docs", default=3, type=int)
 parser.add_argument("--gpus", default=1, type=int)
+parser.add_argument("--max_epochs", default=3, type=int)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
 #%%
@@ -112,7 +113,7 @@ if __name__ == '__main__':
     )
 
     #%%
-    max_epochs =1
+    max_epochs =args[0].max_epochs
     precision = 32
     callbacks = [TQDMProgressBar(refresh_rate=1)]
 
