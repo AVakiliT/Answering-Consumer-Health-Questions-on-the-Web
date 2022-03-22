@@ -20,7 +20,7 @@ from boolq.BaseModules import ClassifierLightningModel
 from pytorch_lightning.callbacks import TQDMProgressBar, EarlyStopping, ModelCheckpoint
 parser = ArgumentParser()
 parser.add_argument("--boolq_resume_version", default=52, type=int)
-parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
+parser.add_argument("--t_name", default="distilbert-base-uncased", type=str)
 parser.add_argument("--num_docs", default=50, type=int)
 parser.add_argument("--gpus", default=0, type=int)
 parser.add_argument("--max_epochs", default=3, type=int)
@@ -91,8 +91,8 @@ if __name__ == '__main__':
     # pretrained_model = "bert-base-uncased"
     # pretrained_model = "t5-base"
 
-    tokenizer = AutoTokenizer.from_pretrained(args[0].model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(args[0].model_name)
+    tokenizer = AutoTokenizer.from_pretrained(args[0].t_name)
+    model = AutoModelForSequenceClassification.from_pretrained(args[0].t_name)
     qa=BoolQBertModule.load_from_checkpoint(resume_checkpoint, model=model, tokenizer=tokenizer)
     data_module = PipelineDataModule(
         train_df=train_df,
