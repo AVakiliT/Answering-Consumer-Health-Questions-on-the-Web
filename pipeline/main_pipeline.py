@@ -54,30 +54,33 @@ if __name__ == '__main__':
     topics_df = topics_df[topics_df.efficacy != 0]
     topics_df.efficacy = topics_df.efficacy.map({-1: 0, 1: 1})
 
-    # def get_df(folder):
-    df = pd.read_parquet(train_dir)
-    domains = df.url.apply(lambda x: '.'.join(tldextract.extract(x)[-2:]))
-    df["domain"] = domains
+    def get_df(train_dir):
+        df = pd.read_parquet(train_dir)
+        domains = df.url.apply(lambda x: '.'.join(tldextract.extract(x)[-2:]))
+        df["domain"] = domains
 
-    # df = df[df.rang <= 20]
-    # xx = df.groupby("topic").agg({"passage": list, "domain": list})
-
-
-    df = pd.merge(df, topics_df["topic query description efficacy".split()], how="inner", on="topic")
-    df["source_text"] = df.apply(prep_sentence, axis=1)
+        # df = df[df.rang <= 20]
+        # xx = df.groupby("topic").agg({"passage": list, "domain": list})
 
 
+        df = pd.merge(df, topics_df["topic query description efficacy".split()], how="inner", on="topic")
+        df["source_text"] = df.apply(prep_sentence, axis=1)
 
-    # df_train = get_df(train_dir)
-    # df_val = get_df(val_dir)
 
-    emb_weight = torch.load("./weights/domain_emb_graphsage.pt")['weight']
-    emb = nn.Embedding.from_pretrained(emb_weight)
-    domain2id = torch.load("./weights/domain_emb_graphsage_w2i.pt")
-    df["domain_id"] = df.domain.map(domain2id)
-    df = df.dropna()
-    df["domain_id"] = df.domain_id.astype(int)
-    train_df = df.groupby("topic efficacy".split()).head(args[0].num_docs).groupby("topic efficacy".split()).agg({"source_text": list, "domain_id": list}).reset_index()
+
+        # df_train = get_df(train_dir)
+        # df_val = get_df(val_dir)
+
+        emb_weight = torch.load("./weights/domain_emb_graphsage.pt")['weight']
+        emb = nn.Embedding.from_pretrained(emb_weight)
+        domain2id = torch.load("./weights/domain_emb_graphsage_w2i.pt")
+        df["domain_id"] = df.domain.map(domain2id)
+        df = df.dropna()
+        df["domain_id"] = df.domain_id.astype(int)
+        return df.groupby("topic efficacy".split()).head(args[0].num_docs).groupby("topic efficacy".split()).agg({"source_text": list, "domain_id": list}).reset_index()
+
+    train_df =get_df(train_dir)
+    valid_df =get_df(val_dir)
 
 
 
@@ -89,7 +92,7 @@ if __name__ == '__main__':
     qa=BoolQBertModule.load_from_checkpoint(resume_checkpoint, model=model, tokenizer=tokenizer)
     data_module = PipelineDataModule(
         train_df=train_df,
-        val_df=train_df,
+        val_df=valid_df,
         batch_size=1,
         source_max_token_len=512,
         tokenizer=tokenizer,
