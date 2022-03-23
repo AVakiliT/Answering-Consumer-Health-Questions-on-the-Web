@@ -143,8 +143,8 @@ if __name__ == '__main__':
     #
     # # fit trainer
     # lightning_module.fix_stupid_metric_device_bs()
-    # trainer.fit(lightning_module, data_module)
-    trainer.validate(lightning_module, data_module)
+    trainer.fit(lightning_module, data_module)
+    # trainer.validate(lightning_module, data_module)
 
 
 
