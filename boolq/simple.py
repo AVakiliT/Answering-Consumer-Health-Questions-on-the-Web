@@ -36,6 +36,10 @@ args = parser.parse_known_args()
 YES = "▁yes"
 NO = "▁no"
 IRRELEVANT = "▁irrelevant"
+MODEL_NAME = args[0].model_name
+LR = args[0].lr
+NUM_CLASSES = args[0].num_classes
+
 if args[0].resume_version!=None:
     list_of_files = glob.glob(f'checkpoints/lightning_logs/version_{args[0].resume_version}/checkpoints/*.ckpt')  # * means all if need specific format then *.csv
     resume_checkpoint = max(list_of_files, key=os.path.getctime)
@@ -103,13 +107,13 @@ if __name__ == '__main__':
 
     # %%
 
-    batch_size = args[0].batch_size
+    BATCH_SIZE = args[0].batch_size
     source_max_token_len = 512
     target_max_token_len = 2
     dataloader_num_workers = 4
     early_stopping_patience_epochs = 0
     logger = "default"
-    max_epochs = args[0].max_epochs
+    MAX_EPOCHS = args[0].max_epochs
     precision = 32
     # MODEL_BASE = "t5-base"
 
@@ -134,7 +138,6 @@ if __name__ == '__main__':
     # )
 
     # %%
-    num_classes = args[0].num_classes
     if args[0].t_type == "t5":
         tokenizer = AutoTokenizer.from_pretrained("t5-base")
         model = T5ForConditionalGeneration.from_pretrained("t5-base").to(0)
@@ -143,7 +146,7 @@ if __name__ == '__main__':
             tokenizer=tokenizer,
             model=model,
             save_only_last_epoch=True,
-            num_classes=num_classes,
+            num_classes=NUM_CLASSES,
             labels_text=[NO, IRRELEVANT, YES],
             train_metrics="Accuracy".split(),
             valid_metrics="Accuracy F1".split(),
@@ -152,7 +155,7 @@ if __name__ == '__main__':
     else:
 
         tokenizer = AutoTokenizer.from_pretrained(args[0].model_name)
-        model = AutoModelForSequenceClassification.from_pretrained(args[0].model_name, num_labels=num_classes).to(0)
+        model = AutoModelForSequenceClassification.from_pretrained(args[0].model_name, num_labels=NUM_CLASSES).to(0)
         # tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/paraphrase-TinyBERT-L6-v2")
         # model = AutoModelForSequenceClassification.from_pretrained("sentence-transformers/paraphrase-TinyBERT-L6-v2",
         #                                                            num_labels=num_classes).to(0)
@@ -160,12 +163,12 @@ if __name__ == '__main__':
             tokenizer=tokenizer,
             model=model,
             save_only_last_epoch=True,
-            num_classes=num_classes,
+            num_classes=NUM_CLASSES,
             labels_text=[NO, IRRELEVANT, YES],
             train_metrics="Accuracy".split(),
             valid_metrics="Accuracy F1".split(),
             weights=weights,
-            lr=args[0].lr
+            lr=LR
         )
         # lightning_module.load_from_checkpoint(
         #     "./checkpoints/lightning_logs/version_28266369/checkpoints/epoch=0-step=4713.ckpt",
@@ -184,7 +187,7 @@ if __name__ == '__main__':
         df_train,
         df_validation,
         tokenizer=tokenizer,
-        batch_size=batch_size,
+        batch_size=BATCH_SIZE,
         source_max_token_len=source_max_token_len,
         target_max_token_len=target_max_token_len,
         num_workers=dataloader_num_workers
@@ -210,8 +213,9 @@ if __name__ == '__main__':
     #         # prepare trainer
     checkpoint_callback = ModelCheckpoint(
         monitor="valid_F1",
-        filename=f"{args[0].model_name.split('/')[-1]}-num_class={num_classes}-"+"{epoch:02d}-{valid_F1:.3f}-{valid_Accuracy:.3f}",
+        filename="{epoch:02d}-{valid_F1:.3f}-{valid_Accuracy:.3f}",
         mode="max",
+        dirpath=f"checkpoints/{args[0].model_name.split('/')[-1]}-num_class={NUM_CLASSES}-lr={args[0].lr}",
         every_n_epochs=1,
         save_top_k=2
     )
@@ -221,7 +225,7 @@ if __name__ == '__main__':
     trainer = pl.Trainer(
         logger=loggers,
         callbacks=callbacks,
-        max_epochs=max_epochs,
+        max_epochs=MAX_EPOCHS,
         gpus=gpus,
         precision=precision,
         log_every_n_steps=1,
