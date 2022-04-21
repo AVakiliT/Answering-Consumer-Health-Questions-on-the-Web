@@ -215,7 +215,7 @@ if __name__ == '__main__':
         monitor="valid_F1",
         filename="{epoch:02d}-{valid_F1:.3f}-{valid_Accuracy:.3f}",
         mode="max",
-        dirpath=f"checkpoints/{args[0].model_name.split('/')[-1]}-num_class={NUM_CLASSES}-lr={args[0].lr}",
+        dirpath=f"checkpoints/boolq-simple/{args[0].model_name.split('/')[-1]}-num_class={NUM_CLASSES}-lr={args[0].lr}-batch_size={BATCH_SIZE}",
         every_n_epochs=1,
         save_top_k=2
     )
