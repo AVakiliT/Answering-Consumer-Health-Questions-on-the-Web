@@ -21,9 +21,9 @@ from pytorch_lightning.callbacks import TQDMProgressBar, EarlyStopping, ModelChe
 parser = ArgumentParser()
 parser.add_argument("--boolq_resume_version", default=52, type=int)
 parser.add_argument("--t_name", default="distilbert-base-uncased", type=str)
-parser.add_argument("--num_docs", default=50, type=int)
+parser.add_argument("--num_docs", default=10, type=int)
 parser.add_argument("--gpus", default=0, type=int)
-parser.add_argument("--max_epochs", default=3, type=int)
+parser.add_argument("--max_epochs", default=1, type=int)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
 #%%
@@ -143,8 +143,8 @@ if __name__ == '__main__':
     #
     # # fit trainer
     # lightning_module.fix_stupid_metric_device_bs()
-    trainer.fit(lightning_module, data_module)
-    # trainer.validate(lightning_module, data_module)
+    # trainer.fit(lightning_module, data_module)
+    trainer.validate(lightning_module, data_module)
 
 
 
