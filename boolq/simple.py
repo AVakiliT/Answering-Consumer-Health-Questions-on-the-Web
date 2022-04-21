@@ -21,13 +21,13 @@ parser = ArgumentParser()
 parser.add_argument("--batch_size", default=8, type=int)
 parser.add_argument("--max_epochs", default=2, type=int)
 parser.add_argument("--num_classes", default=2, type=int)
-parser.add_argument("--lr", default=2e-5, type=float)
+parser.add_argument("--lr", default=1e-5, type=float)
 parser.add_argument('--neg_sample', action='store_true')
 parser.add_argument('--no-neg_sample', action='store_false')
 parser.set_defaults(neg_sample=False)
 parser.add_argument("--t_type", default="bert", type=str)
 parser.add_argument("--resume_version", default=None, type=int)
-parser.add_argument("--model_name", default="microsoft/deberta-base", type=str)
+parser.add_argument("--t_name", default="microsoft/deberta-base", type=str)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
 # YES = "▁5.0"
@@ -36,16 +36,16 @@ args = parser.parse_known_args()
 YES = "▁yes"
 NO = "▁no"
 IRRELEVANT = "▁irrelevant"
-MODEL_NAME = args[0].model_name
+MODEL_NAME = args[0].t_name
 LR = args[0].lr
 NUM_CLASSES = args[0].num_classes
 
-if args[0].resume_version!=None:
-    list_of_files = glob.glob(f'checkpoints/lightning_logs/version_{args[0].resume_version}/checkpoints/*.ckpt')  # * means all if need specific format then *.csv
-    resume_checkpoint = max(list_of_files, key=os.path.getctime)
-    print(f"resuming from version {args[0].resume_version}")
-else:
-    resume_checkpoint=None
+# if args[0].resume_version!=None:
+#     list_of_files = glob.glob(f'checkpoints/lightning_logs/version_{args[0].resume_version}/checkpoints/*.ckpt')  # * means all if need specific format then *.csv
+#     resume_checkpoint = max(list_of_files, key=os.path.getctime)
+#     print(f"resuming from version {args[0].resume_version}")
+# else:
+#     resume_checkpoint=None
 
 # %%
 if __name__ == '__main__':
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     MAX_EPOCHS = args[0].max_epochs
     precision = 32
     # MODEL_BASE = "t5-base"
-
+    CHECKPOINT_PATH = f"checkpoints/boolq-simple/{MODEL_NAME.split('/')[-1]}-num_class={NUM_CLASSES}-lr={args[0].lr}-batch_size={BATCH_SIZE}"
     # %%
     # num_classes = 2
 
@@ -154,8 +154,8 @@ if __name__ == '__main__':
         )
     else:
 
-        tokenizer = AutoTokenizer.from_pretrained(args[0].model_name)
-        model = AutoModelForSequenceClassification.from_pretrained(args[0].model_name, num_labels=NUM_CLASSES).to(0)
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+        model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=NUM_CLASSES).to(0)
         # tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/paraphrase-TinyBERT-L6-v2")
         # model = AutoModelForSequenceClassification.from_pretrained("sentence-transformers/paraphrase-TinyBERT-L6-v2",
         #                                                            num_labels=num_classes).to(0)
@@ -215,7 +215,7 @@ if __name__ == '__main__':
         monitor="valid_F1",
         filename="{epoch:02d}-{valid_F1:.3f}-{valid_Accuracy:.3f}",
         mode="max",
-        dirpath=f"checkpoints/boolq-simple/{args[0].model_name.split('/')[-1]}-num_class={NUM_CLASSES}-lr={args[0].lr}-batch_size={BATCH_SIZE}",
+        dirpath=CHECKPOINT_PATH,
         every_n_epochs=1,
         save_top_k=2
     )
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     #
     # # fit trainer
     # lightning_module.fix_stupid_metric_device_bs()
-    trainer.fit(lightning_module, data_module, ckpt_path=resume_checkpoint)
+    trainer.fit(lightning_module, data_module, ckpt_path=None)
     # trainer.validate(lightning_module, data_module)
 
 # %%
