@@ -2,7 +2,7 @@
 import pandas as pd
 import torch
 from torch.utils.data import Dataset, DataLoader
-from tqdm import trange
+from tqdm import trange, tqdm
 import numpy as np
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, PreTrainedTokenizer
 from tldextract import extract
@@ -14,18 +14,27 @@ v = pd.read_csv("./data/filtered_vertices.tsv", sep="\t", header=None, names="cc
 e = pd.read_csv("./data/filtered_edges.tsv", sep="\t", header=None, names="from_ccid to_ccid".split())
 df["domain"] = df.url.apply(lambda x: extract(x).domain + '.' + extract(x).suffix)
 df = df.merge(topics["description efficacy".split()], on="topic", how="inner")
-
+#%%
+import networkx as nx
+topic = 1
+filtered_urls = df[df.topic == topic].domain.drop_duplicates()
+fv = v.merge(filtered_urls, on="domain", how="inner")
+fe = e.merge(fv.rename(columns={"ccid": "from_ccid"}), on="from_ccid", how="inner").merge(
+    fv.rename(columns={"ccid": "to_ccid"}), on="to_ccid", how="inner")
+G = nx.DiGraph()
+G.add_nodes_from(fv.apply(lambda row: (row.ccid, dict(domain=row.domain)), axis=1))
+G.add_edges_from(fe.apply(lambda row: (row.from_ccid, row.to_ccid), axis=1))
+[(G.nodes()[i]["domain"], v) for i, v in sorted(G.in_degree, key=lambda x: x[1], reverse=True)[:20]]
 # %%
 
-counts = {}
-for i in trange(1, 52):
-    topic = i
-    filtered_urls = df[df.topic == topic].domain.drop_duplicates()
-    fv = v.merge(filtered_urls, on="domain", how="inner")
-    fe = e.merge(fv.rename(columns={"ccid": "from_ccid"}), on="from_ccid", how="inner").merge(
-        fv.rename(columns={"ccid": "to_ccid"}), on="to_ccid", how="inner")
-    counts[topics.loc[i].description] = fe.shape[0]
-counts
+# counts = {}
+# for topic in trange(1, 52):
+#     filtered_urls = df[df.topic == topic].domain.drop_duplicates()
+#     fv = v.merge(filtered_urls, on="domain", how="inner")
+#     fe = e.merge(fv.rename(columns={"ccid": "from_ccid"}), on="from_ccid", how="inner").merge(
+#         fv.rename(columns={"ccid": "to_ccid"}), on="to_ccid", how="inner")
+#     counts[topics.loc[topic].description] = fe.shape[0]
+# counts
 
 # %%
 YES = "▁yes"
@@ -90,7 +99,8 @@ class HMIDataset(Dataset):
             input_ids=source_text_encoding["input_ids"].flatten(),
             attention_mask=source_text_encoding["attention_mask"].flatten(),
             efficacy=data_row.efficacy.flatten(),
-            source=data_row.source_text
+            source=data_row.source_text,
+            retrieval_score=data_row.score
         )
 
 
@@ -103,7 +113,36 @@ data_loader = DataLoader(
     shuffle=True,
 )
 #%%
-batch = data_loader.__iter__().next()
-with torch.no_grad():
-    a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0))
-a.logits.softmax(-1)[:,0]
+
+embeddings = []
+for batch in tqdm(data_loader):
+    with torch.no_grad():
+        model.eval()
+        a = model._modules['deberta'](input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0))
+        a = model._modules['pooler'](a.last_hidden_state)
+        embeddings.append(a.cpu())
+embeddings = torch.cat(embeddings)
+torch.save(embeddings, "gnn_fraud/embeddings_2019.pt")
+# with torch.no_grad():
+#     a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0))
+# a.logits.softmax(-1)[:,1]
+
+#%%
+
+embeddings = []
+for batch in tqdm(data_loader):
+    with torch.no_grad():
+        model.eval()
+        a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0)).logits[:,1].gt()
+        embeddings.append(a.cpu())
+embeddings = torch.cat(embeddings)
+df["emb"] = pd.Series([x for x in embeddings])
+#%%
+
+preds = []
+for batch in tqdm(data_loader):
+    with torch.no_grad():
+        model.eval()
+        a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0)).logits[:,1].gt(.5).long()
+        preds.append(a.cpu())
+preds = torch.cat(preds)
