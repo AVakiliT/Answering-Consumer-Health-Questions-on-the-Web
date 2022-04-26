@@ -4,7 +4,7 @@ import os
 import re
 import sys
 
-import spacy
+# import spacy
 from lazynlp import parse_html, transliterate
 from warcio import ArchiveIterator
 
@@ -40,8 +40,8 @@ k = int(sys.argv[2])
 
 qrels = qrels.iloc[n*k:n*k+k]
 
-nlp = spacy.blank("en")
-nlp.add_pipe("sentencizer")
+# nlp = spacy.blank("en")
+# nlp.add_pipe("sentencizer")
 
 def clean_page(page):
 
@@ -56,10 +56,10 @@ def clean_page(page):
     txt = html.unescape(txt)
     return txt
 
-def sent_tokenize(page):
-    paragraphs = page.split("\n\n")
-    return ('\n\n'.join(
-        [' '.join(s.sent.sent.text.strip() for s in nlp(re.sub('\s+', " ", p.strip())).sents) for p in paragraphs]))
+# def sent_tokenize(page):
+#     paragraphs = page.split("\n\n")
+#     return ('\n\n'.join(
+#         [' '.join(s.sent.sent.text.strip() for s in nlp(re.sub('\s+', " ", p.strip())).sents) for p in paragraphs]))
 
 
 docs = []
