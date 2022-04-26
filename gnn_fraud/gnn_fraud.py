@@ -7,7 +7,7 @@ import numpy as np
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, PreTrainedTokenizer
 from tldextract import extract
 from boolq.bert_modules import BoolQBertModule
-
+import networkx as nx
 df = pd.read_parquet("./mdt5/output_Top1kBM25_2019_mt5_2019_base-med_with_text")
 topics = pd.read_csv("./data/topics.csv", sep="\t", index_col="topic")
 v = pd.read_csv("./data/filtered_vertices.tsv", sep="\t", header=None, names="ccid rdomain nhosts domain".split())
@@ -15,16 +15,16 @@ e = pd.read_csv("./data/filtered_edges.tsv", sep="\t", header=None, names="from_
 df["domain"] = df.url.apply(lambda x: extract(x).domain + '.' + extract(x).suffix)
 df = df.merge(topics["description efficacy".split()], on="topic", how="inner")
 #%%
-import networkx as nx
-topic = 1
-filtered_urls = df[df.topic == topic].domain.drop_duplicates()
-fv = v.merge(filtered_urls, on="domain", how="inner")
-fe = e.merge(fv.rename(columns={"ccid": "from_ccid"}), on="from_ccid", how="inner").merge(
-    fv.rename(columns={"ccid": "to_ccid"}), on="to_ccid", how="inner")
-G = nx.DiGraph()
-G.add_nodes_from(fv.apply(lambda row: (row.ccid, dict(domain=row.domain)), axis=1))
-G.add_edges_from(fe.apply(lambda row: (row.from_ccid, row.to_ccid), axis=1))
-[(G.nodes()[i]["domain"], v) for i, v in sorted(G.in_degree, key=lambda x: x[1], reverse=True)[:20]]
+
+# topic = 7
+#
+# filtered_urls = df[df.topic == topic].domain.drop_duplicates()
+# fv = v.merge(filtered_urls, on="domain", how="inner")
+# fe = e.merge(fv.rename(columns={"ccid": "from_ccid"}), on="from_ccid", how="inner").merge(
+#     fv.rename(columns={"ccid": "to_ccid"}), on="to_ccid", how="inner")
+# G = nx.DiGraph()
+# G.add_nodes_from(fv.apply(lambda row: (row.ccid, dict(domain=row.domain)), axis=1))
+# G.add_edges_from(fe.apply(lambda row: (row.from_ccid, row.to_ccid), axis=1))
 # %%
 
 # counts = {}
@@ -110,7 +110,7 @@ dataset = HMIDataset(df, tokenizer=tokenizer)
 data_loader = DataLoader(
     dataset,
     batch_size=8,
-    shuffle=True,
+    shuffle=False,
 )
 #%%
 
@@ -123,26 +123,24 @@ for batch in tqdm(data_loader):
         embeddings.append(a.cpu())
 embeddings = torch.cat(embeddings)
 torch.save(embeddings, "gnn_fraud/embeddings_2019.pt")
-# with torch.no_grad():
-#     a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0))
-# a.logits.softmax(-1)[:,1]
+df["emb"] = pd.Series([x.numpy() for x in embeddings])
+with torch.no_grad():
+    a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0))
+a.logits.softmax(-1)[:,1]
 
-#%%
 
-embeddings = []
-for batch in tqdm(data_loader):
-    with torch.no_grad():
-        model.eval()
-        a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0)).logits[:,1].gt()
-        embeddings.append(a.cpu())
-embeddings = torch.cat(embeddings)
-df["emb"] = pd.Series([x for x in embeddings])
-#%%
+# %%
 
 preds = []
+probs = []
 for batch in tqdm(data_loader):
     with torch.no_grad():
         model.eval()
-        a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0)).logits[:,1].gt(.5).long()
-        preds.append(a.cpu())
+        a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0)).logits.softmax(-1)[:,1]
+        probs.append(a.cpu())
+        preds.append(a.cpu().gt(.5).long())
+probs = torch.cat(probs)
 preds = torch.cat(preds)
+df["prob"] = pd.Series([x.item() for x in probs])
+df["pred"] = pd.Series([x.item() for x in preds])
+df.to_parquet("./gnn_fraud/temp_df")
