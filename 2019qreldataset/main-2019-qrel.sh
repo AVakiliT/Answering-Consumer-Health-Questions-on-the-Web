@@ -7,7 +7,7 @@
 
 
 module load StdEnv/2020  gcc/9.3.0  cuda/11.4 faiss arrow scipy-stack/2021a
-source ~/ENV/bin/activate
+source ~/ENV2/bin/activate
 
 
 python main-2019-qrel.py "${SLURM_ARRAY_TASK_ID}" 1000
