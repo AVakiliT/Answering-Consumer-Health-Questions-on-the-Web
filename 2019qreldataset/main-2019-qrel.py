@@ -40,8 +40,8 @@ def get_file(docno):
 
 qrels["warc_file"] = qrels.docno.apply(get_file)
 
-n = 0#sys.argv[1]
-k = 1000#sys.argv[2]
+n = int(sys.argv[1])
+k = int(sys.argv[2])
 
 qrels = qrels.iloc[n*k:n*k+k]
 
