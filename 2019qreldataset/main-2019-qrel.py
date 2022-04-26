@@ -1,15 +1,10 @@
 import gzip
 import html
-import io
 import os
 import re
 import sys
-from pathlib import Path
 
-import justext
-import lazynlp
 import spacy
-from bs4 import BeautifulSoup
 from lazynlp import parse_html, transliterate
 from warcio import ArchiveIterator
 
