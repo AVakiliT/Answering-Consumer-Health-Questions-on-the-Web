@@ -25,7 +25,9 @@ from tqdm import tqdm
 
 #%%
 import pandas as pd
-qrels = pd.read_csv("../data/qrels/2019_qrels.txt", names="topic iter docno u c r".split(), sep=" ")
+
+qrels = pd.read_csv("./data/qrels/2019_qrels.txt", names="topic iter docno usefulness stance credibility".split(), sep=" ")
+
 
 
 def get_file(docno):
@@ -78,13 +80,13 @@ for row in tqdm(qrels.itertuples(), total=qrels.shape[0]):
                     # text = sent_tokenize(clean_page(_html))
 
 
-                    a = (trec_id, text2, uri)
+                    a = (row.trec_id, text2, uri)
                     docs.append(a)
                     continue
     # if len(docs) == 2:
     #     break
 
-df = pd.DataFrame(docs, columns="docno text url".split())
-out_path  = f"./2019qreldataset/2019qrels.parquet/{n}.snappy.parquet"
+df = pd.DataFrame(docs, columns="topic docno usefulness stance credibility text url".split())
+out_path = f"/project/6003284/avakilit/Trec21_Data/2019qreldataset/2019qrels.parquet/{n:02d}.snappy.parquet"
 os.makedirs(os.path.dirname(out_path), exist_ok=True)
 df.to_parquet(out_path)
