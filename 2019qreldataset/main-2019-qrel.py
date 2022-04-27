@@ -23,11 +23,11 @@ from tqdm import tqdm
 # for record in tqdm(ArchiveIterator(stream)):
 #     url = record.rec_headers.get_header('WARC-Target-URI')
 
-#%%
+# %%
 import pandas as pd
 
-qrels = pd.read_csv("./data/qrels/2019_qrels.txt", names="topic iter docno usefulness stance credibility".split(), sep=" ")
-
+qrels = pd.read_csv("./data/qrels/2019_qrels.txt", names="topic iter docno usefulness stance credibility".split(),
+                    sep=" ")
 
 
 def get_file(docno):
@@ -35,20 +35,20 @@ def get_file(docno):
     warc_file = f"{corp_dir}/ClueWeb12_{warc[:2]}/{warc}/{warc}-{warc_part}.warc.gz"
     return warc_file
 
+
 qrels["warc_file"] = qrels.docno.apply(get_file)
 
 n = int(sys.argv[1])
 k = int(sys.argv[2])
 
-qrels = qrels.iloc[n*k:n*k+k]
+qrels = qrels.iloc[n * k:n * k + k]
+
 
 # nlp = spacy.blank("en")
 # nlp.add_pipe("sentencizer")
 
 def clean_page(page):
-
     page = page.decode('utf-8', errors='ignore')
-
 
     page = page.strip()
     if not page:
@@ -57,6 +57,7 @@ def clean_page(page):
     txt = transliterate(txt)
     txt = html.unescape(txt)
     return txt
+
 
 # def sent_tokenize(page):
 #     paragraphs = page.split("\n\n")
@@ -79,8 +80,7 @@ for row in tqdm(qrels.itertuples(), total=qrels.shape[0]):
                     text2 = clean_page(_html)
                     # text = sent_tokenize(clean_page(_html))
 
-
-                    a = (row.trec_id, text2, uri)
+                    a = (row.topic, row.trec_id, row.usefulness, row.stance, row.credibility, text2, uri)
                     docs.append(a)
                     continue
     # if len(docs) == 2:
