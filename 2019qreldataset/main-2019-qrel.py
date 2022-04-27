@@ -26,7 +26,7 @@ from tqdm import tqdm
 # %%
 import pandas as pd
 
-qrels = pd.read_csv("./data/qrels/2019_qrels.txt", names="topic iter docno usefulness stance credibility".split(),
+qrels = pd.read_csv("/project/6003284/avakilit/Trec21_Data/data/qrels/2019_qrels.txt", names="topic iter docno usefulness stance credibility".split(),
                     sep=" ")
 
 
