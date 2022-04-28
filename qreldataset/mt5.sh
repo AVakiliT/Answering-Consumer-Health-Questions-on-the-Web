@@ -7,6 +7,6 @@
 
 
 module load scipy-stack/2022a gcc arrow cuda/11
-source ~/PYTORCH/bin/activate
+source ~/avakilit/PYTORCH/bin/activate
 
 ipython ./mt5.py
