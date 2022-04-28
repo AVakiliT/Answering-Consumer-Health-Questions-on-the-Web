@@ -17,13 +17,9 @@
 #','.join(map(str,set(range(101,151)).difference(set([int(re.search('topic-(.*).run', s).group(1)) for s in glob.glob("./output_Top1kBM25_mt5_2021_base-med/*")]))))
 
 
-module load StdEnv  gcc  cuda/11
-module load faiss
-module load arrow
-module load python
+module load StdEnv  gcc  cuda/11 faiss arrow python java
 source ~/PYGAGGLE/bin/activate
 #pip install --upgrade pip
-module load java
 
 echo "Starting script..."
 
