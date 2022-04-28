@@ -9,7 +9,7 @@ from transformers import T5ForConditionalGeneration, AutoModelForSeq2SeqLM
 import os
 
 from torch.cuda import amp
-from qreldataset.mt5lib import Query, Text, MonoT5
+from mt5lib import Query, Text, MonoT5
 print("Importing...", flush=True)
 import argparse
 from random import sample
