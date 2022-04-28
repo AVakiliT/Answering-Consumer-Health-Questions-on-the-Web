@@ -6,6 +6,7 @@ from functools import lru_cache
 from typing import List, Mapping, Union, Iterable, Optional, Tuple
 
 from spacy.lang.en import English
+from tqdm import tqdm
 from transformers import PreTrainedTokenizer, PreTrainedModel
 import torch
 import torch
@@ -358,7 +359,7 @@ class MonoT5(Reranker):
     def rescore(self, query: Query, texts: List[Text]) -> List[Text]:
         texts = deepcopy(texts)
         batch_input = QueryDocumentBatch(query=query, documents=texts)
-        for batch in self.tokenizer.traverse_query_document(batch_input):
+        for batch in tqdm(self.tokenizer.traverse_query_document(batch_input),total=int(len(batch_input)/ self.tokenizer.batch_size)):
             with torch.cuda.amp.autocast(enabled=self.use_amp):
                 input_ids = batch.output['input_ids'].to(self.device)
                 attn_mask = batch.output['attention_mask'].to(self.device)

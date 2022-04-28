@@ -8,7 +8,7 @@ tqdm.pandas()
 
 window_size, step = 6, 3
 
-df = pd.read_parquet("./2019qreldataset/2019qrels.parquet/")
+df = pd.read_parquet("./qreldataset/2019qrels.parquet/")
 print(df.count())
 
 
@@ -36,4 +36,4 @@ def sentencize(s):
 
 df["passage"] = df.text.progress_apply(sentencize)
 df_new = df.explode("passage")
-df_new.to_parquet("./2019qreldataset/2019qrels.passages.parquet")
+df_new.to_parquet("./qreldataset/2019qrels.passages.parquet")
