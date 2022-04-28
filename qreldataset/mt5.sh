@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --account=rrg-smucker
+#SBATCH --account=def-smucker
 #SBATCH --time=0-3:0:0
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=24G
@@ -9,4 +9,4 @@
 module load scipy-stack/2022a gcc arrow cuda/11
 source ~/PYTORCH/bin/activate
 
-ipython ./qreldataset/mt5.py
+ipython ./mt5.py
