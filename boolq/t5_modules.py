@@ -68,7 +68,6 @@ class MyDataset(Dataset):
             add_special_tokens=True,
             return_tensors="pt",
         )
-
         target_text_encoding = self.tokenizer(
             data_row["target_text"],
             max_length=self.target_max_token_len,
@@ -84,10 +83,11 @@ class MyDataset(Dataset):
             labels == 0
             ] = -100  # to make sure we have correct labels for T5 text generation
 
+
         return dict(
             source_text_input_ids=source_text_encoding["input_ids"].flatten(),
             source_text_attention_mask=source_text_encoding["attention_mask"].flatten(),
-            labels=labels.flatten(),
+            labels=labels,
             labels_attention_mask=target_text_encoding["attention_mask"].flatten(),
             target_class=data_row["target_class"].flatten()
         )
