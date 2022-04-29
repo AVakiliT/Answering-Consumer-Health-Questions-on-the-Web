@@ -26,7 +26,7 @@ df = df[df.text.apply(len).gt(0)]
 topics = pd.read_csv("./data/topics.csv", sep="\t")
 df = df.merge(topics["topic description efficacy".split()], on="topic", how="inner")
 runs = []
-for topic in tqdm(df.topic.unique().tolist()[:2]):
+for topic in tqdm(df.topic.unique().tolist()):
 
     # df = df[df.topic == topic].merge(topics[topics.topic == topic]["topic description efficacy".split()], on="topic", how="inner")
     query = Query(topics[topics.topic == topic].iloc[0].description)
