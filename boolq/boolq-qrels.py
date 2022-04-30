@@ -22,6 +22,7 @@ parser.add_argument("--batch_size", default=4, type=int)
 parser.add_argument("--max_epochs", default=2, type=int)
 parser.add_argument("--lr", default=1e-5, type=float)
 parser.add_argument("--t_name", default="microsoft/deberta-base", type=str)
+parser.add_argument("--load_from", default="checkpoints/boolq-simple/deberta-base-num_class=3-lr=1e-05-batch_size=16/epoch=03-valid_F1=0.906-valid_Accuracy=0.906.ckpt", type=str)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
 # YES = "▁5.0"
@@ -31,6 +32,8 @@ MODEL_NAME = args[0].t_name
 LR = args[0].lr
 NUM_CLASSES = 3
 BATCH_SIZE = args[0].batch_size
+LOAD_FROM = args[0].load_from
+LOAD_CHECKPOINT_PATH = LOAD_FROM.split('/')[-3] + '-' + LOAD_FROM.split('/')[-2] + '-' + LOAD_FROM.split('/')[-1].split('-')[0] + '/' if LOAD_FROM else ''
 YES = "▁yes"
 NO = "▁no"
 IRRELEVANT = "▁irrelevant"
@@ -99,7 +102,7 @@ gpus = 1
 #         # add logger
 loggers = True
 #
-CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}"
+CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{LOAD_CHECKPOINT_PATH}{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}"
 precision = 32
 MAX_EPOCHS = args[0].max_epochs
 checkpoint_callback = ModelCheckpoint(
@@ -122,5 +125,18 @@ trainer = Trainer(
     default_root_dir="checkpoints",
     enable_checkpointing=True,
 )
+
+if LOAD_FROM :
+    lightning_module.load_from_checkpoint(
+        LOAD_FROM,
+        tokenizer=tokenizer,
+        model=model,
+        save_only_last_epoch=True,
+        num_classes=NUM_CLASSES,
+        labels_text=[NO, IRRELEVANT, YES],
+        train_metrics="Accuracy".split(),
+        valid_metrics="Accuracy F1".split(),
+        weights=weights
+    )
 
 trainer.fit(lightning_module, data_module, ckpt_path=None)
