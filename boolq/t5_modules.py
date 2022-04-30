@@ -344,4 +344,5 @@ class MyLightningModel(pl.LightningModule):
         target = np.hstack([output['target'] for output in validation_step_outputs])
         print()
         print(f'\nVALID Epoch: [{self.current_epoch}]\n{classification_report(target, prediction, zero_division=1)}\n')
+        # print(f'\nVALID Epoch: [{self.current_epoch}]\n{classification_report(target, prediction, zero_division=1)}\n', file=)
 

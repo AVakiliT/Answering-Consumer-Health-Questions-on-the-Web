@@ -58,7 +58,7 @@ def gen_labels(row):
 
 df["target_class"] = df.apply(gen_labels, axis=1)
 df["target_text"] = df.target_class.map({0: NO.replace("▁", ""), 1: IRRELEVANT.replace("▁", ""), 2: YES.replace("▁", "")})
-df_train, df_test = train_test_split(df, test_size=0.2, stratify=df.target_class)
+df_train, df_test = train_test_split(df, test_size=0.2, stratify=df.target_class, random_state=42)
 
 
 weights = torch.tensor((1 / (df_train.target_class.value_counts() / df_train.shape[0]).sort_index()).to_list())
