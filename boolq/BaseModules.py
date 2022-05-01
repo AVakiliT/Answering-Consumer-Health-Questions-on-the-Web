@@ -1,9 +1,14 @@
 import numpy as np
 import torchmetrics
 import pytorch_lightning as pl
+from datasets import load_dataset
 from sklearn.metrics import classification_report
 from torch.optim import AdamW
+import pandas as pd
 
+YES = "▁yes"
+NO = "▁no"
+IRRELEVANT = "▁irrelevant"
 
 class ClassifierLightningModel(pl.LightningModule):
 
@@ -62,3 +67,34 @@ class ClassifierLightningModel(pl.LightningModule):
         target = np.hstack([output['target'] for output in validation_step_outputs])
         print()
         print(f'\nVALID Epoch: [{self.current_epoch}]\n{classification_report(target, prediction, zero_division=1)}\n')
+
+def prep_boolq_dataset(prep_sentence, neg_sampling=True):
+    dataset = load_dataset('super_glue', 'boolq')
+    df_train: pd.DataFrame
+    df_validation: pd.DataFrame
+    df_train, df_validation = [pd.concat({
+        "source_text": dataset[sub].data.to_pandas().apply(
+            lambda row: prep_sentence(row.question, row.passage), axis=1
+        ),
+        "target_text": dataset[sub].data.to_pandas().label.map({0: NO.replace("▁", ""), 1: YES.replace("▁", "")}),
+        "target_class": dataset[sub].data.to_pandas().label.map({0: 0, 1: 2})
+    }, axis=1) for sub in "train validation".split()]
+
+    if neg_sampling:
+        df_train_neg, df_validation_neg = [pd.concat({
+            "source_text": pd.concat(
+                [dataset[sub].data.to_pandas().question.shift(1), dataset[sub].data.to_pandas().passage],
+                axis=1).iloc[1:].apply(
+                lambda row: prep_sentence(row.question, row.passage), axis=1
+            )
+        }, axis=1) for sub in "train validation".split()]
+
+        df_train_neg["target_text"] = IRRELEVANT.replace("▁", "")
+        df_train_neg["target_class"] = 1
+        df_validation_neg["target_text"] = IRRELEVANT.replace("▁", "")
+        df_validation_neg["target_class"] = 1
+
+        df_train = pd.concat([df_train, df_train_neg])
+        df_validation = pd.concat([df_validation, df_validation_neg])
+
+    return df_train, df_validation

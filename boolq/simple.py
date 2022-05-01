@@ -5,6 +5,7 @@ from transformers import T5ForConditionalGeneration, AutoTokenizer, AutoModel, A
 import pandas as pd
 import torch
 
+from boolq.BaseModules import prep_boolq_dataset, NO, YES
 from boolq.bert_modules import BoolQBertModule
 from boolq.t5_modules import MyLightningDataModule, MyLightningModel
 import pytorch_lightning as pl
@@ -33,9 +34,7 @@ args = parser.parse_known_args()
 # YES = "▁5.0"
 # NO = "▁1.0"
 # IRRELEVANT = "▁3.0"
-YES = "▁yes"
-NO = "▁no"
-IRRELEVANT = "▁irrelevant"
+
 MODEL_NAME = args[0].t_name
 LR = args[0].lr
 NUM_CLASSES = args[0].num_classes
@@ -57,40 +56,6 @@ if __name__ == '__main__':
 
     def prep_bert_sentence(q, p):
         return f"{q} [SEP] {p}"
-
-
-    def prep_boolq_dataset(prep_sentence, neg_sampling=True):
-
-        dataset = load_dataset('super_glue', 'boolq')
-        df_train: pd.DataFrame
-        df_validation: pd.DataFrame
-        df_train, df_validation = [pd.concat({
-            "source_text": dataset[sub].data.to_pandas().apply(
-                lambda row: prep_sentence(row.question, row.passage), axis=1
-            ),
-            "target_text": dataset[sub].data.to_pandas().label.map({0: NO.replace("▁", ""), 1: YES.replace("▁", "")}),
-            "target_class": dataset[sub].data.to_pandas().label.map({0: 0, 1: 2})
-        }, axis=1) for sub in "train validation".split()]
-
-        if neg_sampling:
-            df_train_neg, df_validation_neg = [pd.concat({
-                "source_text": pd.concat(
-                    [dataset[sub].data.to_pandas().question.shift(1), dataset[sub].data.to_pandas().passage],
-                    axis=1).iloc[1:].apply(
-                    lambda row: prep_sentence(row.question, row.passage), axis=1
-                )
-            }, axis=1) for sub in "train validation".split()]
-
-            df_train_neg["target_text"] = IRRELEVANT.replace("▁", "")
-            df_train_neg["target_class"] = 1
-            df_validation_neg["target_text"] = IRRELEVANT.replace("▁", "")
-            df_validation_neg["target_class"] = 1
-
-            df_train = pd.concat([df_train, df_train_neg])
-            df_validation = pd.concat([df_validation, df_validation_neg])
-
-        return df_train, df_validation
-
 
     df_train, df_validation = prep_boolq_dataset(
         prep_sentence=prep_t5_sentence if args[0].t_type == "t5" else prep_bert_sentence,

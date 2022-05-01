@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-
 import pandas as pd
 # from datasets import load_dataset
 import torch
@@ -7,6 +6,8 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import TQDMProgressBar, ModelCheckpoint
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+
+from boolq.BaseModules import prep_boolq_dataset, NO, YES, IRRELEVANT
 from boolq.bert_modules import BoolQBertModule
 #%%
 from boolq.t5_modules import MyLightningDataModule
@@ -23,6 +24,7 @@ parser.add_argument("--max_epochs", default=2, type=int)
 parser.add_argument("--lr", default=1e-5, type=float)
 parser.add_argument("--t_name", default="microsoft/deberta-base", type=str)
 parser.add_argument("--load_from", default=None, type=str)
+parser.add_argument("--augment", default=True, type=str)
 # parser.add_argument("--load_from", default="checkpoints/boolq-simple/deberta-base-num_class=3-lr=1e-05-batch_size=16/epoch=03-valid_F1=0.906-valid_Accuracy=0.906.ckpt", type=str)
 # parser.add_argument("--transformer-type", default="t5", type=str)
 args = parser.parse_known_args()
@@ -33,11 +35,10 @@ MODEL_NAME = args[0].t_name
 LR = args[0].lr
 NUM_CLASSES = 3
 BATCH_SIZE = args[0].batch_size
+AUGMENT = args[0].augment
 LOAD_FROM = args[0].load_from
 LOAD_CHECKPOINT_PATH = LOAD_FROM.split('/')[-3] + '-' + LOAD_FROM.split('/')[-2] + '-' + LOAD_FROM.split('/')[-1].split('-')[0] + '/' if LOAD_FROM else ''
-YES = "▁yes"
-NO = "▁no"
-IRRELEVANT = "▁irrelevant"
+from boolq.BaseModules import prep_boolq_dataset, NO, YES
 #%%
 df = pd.read_parquet("./qreldataset/2019_mt5_dataset.parquet")
 
@@ -61,6 +62,16 @@ df["target_class"] = df.apply(gen_labels, axis=1)
 df["target_text"] = df.target_class.map({0: NO.replace("▁", ""), 1: IRRELEVANT.replace("▁", ""), 2: YES.replace("▁", "")})
 df_train, df_test = train_test_split(df, test_size=0.2, stratify=df.target_class, random_state=42)
 
+#%%
+
+def prep_bert_sentence(q, p):
+    return f"{q} [SEP] {p}"
+
+df_train_aug, _ = prep_boolq_dataset(
+    prep_sentence=prep_bert_sentence,
+    neg_sampling=False)
+
+df_train = pd.concat([df_train, df_train_aug])
 
 weights = torch.tensor((1 / (df_train.target_class.value_counts() / df_train.shape[0]).sort_index()).to_list())
 weights = weights / weights.sum()
@@ -103,7 +114,7 @@ gpus = 1
 #         # add logger
 loggers = True
 #
-CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{LOAD_CHECKPOINT_PATH}{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}"
+CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{LOAD_CHECKPOINT_PATH}{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}{'-aug' if AUGMENT else ''}"
 precision = 32
 MAX_EPOCHS = args[0].max_epochs
 checkpoint_callback = ModelCheckpoint(
