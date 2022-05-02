@@ -4,6 +4,7 @@ import pandas as pd
 import torch
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import TQDMProgressBar, ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
@@ -115,7 +116,8 @@ callbacks = [TQDMProgressBar(refresh_rate=1)]
 gpus = 1
 #
 #         # add logger
-loggers = True
+# loggers = True
+loggers = TensorBoardLogger(save_dir="logs/")
 #
 CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{LOAD_CHECKPOINT_PATH}{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}{'-aug' if AUGMENT else ''}"
 precision = 32
