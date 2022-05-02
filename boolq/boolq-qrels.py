@@ -66,14 +66,15 @@ df_train, df_test = train_test_split(df, test_size=0.2, stratify=df.target_class
 
 #%%
 
-def prep_bert_sentence(q, p):
-    return f"{q} [SEP] {p}"
+if AUGMENT:
+    def prep_bert_sentence(q, p):
+        return f"{q} [SEP] {p}"
 
-df_train_aug, _ = prep_boolq_dataset(
-    prep_sentence=prep_bert_sentence,
-    neg_sampling=False)
+    df_train_aug, _ = prep_boolq_dataset(
+        prep_sentence=prep_bert_sentence,
+        neg_sampling=False)
 
-df_train = pd.concat([df_train, df_train_aug])
+    df_train = pd.concat([df_train, df_train_aug])
 
 weights = torch.tensor((1 / (df_train.target_class.value_counts() / df_train.shape[0]).sort_index()).to_list())
 weights = weights / weights.sum()
