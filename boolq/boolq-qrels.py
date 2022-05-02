@@ -52,11 +52,11 @@ def prep_sentence(q, p):
 
 def gen_labels(row):
     if row.usefulness == 0 or row.effective == 0:
-        return 0
+        return 1
     if row.effective == 3:
         return 2
     if row.effective == 1:
-        return 1
+        return 0
 
 df["target_class"] = df.apply(gen_labels, axis=1)
 df["target_text"] = df.target_class.map({0: NO.replace("▁", ""), 1: IRRELEVANT.replace("▁", ""), 2: YES.replace("▁", "")})

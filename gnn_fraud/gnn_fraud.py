@@ -37,18 +37,20 @@ df = df.merge(topics["description efficacy".split()], on="topic", how="inner")
 # counts
 
 # %%
+NUM_CLASSES =  3
 YES = "▁yes"
 NO = "▁no"
 IRRELEVANT = "▁irrelevant"
 CHECKPOINT_PATH = f"checkpoints/boolq-simple/deberta-base-num_class=2-lr=1e-5-batch_size=16"
 tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
-model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=2).to(0)
+model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=NUM_CLASSES).to(0)
 lightning_module = BoolQBertModule.load_from_checkpoint(
-    "./checkpoints/boolq-simple/deberta-base-num_class=2-lr=1e-05-batch_size=16/epoch=04-valid_F1=0.818-valid_Accuracy=0.818.ckpt",
+    "./checkpoints/boolq-qrel/deberta-base-lr=1e-05-batch_size=4/epoch=03-valid_F1=0.893-valid_Accuracy=0.893.ckpt",
+    # "../checkpoints/boolq-simple/deberta-base-num_class=2-lr=1e-05-batch_size=16/epoch=04-valid_F1=0.818-valid_Accuracy=0.818.ckpt",
     tokenizer=tokenizer,
     model=model,
     save_only_last_epoch=True,
-    num_classes=2,
+    num_classes=NUM_CLASSES,
     labels_text=[NO, IRRELEVANT, YES],
 )
 
@@ -136,7 +138,7 @@ probs = []
 for batch in tqdm(data_loader):
     with torch.no_grad():
         model.eval()
-        a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0)).logits.softmax(-1)[:,1]
+        a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0)).logits.softmax(-1)
         probs.append(a.cpu())
         preds.append(a.cpu().gt(.5).long())
 probs = torch.cat(probs)
@@ -144,3 +146,6 @@ preds = torch.cat(preds)
 df["prob"] = pd.Series([x.item() for x in probs])
 df["pred"] = pd.Series([x.item() for x in preds])
 df.to_parquet("./gnn_fraud/temp_df")
+
+#%%
+df.pro.value_counts()
