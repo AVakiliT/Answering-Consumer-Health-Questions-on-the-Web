@@ -151,7 +151,7 @@ if __name__ == '__main__':
     class CustomCallback(Callback):
         def __init__(self):
             self.val_outs = []
-            self.current_epoch = 0
+            self.current_epoch = -1
 
 
         def on_validation_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule",
