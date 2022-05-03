@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import torchmetrics
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix, precision_recall_fscore_support
 from transformers import (
     T5ForConditionalGeneration,
     MT5ForConditionalGeneration,
