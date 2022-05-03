@@ -164,7 +164,7 @@ if __name__ == '__main__':
             prediction = np.hstack([output['prediction'] for output in self.val_outs])
             target = np.hstack([output['target'] for output in self.val_outs])
             path = Path(CHECKPOINT_PATH + f"/metrics/epoch-{self.current_epoch}.txt")
-            path.mkdir(parents=True, exist_ok=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
             with open(path, 'w') as f:
                 print(classification_report(target, prediction, zero_division=1), file=f)
             self.current_epoch += 1
