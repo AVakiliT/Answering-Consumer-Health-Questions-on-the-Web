@@ -70,6 +70,7 @@ for batch in tqdm(data_loader):
 # embeddings = torch.cat(embeddings)
 probs = torch.cat(probs)
 # torch.save(embeddings, "gnn_fraud/embeddings_2019.pt")
+df = df.reset_index()
 df["probs"] = pd.Series([x.numpy() for x in probs])
 out_path = f"./data/{args[0].bm25run}_1p_sentences_with_probs/topic-{topic_no}.snappy.parquet"
 Path(out_path).parent.mkdir(exist_ok=True)
