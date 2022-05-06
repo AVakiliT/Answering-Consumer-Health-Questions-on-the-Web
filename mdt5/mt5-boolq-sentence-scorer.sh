@@ -9,7 +9,7 @@
 #SBATCH --output=slurm/%A_%a.out
 
 
-module load StdEnv  gcc  cuda/11 arrow python
+module load module load gcc/9.3.0 arrow python scipy-stack
 source ~/avakilit/PYTORCH/bin/activate
 #pip install --upgrade pip
 
