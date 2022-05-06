@@ -8,9 +8,15 @@ from pyspark.sql.types import *
 
 spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
-df = spark.read.load(f"./data/{sys.argv[1]}")
+if len(sys.argv) > 1:
+    inp = sys.argv[1]
+    out = sys.argv[2]
+else:
+    inp = "Top1kBM25_2019"
+    out = "Top1kBM25_2019"
 
-window_size, step = 6, 3
+df = spark.read.load(f"./data/{inp}")
+window_size, step = 1, 1
 
 
 print(df.count())
@@ -44,4 +50,4 @@ lol_udf = udf(sentencize, schema)
 df_new = df.withColumn("passage", lol_udf("text")).selectExpr("docno", "topic", "score as bm25",
                                                               "explode(passage) as passage", "url")
 
-df_new.repartition(1).write.mode("overwrite").save(f"./data/{sys.argv[2]}_1p_passages")
+df_new.repartition(1).write.mode("overwrite").save(f"./data/{out}_1p_sentences")

@@ -8,6 +8,9 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, PreT
 from tldextract import extract
 from boolq.bert_modules import BoolQBertModule
 import networkx as nx
+
+from gnn_fraud.fraud_utils import HMIDataset
+
 df = pd.read_parquet("./mdt5/output_Top1kBM25_2019_mt5_2019_base-med_with_text")
 topics = pd.read_csv("./data/topics.csv", sep="\t", index_col="topic")
 v = pd.read_csv("./data/filtered_vertices.tsv", sep="\t", header=None, names="ccid rdomain nhosts domain".split())
@@ -16,15 +19,15 @@ df["domain"] = df.url.apply(lambda x: extract(x).domain + '.' + extract(x).suffi
 df = df.merge(topics["description efficacy".split()], on="topic", how="inner")
 #%%
 
-# topic = 7
-#
-# filtered_urls = df[df.topic == topic].domain.drop_duplicates()
-# fv = v.merge(filtered_urls, on="domain", how="inner")
-# fe = e.merge(fv.rename(columns={"ccid": "from_ccid"}), on="from_ccid", how="inner").merge(
-#     fv.rename(columns={"ccid": "to_ccid"}), on="to_ccid", how="inner")
-# G = nx.DiGraph()
-# G.add_nodes_from(fv.apply(lambda row: (row.ccid, dict(domain=row.domain)), axis=1))
-# G.add_edges_from(fe.apply(lambda row: (row.from_ccid, row.to_ccid), axis=1))
+topic = 7
+
+filtered_urls = df[df.topic == topic].domain.drop_duplicates()
+fv = v.merge(filtered_urls, on="domain", how="inner")
+fe = e.merge(fv.rename(columns={"ccid": "from_ccid"}), on="from_ccid", how="inner").merge(
+    fv.rename(columns={"ccid": "to_ccid"}), on="to_ccid", how="inner")
+G = nx.DiGraph()
+G.add_nodes_from(fv.apply(lambda row: (row.ccid, dict(domain=row.domain)), axis=1))
+G.add_edges_from(fe.apply(lambda row: (row.from_ccid, row.to_ccid), axis=1))
 # %%
 
 # counts = {}
@@ -45,7 +48,7 @@ CHECKPOINT_PATH = f"checkpoints/boolq-simple/deberta-base-num_class=2-lr=1e-5-ba
 tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
 model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=NUM_CLASSES).to(0)
 lightning_module = BoolQBertModule.load_from_checkpoint(
-    "./checkpoints/boolq-qrel/deberta-base-lr=1e-05-batch_size=4/epoch=03-valid_F1=0.893-valid_Accuracy=0.893.ckpt",
+    "./checkpoints/boolq-qrel/deberta-base-lr=1e-05-batch_size=16-aug/epoch=02-valid_F1=0.902-valid_Accuracy=0.902.ckpt",
     # "../checkpoints/boolq-simple/deberta-base-num_class=2-lr=1e-05-batch_size=16/epoch=04-valid_F1=0.818-valid_Accuracy=0.818.ckpt",
     tokenizer=tokenizer,
     model=model,
@@ -66,44 +69,7 @@ df["source_text"] = df.apply(lambda x: f"{x.description} [SEP] {x.passage}", axi
 
 
 # %%
-class HMIDataset(Dataset):
-    """  PyTorch Dataset class  """
 
-    def __init__(
-            self,
-            data: pd.DataFrame,
-            tokenizer: PreTrainedTokenizer,
-            source_max_token_len: int = 512,
-    ):
-        self.tokenizer = tokenizer
-        self.data = data
-        self.source_max_token_len = source_max_token_len
-
-    def __len__(self):
-        """ returns length of data """
-        return len(self.data)
-
-    def __getitem__(self, index: int):
-        """ returns dictionary of input tensors to feed into T5/MT5 model"""
-
-        data_row = self.data.iloc[index]
-        source_text_encoding = self.tokenizer(
-            data_row["source_text"],
-            max_length=self.source_max_token_len,
-            padding="max_length",
-            truncation=True,
-            return_attention_mask=True,
-            add_special_tokens=True,
-            return_tensors="pt",
-        )
-
-        return dict(
-            input_ids=source_text_encoding["input_ids"].flatten(),
-            attention_mask=source_text_encoding["attention_mask"].flatten(),
-            efficacy=data_row.efficacy.flatten(),
-            source=data_row.source_text,
-            retrieval_score=data_row.score
-        )
 
 
 dataset = HMIDataset(df, tokenizer=tokenizer)
@@ -115,37 +81,48 @@ data_loader = DataLoader(
     shuffle=False,
 )
 #%%
-
+probs = []
 embeddings = []
 for batch in tqdm(data_loader):
     with torch.no_grad():
         model.eval()
         a = model._modules['deberta'](input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0))
         a = model._modules['pooler'](a.last_hidden_state)
+        logits = model._modules['classifier'](a)
         embeddings.append(a.cpu())
+        probs.append(logits.cpu().softmax(-1))
 embeddings = torch.cat(embeddings)
+probs = torch.cat(probs)
 torch.save(embeddings, "gnn_fraud/embeddings_2019.pt")
 df["emb"] = pd.Series([x.numpy() for x in embeddings])
-with torch.no_grad():
-    a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0))
-a.logits.softmax(-1)[:,1]
+df["probs"] = pd.Series([x.numpy() for x in probs])
+# with torch.no_grad():
+#     a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0))
+# a.logits.softmax(-1)[:,1]
 
 
 # %%
 
-preds = []
-probs = []
-for batch in tqdm(data_loader):
-    with torch.no_grad():
-        model.eval()
-        a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0)).logits.softmax(-1)
-        probs.append(a.cpu())
-        preds.append(a.cpu().gt(.5).long())
-probs = torch.cat(probs)
-preds = torch.cat(preds)
-df["prob"] = pd.Series([x.item() for x in probs])
-df["pred"] = pd.Series([x.item() for x in preds])
-df.to_parquet("./gnn_fraud/temp_df")
+# preds = []
+# probs = []
+# for batch in tqdm(data_loader):
+#     with torch.no_grad():
+#         model.eval()
+#         a = model(input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0)).logits.softmax(-1)
+#         probs.append(a.cpu())
+#         preds.append(a.cpu().gt(.5).long())
+# probs = torch.cat(probs)
+# preds = torch.cat(preds)
+# df["prob"] = pd.Series([x.item() for x in probs])
+# df["pred"] = pd.Series([x.item() for x in preds])
+df.to_parquet("./gnn_fraud/temp_df_aug")
+df2 = pd.read_parquet("./gnn_fraud/old_temp_df")
 
 #%%
-df.pro.value_counts()
+
+# df["match"] = (df2.prob.gt(.5).astype("long") * 2 - 1).eq(df2.efficacy).astype("float")
+df["match"] = df.probs.apply(lambda x: x.argmax()).sub(1).eq(df.efficacy)
+df[df.efficacy != 0].groupby("topic").agg({"match": "mean", "efficacy":"max", "description":"max"}).sort_values("match")
+
+#%%
+df2[df2.efficacy != 0].groupby("topic").agg({"match": "mean", "efficacy":"max", "description":"max"}).sort_values("match")
