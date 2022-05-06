@@ -9,7 +9,7 @@
 #SBATCH --output=slurm/%A_%a.out
 
 
-module load module load gcc/9.3.0 arrow python scipy-stack
+module load gcc/9.3.0 arrow python scipy-stack
 source ~/avakilit/PYTORCH/bin/activate
 #pip install --upgrade pip
 
