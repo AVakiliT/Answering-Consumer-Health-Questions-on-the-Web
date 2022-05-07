@@ -58,20 +58,21 @@ data_loader = DataLoader(
 
 #%%
 probs = []
-# embeddings = []
+embeddings = []
 for batch in tqdm(data_loader):
     with torch.no_grad():
         model.eval()
         a = model._modules['deberta'](input_ids=batch["input_ids"].to(0), attention_mask=batch["attention_mask"].to(0))
         a = model._modules['pooler'](a.last_hidden_state)
         logits = model._modules['classifier'](a)
-        # embeddings.append(a.cpu())
+        embeddings.append(a.cpu())
         probs.append(logits.cpu().softmax(-1))
-# embeddings = torch.cat(embeddings)
+embeddings = torch.cat(embeddings)
 probs = torch.cat(probs)
 # torch.save(embeddings, "gnn_fraud/embeddings_2019.pt")
 df = df.reset_index()
 df["probs"] = pd.Series([x.numpy() for x in probs])
+df["embedding"] = pd.Series([x.numpy() for x in embeddings])
 out_path = f"./data/{args[0].bm25run}_1p_sentences_with_probs/topic-{topic_no}.snappy.parquet"
 Path(out_path).parent.mkdir(exist_ok=True)
 df.to_parquet(out_path)
