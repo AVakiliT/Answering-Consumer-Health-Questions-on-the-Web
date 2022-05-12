@@ -17,5 +17,5 @@ source ~/avakilit/PYTORCH/bin/activate
 echo "Starting script..."
 
 ipython mdt5/mt5-boolq-sentence-scorer.py -- --topic_no $SLURM_ARRAY_TASK_ID \
- --bm25run Top1kBM25
+ --bm25run Top1kBM25_2021
 
