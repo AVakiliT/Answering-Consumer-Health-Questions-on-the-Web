@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --account=rrg-smucker
 #SBATCH --time=0-2:0:0
-#SBATCH --array=1-51
+#SBATCH --array=101-150
 # --array=1-51
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=12G
@@ -16,5 +16,5 @@ source ~/avakilit/PYTORCH/bin/activate
 echo "Starting script..."
 
 python mt5-boolq-sentence-scorer.py --topic_no $SLURM_ARRAY_TASK_ID \
- --bm25run Top1kBM25_2019
+ --bm25run Top1kBM25
 
