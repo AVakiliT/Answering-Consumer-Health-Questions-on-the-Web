@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from tldextract import extract
-from boolq.bert_modules import BoolQBertModule
+from ..boolq.bert_modules import BoolQBertModule
 from gnn_fraud.fraud_utils import HMIDataset
 
 print("Parsing args...", flush=True)
@@ -21,7 +21,7 @@ topic_no = args[0].topic_no
 df = pd.read_parquet(f"./data/{args[0].bm25run}_1p_sentences/")
 df = df.rename(columns={"bm25":"score"})
 df["domain"] = df.url.apply(lambda x: extract(x).domain + '.' + extract(x).suffix)
-df["host"] = df.url.apply(lambda x: f"{x.subdomain}{'.' if x.subdomain else ''}{x.domain}.{x.suffix}")
+df["host"] = df.url.apply(lambda x: f"{extract(x).subdomain}{'.' if extract(x).subdomain else ''}{extract(x).domain}.{extract(x).suffix}")
 topics = pd.read_csv("./data/topics.csv", sep="\t", index_col="topic")
 df = df.merge(topics["description efficacy".split()], on="topic", how="inner")
 df["source_text"] = df.apply(lambda x: f"{x.description} [SEP] {x.passage}", axis=1)
