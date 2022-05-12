@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from tldextract import extract
-from ..boolq.bert_modules import BoolQBertModule
+from boolq.bert_modules import BoolQBertModule
 from gnn_fraud.fraud_utils import HMIDataset
 
 print("Parsing args...", flush=True)
