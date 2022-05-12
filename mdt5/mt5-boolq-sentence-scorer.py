@@ -21,7 +21,7 @@ topic_no = args[0].topic_no
 df = pd.read_parquet(f"./data/{args[0].bm25run}_1p_sentences/")
 df = df.rename(columns={"bm25":"score"})
 df["domain"] = df.url.apply(lambda x: extract(x).domain + '.' + extract(x).suffix)
-df["host"] = df.url.apply(lambda x: extract(x).subdomain + '.' + extract(x).domain + '.' + extract(x).suffix)
+df["host"] = df.url.apply(lambda x: f"{x.subdomain}{'.' if x.subdomain else ''}{x.domain}.{x.suffix}")
 topics = pd.read_csv("./data/topics.csv", sep="\t", index_col="topic")
 df = df.merge(topics["description efficacy".split()], on="topic", how="inner")
 df["source_text"] = df.apply(lambda x: f"{x.description} [SEP] {x.passage}", axis=1)
