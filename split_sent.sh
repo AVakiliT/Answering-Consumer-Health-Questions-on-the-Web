@@ -6,6 +6,6 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH--cpus-per-task=28
 
-module load spark;export PYSPARK_DRIVER_PYTHON=ipython;export _JAVA_OPTIONS="-Xms256m -Xmx180G";source ~/ENV/bin/activate
+module load spark scipy-stack; export PYSPARK_DRIVER_PYTHON=ipython;export _JAVA_OPTIONS="-Xms256m -Xmx120G";source ~/avakilit/SPARKENV/bin/activate
 
-spark-submit split_sent.py Top1kBM25_2019 Top1kBM25_2019
+spark-submit split_sent.py Top1kBM25 Top1kBM25_2021
