@@ -26,16 +26,16 @@ schema = ArrayType(StringType())
 nlp = spacy.blank("en")
 nlp.add_pipe("sentencizer")
 
-
-def tokenize_windows(s):
-    s = re.sub('\s+', " ", s.strip())
-    doc = nlp(s)
-    sentences = [sent.sent.text.strip() for sent in doc.sents if len(sent) > 5]
-    tokens = nlp(' '.join(sentences))
-
-    if len(tokens) <= window_size:
-        return tokens.text.strip()
-    return [tokens[i: i + window_size].text.strip() for i in range(0, len(tokens), step)]
+#
+# def tokenize_windows(s):
+#     s = re.sub('\s+', " ", s.strip())
+#     doc = nlp(s)
+#     sentences = [sent.sent.text.strip() for sent in doc.sents if len(sent) > 5]
+#     tokens = nlp(' '.join(sentences))
+#
+#     if len(tokens) <= window_size:
+#         return tokens.text.strip()
+#     return [tokens[i: i + window_size].text.strip() for i in range(0, len(tokens), step)]
 
 
 def sentencize(s):

@@ -11,7 +11,6 @@ df = pd.concat(
      pd.read_parquet(f"./data/Top1kBM25_2019")])
 
 domains = df.url.apply(lambda x: '.'.join(tldextract.extract(x)[-2:])).drop_duplicates()
-
 r_domains = domains.apply(lambda x: '.'.join(x.split('.')[::-1]))
 
 d = pd.concat({'domain': domains, 'rdomain': r_domains}, axis=1)
