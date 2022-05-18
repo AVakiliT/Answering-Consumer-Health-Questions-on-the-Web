@@ -15,7 +15,7 @@ parser.add_argument("--topic_no", default=33, type=int)
 args = parser.parse_known_args()
 topic_no = args[0].topic_no
 #%%
-df = pd.read_parquet(f"./data/2021_qrels_1p_sentences/")
+df = pd.read_parquet(f"./data/qrel_2021_1p_sentences/")
 df["domain"] = df.url.apply(lambda x: extract(x).domain + '.' + extract(x).suffix)
 df["host"] = df.url.apply(lambda x: f"{extract(x).subdomain}{'.' if extract(x).subdomain else ''}{extract(x).domain}.{extract(x).suffix}")
 topics = pd.read_csv("./data/topics.csv", sep="\t", index_col="topic")
@@ -68,6 +68,6 @@ probs = torch.cat(probs)
 df = df.reset_index(drop=True)
 df["probs"] = pd.Series([x.numpy() for x in probs])
 df["embedding"] = pd.Series([x.numpy() for x in embeddings])
-out_path = f"./data/2021qrels_1p_sentences_with_probs/topic-{topic_no}.snappy.parquet"
+out_path = f"./data/qrel_2021_1p_sentences_with_probs/topic-{topic_no}.snappy.parquet"
 Path(out_path).parent.mkdir(exist_ok=True)
 df.to_parquet(out_path)
