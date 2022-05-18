@@ -15,5 +15,5 @@ source ~/avakilit/PYTORCH/bin/activate
 
 echo "Starting script..."
 
-ipython mdt5/2021qrels.py -- --topic_no $SLURM_ARRAY_TASK_ID \
+ipython --ipython-dir=/tmp mdt5/2021qrels.py -- --topic_no $SLURM_ARRAY_TASK_ID
 

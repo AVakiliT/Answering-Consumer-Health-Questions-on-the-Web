@@ -1,4 +1,5 @@
 import argparse
+import os.path
 from pathlib import Path
 
 import pandas as pd
@@ -23,7 +24,8 @@ df = df.merge(topics["description efficacy".split()], on="topic", how="inner")
 df["source_text"] = df.apply(lambda x: f"{x.description} [SEP] {x.passage}", axis=1)
 
 df = df[df.topic == topic_no]
-
+if df.shape[0] == 0 or os.path.exists(f"./data/qrel_2021_1p_sentences_with_probs/topic-{topic_no}.snappy.parquet"):
+    exit()
 #%%
 NUM_CLASSES =  3
 YES = "▁yes"
