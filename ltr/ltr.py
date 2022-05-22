@@ -1,7 +1,7 @@
 import pandas as pd
 import lightgbm as lgb
 
-df = pd.read_parquet("./data/qrel_2021_1p_sentences_with_probs")
+qrels = pd.read_parquet("./data/qrel_2021_1p_sentences_with_probs")
 top1krun = pd.read_parquet("./data/Top1kBM25_2021_1p_sentences_with_probs")
 def f(df):
     df["prob_pos"] = df.probs.apply(lambda x: x[2])
@@ -12,19 +12,23 @@ def f(df):
     temp = df.loc[df.groupby("topic docno".split()).max_prob.idxmax()]
     return temp
 
-temp = f(df)
-temp2 = f(top1krun)
+qrel_top_passage = f(qrels)
+top1k_top_passage = f(top1krun)
+top1k_top_passage = top1k_top_passage.rename(columns={"score":"bm25"})
+
+qrel_top_passage = qrel_top_passage.merge(pd.read_parquet('./data/qrels/2021_qrels_with_bm25.parquet')['topic docno bm25'.split()], on='topic docno'.split(), how='inner')
 
 #%%
-X = temp["prob_pos prob_neg host".split()]
+X = qrel_top_passage["prob_pos prob_neg bm25 host".split()]
 X.host = X.host.astype("category")
-y = temp.score
-group = temp.topic
+y = qrel_top_passage.score
+y = y - y.min()
+group = qrel_top_passage.topic
 dataset = lgb.Dataset(X, label=y, weight=None, group=group, categorical_feature="auto")
-param = {'num_leaves': 31, 'objective': 'binary'}
-param['metric'] = ['auc', 'binary_logloss', 'map']
+param = {'num_leaves': 31, 'objective': 'lambdarank'}
+param['metric'] = ['auc', 'map', 'ndcg']
 # cv = lgb.cv(param, dataset, 10, nfold=5)
-top1krun = pd.read_parquet("./data/Top1kBM25_2021_1p_sentences_with_probs")
+
 
 #%%
 def construct_run(_lol):
@@ -42,8 +46,6 @@ runs2 = []
 for _x, _y in cv.split(X, y, group):
     train_data = lgb.Dataset(X.iloc[_x], label=y.iloc[_x], categorical_feature=['host'], group=group.iloc[_x].to_frame(0).groupby(0)[0].count())
     eval_data = lgb.Dataset(X.iloc[_y], label=y.iloc[_y], categorical_feature=['host'], group=group.iloc[_y].to_frame(0).groupby(0)[0].count())
-    param = {'num_leaves': 31}
-    param['metric'] = 'auc map'.split()
     num_round = 10
     bst = lgb.train(param, train_data, num_round, valid_sets=[eval_data])
 
@@ -52,20 +54,24 @@ for _x, _y in cv.split(X, y, group):
     ypred = bst.predict(X.iloc[_y])
     lol = X.iloc[_y]
     lol["pred"] = ypred
-    lol["efficacy"] = temp.iloc[_y].efficacy
-    lol["topic"] = temp.iloc[_y].topic
-    lol["docno"] = temp.iloc[_y].docno
-    lol["passage"] = temp.iloc[_y].passage
+    lol["efficacy"] = qrel_top_passage.iloc[_y].efficacy
+    lol["topic"] = qrel_top_passage.iloc[_y].topic
+    lol["docno"] = qrel_top_passage.iloc[_y].docno
+    lol["passage"] = qrel_top_passage.iloc[_y].passage
+    lol["score"] = qrel_top_passage.iloc[_y].score
+    lol = lol.sort_values(by="topic pred".split(), ascending=[True, False])
     run = construct_run(lol)
     runs.append(run)
 
-    lol2 = temp2[temp2.topic.isin(temp.iloc[_y].topic.unique())]
-    X2 = lol2["prob_pos prob_neg host".split()]
+    lol2 = top1k_top_passage[top1k_top_passage.topic.isin(qrel_top_passage.iloc[_y].topic.unique())]
+    X2 = lol2["prob_pos prob_neg bm25 host".split()]
     X2.host = X2.host.astype("category")
     ypred2 = bst.predict(X2)
     X2["pred"] = ypred2
     X2["topic"] = lol2.topic
     X2["docno"] = lol2.docno
+    X2["passage"] = lol2.passage
+    X2 = X2.sort_values(by="topic pred".split(), ascending=[True, False])
     run2 = construct_run(X2)
     runs2.append(run2)
 
