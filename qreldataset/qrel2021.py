@@ -1,5 +1,5 @@
 from pyspark.sql.functions import col, udf
-from pyspark.sql.types import IntegerType, StructType, StructField, StringType, FloatType
+from pyspark.sql.types import IntegerType, StructType, StructField, StringType, FloatType, ArrayType
 spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
 c4 = spark.read.load("/home/avakilit/group-data/c4-parquet/")
@@ -35,17 +35,21 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf
 from pyspark.sql.types import *
 
+df = spark.read.load("/project/6004803/avakilit/Trec21_Data/data/qrel_2021")
 
-
-window_size, step = 1, 1
+window_size, step = 6, 3
 
 
 # print(df.count())
-
-schema = ArrayType(StringType())
-
 nlp = spacy.blank("en")
 nlp.add_pipe("sentencizer")
+
+schema = ArrayType(StructType([
+    StructField("passage_index",IntegerType()),
+    StructField("passage",StringType())
+]))
+
+
 
 #
 # def tokenize_windows(s):
@@ -63,12 +67,13 @@ def sentencize(s):
     s = re.sub('\s+', " ", s.strip())
     sentences = [sent.sent.text.strip() for sent in nlp(s).sents if len(sent) > 3]
     if len(sentences) <= window_size:
-        return [s]
-    return [' '.join(sentences[i: i + window_size]) for i in range(0, len(sentences), step)]
+        return [(0,s)]
+    return [(i,' '.join(sentences[i: i + window_size])) for i in range(0, len(sentences), step)]
 
 lol_udf = udf(sentencize, schema)
 df_new = df.withColumn("passage", lol_udf("text"))
 df_new = df_new.selectExpr("topic,docno,timestamp,url,usefulness,stance,credibility,explode(passage) as passage".split(','))
-df_new.repartition(1).write.save("/project/6004803/avakilit/Trec21_Data/data/qrel_2021_1p_sentences", mode="overwrite")
+df_new = df_new.selectExpr('topic,docno,timestamp,url,usefulness,stance,credibility,passage["passage_index"] as passage_index,passage["passage"] as passage'.split(','))
+df_new.repartition(1).write.save(f"/project/6004803/avakilit/Trec21_Data/data/qrels.2021.passages_{window_size}_{step}", mode="overwrite")
 
 #%%
