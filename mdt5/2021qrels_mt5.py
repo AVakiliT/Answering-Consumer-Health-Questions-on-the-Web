@@ -33,7 +33,7 @@ for topic in tqdm(df.topic.unique().tolist()):
     # df = df[df.topic == topic].merge(topics[topics.topic == topic]["topic description efficacy".split()], on="topic", how="inner")
     query = Query(topics[topics.topic == topic].iloc[0].description)
 
-    texts = [Text(row.passage, row["docno timestamp url usefulness stance credibility passage_index passage description efficacy".split()]) for _, row in
+    texts = [Text(row.passage, row["topic docno timestamp url usefulness stance credibility passage_index passage description efficacy".split()]) for _, row in
              df[df.topic==topic].iterrows()]
 
     reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-base-med-msmarco")

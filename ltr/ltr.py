@@ -32,6 +32,9 @@ qrel_top_passage = qrel_top_passage.merge(pd.read_parquet('./data/qrels/2021_qre
 # qrel_top_passage = qrel_top_passage.merge(original_qrels['topic docno usefulness stance credibility'.split()], on='topic docno'.split(), how='inner')
 qrel_top_passage["ranking"] = qrel_top_passage.groupby("topic").bm25.rank("dense", ascending=False)
 #%%
+qrel_mt5 = pd.read_parquet("./data/qrels.2021.passages_6_3.top_passage_mt5.parquet")
+qrel_mt5["topic docno mt5".split()]
+#%%
 # def get_vs(row):
 #     vp = np.zeros(len(cats))
 #     vn = np.zeros(len(cats))
