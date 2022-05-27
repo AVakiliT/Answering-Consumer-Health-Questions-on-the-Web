@@ -5,6 +5,7 @@ from sklearn.linear_model import LogisticRegression
 
 qrels = pd.read_parquet("./data/qrel_2021_1p_sentences_with_probs")
 top1krun = pd.read_parquet("./data/Top1kBM25_2021_1p_sentences_with_probs")
+# top1krun_2019 = pd.read_parquet("./data/Top1kBM25_2019_1p_sentences_with_probs")
 
 
 def f(df):
@@ -33,7 +34,16 @@ qrel_top_passage = qrel_top_passage.merge(pd.read_parquet('./data/qrels/2021_qre
 qrel_top_passage["ranking"] = qrel_top_passage.groupby("topic").bm25.rank("dense", ascending=False)
 #%%
 qrel_mt5 = pd.read_parquet("./data/qrels.2021.passages_6_3.top_passage_mt5.parquet")
-qrel_mt5["topic docno mt5".split()]
+qrel_top_passage = qrel_top_passage.merge(qrel_mt5["topic docno mt5".split()], on="topic docno".split(), how="inner")
+
+# top1krun_mt5 = pd.read_parquet("../data/")
+
+#%% PAGERANK
+pagerank_df = pd.read_csv(r"C:\Users\Amir\Downloads\cc-main-2018-19-nov-dec-jan-domain-ranks.txt.gz", sep="\t")
+pagerank_df = pagerank_df.rename(columns={s : s.replace("#","") for s in pagerank_df.columns})
+pagerank_df["domain"] = pagerank_df["host_rev"].apply(lambda x: '.'.join(x.split('.')[::-1]))
+qrel_top_passage = qrel_top_passage.merge(pagerank_df["domain pr_val".split()], on="domain", how="left")
+top1k_top_passage = top1k_top_passage.merge(pagerank_df["domain pr_val".split()], on="domain", how="left")
 #%%
 # def get_vs(row):
 #     vp = np.zeros(len(cats))
@@ -53,10 +63,10 @@ qrel_mt5["topic docno mt5".split()]
 
 #%%
 y = qrel_top_passage.score
-# y = y - y.min()
-criteria = [y.between(-3, -1), y.between(0, 4), y.between(5, 12)]
-values = [0, 1, 2]
-y = pd.Series(np.select(criteria, values, 0))
+y = y - y.min()
+# criteria = [y.between(-3, -1), y.between(0, 4), y.between(5, 12)]
+# values = [0, 1, 2]
+# y = pd.Series(np.select(criteria, values, 0))
 group = qrel_top_passage.topic
 param = dict(
     objective='regression',
@@ -83,7 +93,7 @@ runs2 = []
 stats = [[],[]]
 
 for index_train, index_test in cv.split(qrel_top_passage, y, group):
-    X = qrel_top_passage["prob_neg prob_pos efficacy".split()]
+    X = qrel_top_passage["prob_pos prob_neg pr_val efficacy".split()]
 
     # v_in = np.vstack(qrel_top_passage.iloc[index_train].groupby("topic").v.sum().to_list())
     # v_y = qrel_top_passage.iloc[index_train].groupby('topic').efficacy.max().to_numpy()
@@ -113,9 +123,9 @@ for index_train, index_test in cv.split(qrel_top_passage, y, group):
     lol = lol.sort_values(by="topic pred".split(), ascending=[True, False])
     run = construct_run(lol)
     runs.append(run)
-    #
+
     lol2 = top1k_top_passage[top1k_top_passage.topic.isin(qrel_top_passage.iloc[index_test].topic.unique())]
-    X2 = lol2["prob_neg prob_pos efficacy".split()]
+    X2 = lol2["prob_pos prob_neg pr_val efficacy".split()]
     ypred2 = bst.predict(X2)
     X2["pred"] = ypred2
     X2["topic"] = lol2.topic

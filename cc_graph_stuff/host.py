@@ -5,7 +5,9 @@ from tldextract import extract
 #%%
 
 
-schema =
+schema = StructType([
+    StructField("id", IntegerType(), True),
+    StructField("r_host", StringType(), True)])
 
 spark = SparkSession.builder.appName("MyApp").getOrCreate()
 path = "/project/6004803/smucker/group-data/commoncrawl/cc-graph/"
@@ -21,7 +23,15 @@ def f(x):
 v = v.withColumn("host", f(col("r_host")))
 v.head(5)
 
-df = spark.read.load("./data/Top1kBM25_2019").union(spark.read.load("./data/Top1kBM25"))
+df1 = spark.read.load("./data/Top1kBM25_2019")
+df2 = spark.read.load("./data/Top1kBM25")
+# df3 = spark.read.load("./data/qrel_2021")
+df = df1.select("topic docno url".split()).union(
+    df2.select("topic docno url".split())
+)\
+#     .union(
+#     df3.select("topic docno url".split())
+# )
 #%%
 @udf(StringType())
 def url2host(url):
