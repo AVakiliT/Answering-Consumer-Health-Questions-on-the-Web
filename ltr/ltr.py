@@ -27,16 +27,17 @@ top1k_top_passage.host = top1k_top_passage.host.astype('category')
 
 qrel_top_passage = qrel_top_passage.merge(pd.read_parquet('./data/qrels/2021_qrels_with_bm25.parquet')['topic docno bm25'.split()], on='topic docno'.split(), how='inner')
 # original_qrels = pd.read_csv("data/qrels/2021_qrels.txt", names="topic iter docno usefulness stance credibility".split(), sep=" ")
-# def unfixdocno(s):
-#     return f"c4-{int(s[21:25]):04}-{int(s.split('.')[-1]):06}"
+def unfixdocno(s):
+    return f"c4-{int(s[21:25]):04}-{int(s.split('.')[-1]):06}"
 # original_qrels.docno = original_qrels.docno.apply(unfixdocno)
 # qrel_top_passage = qrel_top_passage.merge(original_qrels['topic docno usefulness stance credibility'.split()], on='topic docno'.split(), how='inner')
 qrel_top_passage["ranking"] = qrel_top_passage.groupby("topic").bm25.rank("dense", ascending=False)
-#%%
+#%% MT5
 qrel_mt5 = pd.read_parquet("./data/qrels.2021.passages_6_3.top_passage_mt5.parquet")
 qrel_top_passage = qrel_top_passage.merge(qrel_mt5["topic docno mt5".split()], on="topic docno".split(), how="inner")
-
-# top1krun_mt5 = pd.read_parquet("../data/")
+run_2021_mt5 = pd.read_parquet("mdt5/output_Top1kBM25_2021_mt5_2021_base-med_with_text").rename(columns={"docid":"docno", "score":"mt5"})
+run_2021_mt5.docno = run_2021_mt5.docno.apply(unfixdocno)
+top1k_top_passage = top1k_top_passage.merge(run_2021_mt5["topic docno mt5".split()], on="topic docno".split(), how="inner")
 
 #%% PAGERANK
 pagerank_df = pd.read_csv(r"C:\Users\Amir\Downloads\cc-main-2018-19-nov-dec-jan-domain-ranks.txt.gz", sep="\t")
@@ -44,6 +45,11 @@ pagerank_df = pagerank_df.rename(columns={s : s.replace("#","") for s in pageran
 pagerank_df["domain"] = pagerank_df["host_rev"].apply(lambda x: '.'.join(x.split('.')[::-1]))
 qrel_top_passage = qrel_top_passage.merge(pagerank_df["domain pr_val".split()], on="domain", how="left")
 top1k_top_passage = top1k_top_passage.merge(pagerank_df["domain pr_val".split()], on="domain", how="left")
+#%% HONCODE
+honcode = pd.read_csv("./data/found_HONCode_hosts_no_dups", sep=" ", header=None)[2].to_list()
+qrel_top_passage["honcode"] = qrel_top_passage.host.isin(honcode).astype("float")
+top1k_top_passage["honcode"] = top1k_top_passage.host.isin(honcode).astype("float")
+
 #%%
 # def get_vs(row):
 #     vp = np.zeros(len(cats))
@@ -64,14 +70,16 @@ top1k_top_passage = top1k_top_passage.merge(pagerank_df["domain pr_val".split()]
 #%%
 y = qrel_top_passage.score
 y = y - y.min()
+y = y.map({i:x for i, x in enumerate([0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2])})
+
 # criteria = [y.between(-3, -1), y.between(0, 4), y.between(5, 12)]
 # values = [0, 1, 2]
 # y = pd.Series(np.select(criteria, values, 0))
 group = qrel_top_passage.topic
 param = dict(
-    objective='regression',
+    objective='mse',
     metric='auc ndcg'.split(),
-    # label_gain=np.array([-4, -2,    -1,    0,    1,    2,    4,    8,   16,   32,   64,  128, 256,  512, 1024, 2048])
+    # label_gain=np.array([0, 1, 2, 10, 11, 12, 13, 14, 15, 16, 64, 1001, 1002, 1003, 1004, 1005]),
              )
 # cv = lgb.cv(param, dataset, 10, nfold=5)
 
@@ -92,8 +100,10 @@ runs = []
 runs2 = []
 stats = [[],[]]
 
+features = """prob_pos efficacy mt5 honcode pr_val"""
+
 for index_train, index_test in cv.split(qrel_top_passage, y, group):
-    X = qrel_top_passage["prob_pos prob_neg pr_val efficacy".split()]
+    X = qrel_top_passage[features.split()]
 
     # v_in = np.vstack(qrel_top_passage.iloc[index_train].groupby("topic").v.sum().to_list())
     # v_y = qrel_top_passage.iloc[index_train].groupby('topic').efficacy.max().to_numpy()
@@ -125,7 +135,7 @@ for index_train, index_test in cv.split(qrel_top_passage, y, group):
     runs.append(run)
 
     lol2 = top1k_top_passage[top1k_top_passage.topic.isin(qrel_top_passage.iloc[index_test].topic.unique())]
-    X2 = lol2["prob_pos prob_neg pr_val efficacy".split()]
+    X2 = lol2[features.split()]
     ypred2 = bst.predict(X2)
     X2["pred"] = ypred2
     X2["topic"] = lol2.topic
