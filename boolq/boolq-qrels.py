@@ -81,10 +81,11 @@ if __name__ == '__main__':
     df["target_text"] = df.target_class.map(
         {0: NO.replace("▁", ""), 1: IRRELEVANT.replace("▁", ""), 2: YES.replace("▁", "")})
     # df_train, df_test = train_test_split(df, test_size=0.2, stratify=df.target_class, random_state=42)
-    idx_test, idx_train = GroupShuffleSplit(n_splits=1, test_size=.8, random_state=42).split(df,groups=df.topic).__next__()
+    gss = GroupShuffleSplit(n_splits=1, test_size=.2, random_state=42).split(df, groups=df.topic)
+    idx_train, idx_test = next(gss)
     df_train = df.iloc[idx_train]
     df_test = df.iloc[idx_test]
-    df_test.efficacy.value_counts()
+    # df_train.efficacy.value_counts()
     # tr,va,te = StratifiedGroupShuffleSplit(df, 0.6)
     # %%
 
