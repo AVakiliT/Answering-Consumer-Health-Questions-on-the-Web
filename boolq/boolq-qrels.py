@@ -98,7 +98,6 @@ if __name__ == '__main__':
             neg_sampling=False)
 
         df_train = pd.concat([df_train, df_train_aug])
-    df_train = df_train.sample(frac=.05)
     weights = torch.tensor((1 / (df_train.target_class.value_counts() / df_train.shape[0]).sort_index()).to_list())
     weights = weights / weights.sum()
 
