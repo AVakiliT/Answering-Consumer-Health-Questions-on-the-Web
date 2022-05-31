@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # parser = MyLightningModel.add_model_specific_args(parser)
     # parser = pl.Trainer.add_argparse_args(parser)
     parser.add_argument("--batch_size", default=4, type=int)
-    parser.add_argument("--max_epochs", default=2, type=int)
+    parser.add_argument("--max_epochs", default=1, type=int)
     parser.add_argument("--lr", default=1e-5, type=float)
     parser.add_argument("--t_name", default="microsoft/deberta-base", type=str)
     parser.add_argument("--load_from", default=None, type=str)
@@ -41,6 +41,7 @@ if __name__ == '__main__':
     parser.set_defaults(augment=False)
     # parser.add_argument("--load_from", default="checkpoints/boolq-simple/deberta-base-num_class=3-lr=1e-05-batch_size=16/epoch=03-valid_F1Score=0.906-valid_Accuracy=0.906.ckpt", type=str)
     # parser.add_argument("--transformer-type", default="t5", type=str)
+    parser.add_argument("--load_epoch", default=0, type=int)
     args = parser.parse_known_args()
     # YES = "▁5.0"
     # NO = "▁1.0"
@@ -50,9 +51,7 @@ if __name__ == '__main__':
     NUM_CLASSES = 3
     BATCH_SIZE = args[0].batch_size
     AUGMENT = args[0].augment
-    LOAD_FROM = args[0].load_from
-    LOAD_CHECKPOINT_PATH = LOAD_FROM.split('/')[-3] + '-' + LOAD_FROM.split('/')[-2] + '-' + \
-                           LOAD_FROM.split('/')[-1].split('-')[0] + '/' if LOAD_FROM else ''
+    LOAD_EPOCH = args[0].load_epoch
     from boolq.BaseModules import prep_boolq_dataset, NO, YES
 
     # %%
@@ -81,11 +80,7 @@ if __name__ == '__main__':
     df["target_text"] = df.target_class.map(
         {0: NO.replace("▁", ""), 1: IRRELEVANT.replace("▁", ""), 2: YES.replace("▁", "")})
     df_train, df_test = train_test_split(df, test_size=0.2, stratify=df.target_class, random_state=42)
-    # gss = GroupShuffleSplit(n_splits=1, test_size=.2, random_state=1).split(df, groups=df.topic)
-    # idx_train, idx_test = next(gss)
-    # df_train = df.iloc[idx_train]
-    # df_test = df.iloc[idx_test]
-    # tr,va,te = StratifiedGroupShuffleSplit(df, 0.6)
+
     # %%
 
     if AUGMENT:
@@ -140,7 +135,7 @@ if __name__ == '__main__':
     # loggers = True
     loggers = TensorBoardLogger(save_dir="logs/")
     #
-    CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{LOAD_CHECKPOINT_PATH}{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}{'-aug' if AUGMENT else ''}-noirrel"
+    CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}{'-aug' if AUGMENT else ''}-noirrel"
     precision = 32
     MAX_EPOCHS = args[0].max_epochs
     checkpoint_callback = ModelCheckpoint(
@@ -149,7 +144,8 @@ if __name__ == '__main__':
         mode="max",
         dirpath=CHECKPOINT_PATH,
         every_n_epochs=1,
-        save_top_k=2
+        save_top_k=2,
+
     )
 
 
@@ -190,19 +186,7 @@ if __name__ == '__main__':
         log_every_n_steps=1,
         default_root_dir="checkpoints",
         enable_checkpointing=True,
+        resume_from_checkpoint=CHECKPOINT_PATH + f'/epoch={LOAD_EPOCH:02}.ckpt' if LOAD_EPOCH else None,
     )
 
-    if LOAD_FROM:
-        lightning_module.load_from_checkpoint(
-            LOAD_FROM,
-            tokenizer=tokenizer,
-            model=model,
-            save_only_last_epoch=True,
-            num_classes=NUM_CLASSES,
-            labels_text=[NO, IRRELEVANT, YES],
-            train_metrics="Accuracy".split(),
-            valid_metrics="Accuracy F1Score".split(),
-            weights=weights
-        )
-
-    trainer.fit(lightning_module, data_module, ckpt_path=None)
+    trainer.fit(lightning_module, data_module)
