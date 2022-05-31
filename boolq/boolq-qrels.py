@@ -59,9 +59,8 @@ if __name__ == '__main__':
     df = pd.read_parquet("./qreldataset/2019_mt5_dataset.parquet")
 
     df["source_text"] = df.apply(lambda row: f"{row.description} [SEP] {row.text}", axis=1)
-    df = df.rename(columns={"stance": "credibility", "credibility": "effective"})
-    df = df[df.effective != -2]
-    df = df[df.effective != 2]
+    df = df.rename(columns={"stance": "credibility", "credibility": "stance"})
+    df = df[df.stance.ge(0)]
 
 
     def prep_sentence(q, p):
@@ -69,23 +68,23 @@ if __name__ == '__main__':
 
 
     def gen_labels(row):
-        if row.usefulness == 0 or row.effective == 0:
+        if row.stance == 2 or row.stance == 0:
             return 1
-        if row.effective == 3:
+        if row.stance == 3:
             return 2
-        if row.effective == 1:
+        if row.stance == 1:
             return 0
+        return float('nan')
 
 
     df["target_class"] = df.apply(gen_labels, axis=1)
     df["target_text"] = df.target_class.map(
         {0: NO.replace("▁", ""), 1: IRRELEVANT.replace("▁", ""), 2: YES.replace("▁", "")})
-    # df_train, df_test = train_test_split(df, test_size=0.2, stratify=df.target_class, random_state=42)
-    gss = GroupShuffleSplit(n_splits=1, test_size=.2, random_state=42).split(df, groups=df.topic)
-    idx_train, idx_test = next(gss)
-    df_train = df.iloc[idx_train]
-    df_test = df.iloc[idx_test]
-    # df_train.efficacy.value_counts()
+    df_train, df_test = train_test_split(df, test_size=0.2, stratify=df.target_class, random_state=42)
+    # gss = GroupShuffleSplit(n_splits=1, test_size=.2, random_state=1).split(df, groups=df.topic)
+    # idx_train, idx_test = next(gss)
+    # df_train = df.iloc[idx_train]
+    # df_test = df.iloc[idx_test]
     # tr,va,te = StratifiedGroupShuffleSplit(df, 0.6)
     # %%
 
@@ -141,7 +140,7 @@ if __name__ == '__main__':
     # loggers = True
     loggers = TensorBoardLogger(save_dir="logs/")
     #
-    CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{LOAD_CHECKPOINT_PATH}{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}{'-aug' if AUGMENT else ''}-group=42"
+    CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{LOAD_CHECKPOINT_PATH}{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}{'-aug' if AUGMENT else ''}-noirrel"
     precision = 32
     MAX_EPOCHS = args[0].max_epochs
     checkpoint_callback = ModelCheckpoint(
