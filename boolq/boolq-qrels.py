@@ -37,6 +37,8 @@ if __name__ == '__main__':
     parser.add_argument("--t_name", default="microsoft/deberta-base", type=str)
     parser.add_argument("--load_from", default=None, type=str)
     parser.add_argument('--augment', action='store_true')
+    parser.add_argument('--infer_all', action='store_true')
+    parser.add_argument('--no_train', action='store_true')
     parser.add_argument('--no-augment', action='store_false')
     parser.set_defaults(augment=False)
     # parser.add_argument("--load_from", default="checkpoints/boolq-simple/deberta-base-num_class=3-lr=1e-05-batch_size=16/epoch=03-valid_F1Score=0.906-valid_Accuracy=0.906.ckpt", type=str)
@@ -52,6 +54,8 @@ if __name__ == '__main__':
     BATCH_SIZE = args[0].batch_size
     AUGMENT = args[0].augment
     LOAD_EPOCH = args[0].load_epoch
+    INFER_ALL = args[0].infer_all
+    NO_TRAIN = args[0].no_train
     from boolq.BaseModules import prep_boolq_dataset, NO, YES
 
     # %%
@@ -82,6 +86,9 @@ if __name__ == '__main__':
     df_train, df_test = train_test_split(df, test_size=0.2, stratify=df.target_class, random_state=42)
 
     # %%
+    if INFER_ALL:
+        df_train =df
+        df_test = df
 
     if AUGMENT:
         def prep_bert_sentence(q, p):
@@ -92,7 +99,9 @@ if __name__ == '__main__':
             prep_sentence=prep_bert_sentence,
             neg_sampling=False)
 
-        df_train = pd.concat([df, df_train_aug])
+        df_train = pd.concat([df_train, df_train_aug])
+
+
     weights = torch.tensor((1 / (df_train.target_class.value_counts() / df_train.shape[0]).sort_index()).to_list())
     weights = weights / weights.sum()
 
@@ -161,15 +170,15 @@ if __name__ == '__main__':
             self.val_outs.append(outputs)
 
         def on_validation_epoch_end(self, trainer, pl_module):
-            print(len(self.val_outs))
-            prediction = np.hstack([output['prediction'] for output in self.val_outs])
+            # print(len(self.val_outs))
+            prediction = np.vstack([output['logits'] for output in self.val_outs])
             target = np.hstack([output['target'] for output in self.val_outs])
             if self.current_epoch >=0:
                 path = Path(CHECKPOINT_PATH + f"/metrics/epoch-{self.current_epoch}.txt")
                 path.parent.mkdir(parents=True, exist_ok=True)
                 with open(path, 'w') as f:
-                    print(classification_report(target, prediction, zero_division=1), file=f)
-                path = Path(CHECKPOINT_PATH + f"/history/epoch-{self.current_epoch}.txt")
+                    print(classification_report(target, prediction.argmax(-1), zero_division=1), file=f)
+                path = Path(CHECKPOINT_PATH + f"/history/epoch-{self.current_epoch}.pt")
                 path.parent.mkdir(parents=True, exist_ok=True)
                 torch.save((target, prediction), f=path)
             self.current_epoch += 1
@@ -189,4 +198,7 @@ if __name__ == '__main__':
         resume_from_checkpoint=CHECKPOINT_PATH + f'/epoch={LOAD_EPOCH:02}.ckpt' if LOAD_EPOCH else None,
     )
 
-    trainer.fit(lightning_module, data_module)
+    if not NO_TRAIN:
+        trainer.fit(lightning_module, data_module)
+    else:
+        trainer.validate(lightning_module, data_module)

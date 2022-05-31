@@ -269,7 +269,7 @@ class MyLightningModel(pl.LightningModule):
         )
 
         label_logits = self.get_class_logits(outputs)
-        prediction = np.argmax(label_logits, axis=1).flatten()
+
 
         self.log_metrics(self.train_metrics, F.softmax(label_logits, dim=-1), targets.cpu().flatten(), is_end=False, train=True)
 
@@ -279,12 +279,12 @@ class MyLightningModel(pl.LightningModule):
         self.log(
             "train_loss", self.train_loss.compute(), prog_bar=True, logger=True, on_epoch=False, on_step=True
         )
-        return {'loss': loss, 'prediction': prediction, 'target': targets.cpu().flatten()}
+        return {'loss': loss, 'logits': label_logits.cpu(), 'target': targets.cpu().flatten()}
 
     def training_epoch_end(self, training_step_outputs):
         self.log_metrics(self.train_metrics, is_end=True, train=True)
-        prediction = np.hstack([output['prediction'] for output in training_step_outputs])
-        target = np.hstack([output['target'] for output in training_step_outputs])
+        # prediction = np.hstack([output['prediction'] for output in training_step_outputs])
+        # target = np.hstack([output['target'] for output in training_step_outputs])
         # print(f'TRAIN \n{classification_report(target, prediction, zero_division=1)}\n')
 
     def configure_optimizers(self):
@@ -328,7 +328,6 @@ class MyLightningModel(pl.LightningModule):
         #                                return_dict_in_generate=True, output_scores=True)
 
         label_logits = self.get_class_logits_v(outputs)
-        prediction = np.argmax(label_logits, axis=1).flatten()
         targets = batch['target_class'].cpu().flatten()
         if self.num_classes == 2:
             targets = targets.float().divide(2).long()
@@ -336,13 +335,13 @@ class MyLightningModel(pl.LightningModule):
         # self.log(
         #     "val_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True
         # )
-        return {'prediction': prediction, "target": targets}
+        return {'logits': label_logits.cpu(), "target": targets}
 
     def validation_epoch_end(self, validation_step_outputs):
         self.log_metrics(self.valid_metrics, is_end=True, train=False)
-        prediction = np.hstack([output['prediction'] for output in validation_step_outputs])
+        prediction = np.vstack([output['logits'] for output in validation_step_outputs])
         target = np.hstack([output['target'] for output in validation_step_outputs])
         print()
-        print(f'\nVALID Epoch: [{self.current_epoch}]\n{classification_report(target, prediction, zero_division=1)}\n')
+        print(f'\nVALID Epoch: [{self.current_epoch}]\n{classification_report(target, prediction.argmax(-1), labels=[0, 1, 2], zero_division=0)}\n')
         # print(f'\nVALID Epoch: [{self.current_epoch}]\n{classification_report(target, prediction, zero_division=1)}\n', file=)
 
