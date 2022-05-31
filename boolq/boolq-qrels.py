@@ -92,7 +92,7 @@ if __name__ == '__main__':
             prep_sentence=prep_bert_sentence,
             neg_sampling=False)
 
-        df_train = pd.concat([df_train, df_train_aug])
+        df_train = pd.concat([df, df_train_aug])
     weights = torch.tensor((1 / (df_train.target_class.value_counts() / df_train.shape[0]).sort_index()).to_list())
     weights = weights / weights.sum()
 
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     # loggers = True
     loggers = TensorBoardLogger(save_dir="logs/")
     #
-    CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}{'-aug' if AUGMENT else ''}-noirrel"
+    CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}{'-aug' if AUGMENT else ''}-noirrel-alltrain"
     precision = 32
     MAX_EPOCHS = args[0].max_epochs
     checkpoint_callback = ModelCheckpoint(
