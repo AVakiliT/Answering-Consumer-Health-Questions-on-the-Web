@@ -144,7 +144,7 @@ if __name__ == '__main__':
         mode="max",
         dirpath=CHECKPOINT_PATH,
         every_n_epochs=1,
-        save_top_k=2,
+        save_top_k=-1,
 
     )
 
