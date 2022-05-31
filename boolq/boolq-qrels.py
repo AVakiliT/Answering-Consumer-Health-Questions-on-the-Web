@@ -144,7 +144,7 @@ if __name__ == '__main__':
     # loggers = True
     loggers = TensorBoardLogger(save_dir="logs/")
     #
-    CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}{'-aug' if AUGMENT else ''}-noirrel-{'alltrain' if INFER_ALL else ''}"
+    CHECKPOINT_PATH = f"checkpoints/boolq-qrel/{MODEL_NAME.split('/')[-1]}-lr={args[0].lr}-batch_size={BATCH_SIZE}{'-aug' if AUGMENT else ''}-noirrel{'-alltrain' if INFER_ALL else ''}"
     precision = 32
     MAX_EPOCHS = args[0].max_epochs
     checkpoint_callback = ModelCheckpoint(
