@@ -41,7 +41,7 @@ if __name__ == '__main__':
     parser.set_defaults(augment=False)
     # parser.add_argument("--load_from", default="checkpoints/boolq-simple/deberta-base-num_class=3-lr=1e-05-batch_size=16/epoch=03-valid_F1Score=0.906-valid_Accuracy=0.906.ckpt", type=str)
     # parser.add_argument("--transformer-type", default="t5", type=str)
-    parser.add_argument("--load_epoch", default=0, type=int)
+    parser.add_argument("--load_epoch", default=None, type=int)
     args = parser.parse_known_args()
     # YES = "▁5.0"
     # NO = "▁1.0"
