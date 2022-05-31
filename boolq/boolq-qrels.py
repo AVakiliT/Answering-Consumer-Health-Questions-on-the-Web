@@ -146,7 +146,7 @@ if __name__ == '__main__':
     MAX_EPOCHS = args[0].max_epochs
     checkpoint_callback = ModelCheckpoint(
         monitor="valid_F1Score",
-        filename="{epoch:02d}-{valid_F1Score:.3f}-{valid_Accuracy:.3f}",
+        filename="{epoch:02d}",
         mode="max",
         dirpath=CHECKPOINT_PATH,
         every_n_epochs=1,
@@ -169,10 +169,14 @@ if __name__ == '__main__':
             print(len(self.val_outs))
             prediction = np.hstack([output['prediction'] for output in self.val_outs])
             target = np.hstack([output['target'] for output in self.val_outs])
-            path = Path(CHECKPOINT_PATH + f"/metrics/epoch-{self.current_epoch}.txt")
-            path.parent.mkdir(parents=True, exist_ok=True)
-            with open(path, 'w') as f:
-                print(classification_report(target, prediction, zero_division=1), file=f)
+            if self.current_epoch >=0:
+                path = Path(CHECKPOINT_PATH + f"/metrics/epoch-{self.current_epoch}.txt")
+                path.parent.mkdir(parents=True, exist_ok=True)
+                with open(path, 'w') as f:
+                    print(classification_report(target, prediction, zero_division=1), file=f)
+                path = Path(CHECKPOINT_PATH + f"/history/epoch-{self.current_epoch}.txt")
+                path.parent.mkdir(parents=True, exist_ok=True)
+                torch.save((target, prediction), f=path)
             self.current_epoch += 1
 
     custom_callback = CustomCallback()
