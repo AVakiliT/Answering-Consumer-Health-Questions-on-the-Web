@@ -39,7 +39,7 @@ if __name__ == '__main__':
     parser.add_argument('--augment', action='store_true')
     parser.add_argument('--no-augment', action='store_false')
     parser.set_defaults(augment=False)
-    # parser.add_argument("--load_from", default="checkpoints/boolq-simple/deberta-base-num_class=3-lr=1e-05-batch_size=16/epoch=03-valid_F1=0.906-valid_Accuracy=0.906.ckpt", type=str)
+    # parser.add_argument("--load_from", default="checkpoints/boolq-simple/deberta-base-num_class=3-lr=1e-05-batch_size=16/epoch=03-valid_F1Score=0.906-valid_Accuracy=0.906.ckpt", type=str)
     # parser.add_argument("--transformer-type", default="t5", type=str)
     args = parser.parse_known_args()
     # YES = "▁5.0"
@@ -98,7 +98,7 @@ if __name__ == '__main__':
             neg_sampling=False)
 
         df_train = pd.concat([df_train, df_train_aug])
-
+    df_train = df_train.sample(frac=.05)
     weights = torch.tensor((1 / (df_train.target_class.value_counts() / df_train.shape[0]).sort_index()).to_list())
     weights = weights / weights.sum()
 
@@ -145,8 +145,8 @@ if __name__ == '__main__':
     precision = 32
     MAX_EPOCHS = args[0].max_epochs
     checkpoint_callback = ModelCheckpoint(
-        monitor="valid_F1",
-        filename="{epoch:02d}-{valid_F1:.3f}-{valid_Accuracy:.3f}",
+        monitor="valid_F1Score",
+        filename="{epoch:02d}-{valid_F1Score:.3f}-{valid_Accuracy:.3f}",
         mode="max",
         dirpath=CHECKPOINT_PATH,
         every_n_epochs=1,
@@ -198,7 +198,7 @@ if __name__ == '__main__':
             num_classes=NUM_CLASSES,
             labels_text=[NO, IRRELEVANT, YES],
             train_metrics="Accuracy".split(),
-            valid_metrics="Accuracy F1".split(),
+            valid_metrics="Accuracy F1Score".split(),
             weights=weights
         )
 
