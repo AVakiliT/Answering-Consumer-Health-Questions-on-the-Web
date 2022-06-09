@@ -12,8 +12,8 @@
 #  /project/6004803/smucker/group-data/runs/trec2021-misinfo/automatic/run.c4.noclean.bm25.topics.2021.10K.fixed_docno.txt
 
 module load gcc arrow python scipy-stack
-python gettop1kdocs.py $SLURM_ARRAY_TASK_ID 128 Top1kEBM25 \
-  /project/6004803/avakilit/test/playground/anserini/runs/run.c4.noclean.expanded.bm25.topics.2021.txt
+python gettop1kdocs.py $SLURM_ARRAY_TASK_ID 128 Top1kRWBM25 \
+  /project/6004803/avakilit/test/anserini/runs/rw.run2
 
 #python gettop1kdocs.py $SLURM_ARRAY_TASK_ID 128 Top1kBM25_2019 \
 #/project/6004803/avakilit/test/playground/anserini/runs/run.c4.noclean.bm25.topics.2019.txt

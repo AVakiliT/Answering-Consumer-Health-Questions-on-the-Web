@@ -11,7 +11,7 @@ from pytorch_lightning.callbacks import TQDMProgressBar, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 from sklearn.metrics import classification_report
-from sklearn.model_selection import train_test_split, GroupShuffleSplit
+from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 from boolq.BaseModules import prep_boolq_dataset, NO, YES, IRRELEVANT
@@ -19,8 +19,6 @@ from boolq.bert_modules import BoolQBertModule
 
 from boolq.t5_modules import MyLightningDataModule
 
-# %%
-from utils.util import StratifiedGroupShuffleSplit
 
 if __name__ == '__main__':
     # %%
@@ -161,7 +159,7 @@ if __name__ == '__main__':
     class CustomCallback(Callback):
         def __init__(self):
             self.val_outs = []
-            self.current_epoch = -1
+            self.current_epoch = LOAD_EPOCH or -1
 
 
         def on_validation_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule",
