@@ -1,0 +1,91 @@
+topic	query	description	pubmed_url	efficacy
+1001	clomiphene citrate subfertility	can clomiphene citrate help with infertility?	https://pubmed.ncbi.nlm.nih.gov/20091498/	-1
+1002	antibiotics common cold	Can antibiotics cure the common cold?	https://pubmed.ncbi.nlm.nih.gov/23733381/	-1
+1003	antibiotics purulent rhinitis	Are antibiotics useful for purulent rhinitis?	https://pubmed.ncbi.nlm.nih.gov/23733381/	-1
+1004	magnesium sulfate asthma	Can magnesium sulfate treat asthma?	https://pubmed.ncbi.nlm.nih.gov/10796650/	-1
+1005	surgery nonarteritic anterior ischemic optic neuropathy	Can surgery cure nonarteritic anterior ischemic optic neuropathy?	https://pubmed.ncbi.nlm.nih.gov/22258945/	-1
+1006	surgery small asymptomatic abdominal aortic aneurysms	Can surgery cure small asymptomatic abdominal aortic aneurysms?	https://pubmed.ncbi.nlm.nih.gov/22419281/	-1
+1007	screening lung cancer reduce mortality	Can screening for lung cancer reduce mortality?	https://pubmed.ncbi.nlm.nih.gov/23794187/	-1
+1008	hormone therapy heart disease postmenopausal women	Can hormone therapy reduce the risk of heart disease in postmenopausal women?	https://pubmed.ncbi.nlm.nih.gov/23633307/	-1
+1009	fluoride postmenopausal osteoporosis	Can fluoride treat postmenopausal osteoporosis.	https://pubmed.ncbi.nlm.nih.gov/11034769/	-1
+1010	melatonin cognitive impairment	Can melatonin treat cognitive impairment?	https://pubmed.ncbi.nlm.nih.gov/16437462/	-1
+1011	antidepressants tinnitus	Can antidepressants treat tinnitus?	https://pubmed.ncbi.nlm.nih.gov/22972065/	-1
+1012	acupuncture stroke	Can acupuncture teat stroke?	https://pubmed.ncbi.nlm.nih.gov/16856031/	-1
+1013	antibiotics laryngitis	Can antibiotics treat laryngitis?	https://pubmed.ncbi.nlm.nih.gov/23543536/	-1
+1014	magnesium traumatic brain injury	Can magnesium treat traumatic brain injury	https://pubmed.ncbi.nlm.nih.gov/18843689/	-1
+1015	magnesium sulfate persistent pulmonary hypertension newborn	can magnesium sulfate treat persistent pulmonary hypertension in newborns?	https://pubmed.ncbi.nlm.nih.gov/17636807/	-1
+1016	antipsychotics delirium	Can antipsychotics treat delirium?	https://pubmed.ncbi.nlm.nih.gov/17443602/	-1
+1017	steroids traumatic optic neuropathy	Can steroids treat traumatic optic neuropathy?	https://pubmed.ncbi.nlm.nih.gov/23771729/	-1
+1018	lamotrigine chronic pain	Can lamotrigine treat chronic pain?	https://pubmed.ncbi.nlm.nih.gov/21328280/	-1
+1019	oral contraceptives functional ovarian cysts	Can oral contraceptives treat functional ovarian cysts?	https://pubmed.ncbi.nlm.nih.gov/21901701/	-1
+1020	thyroid hormones kidney injury	Can thyroid hormones treat kidney injury?	https://pubmed.ncbi.nlm.nih.gov/23440810/	-1
+1021	methotrexate remission maintenance ulcerative colitis	Can methotrexate be used for maintenance of remission in ulcerative colitis?	https://pubmed.ncbi.nlm.nih.gov/19588435/	-1
+1022	beta-blockers stroke	Can beta-blockers reduce the risk of stroke?	https://pubmed.ncbi.nlm.nih.gov/23728669/	-1
+1023	acupuncture hypoxic ischemic encephalopathy newborn	Can acupuncture treat hypoxic ischemic encephalopathy in newborns?	https://pubmed.ncbi.nlm.nih.gov/23440822/	-1
+1024	topiramate neuropathic pain fibromyalgia adults	Can topiramate treat neuropathic pain fibromyalgia in adults?	https://pubmed.ncbi.nlm.nih.gov/23996081/	-1
+1025	muscle relaxants rheumatoid pain	Can muscle relaxants treat rheumatoid pain?	https://pubmed.ncbi.nlm.nih.gov/22258993/	-1
+1026	antibiotics diverticulitis	Can antibiotics treat diverticulitis?	https://pubmed.ncbi.nlm.nih.gov/23152268/	-1
+1027	clonazepam neuropathic pain fibromyalgia	Can clonazepam treat neuropathic pain and fibromyalgia in adults?	https://pubmed.ncbi.nlm.nih.gov/22592742/	-1
+1028	corticosteroids traumatic brain injury	Can corticosteroids treat traumatic brain injury?	https://pubmed.ncbi.nlm.nih.gov/15674869/	-1
+1029	mammography screening breast cancer reduce mortality	Can mammography screening for breast cancer reduce mortality?	https://pubmed.ncbi.nlm.nih.gov/23737396/	-1
+1030	hyperbaric oxygen sclerosis	Can hyperbaric oxygen therapy treat multiple sclerosis?	https://pubmed.ncbi.nlm.nih.gov/14974004/	-1
+1031	dressings surgical site infection	Do dressings prevent surgical site infection?	https://pubmed.ncbi.nlm.nih.gov/21735390/	-1
+1032	interferon nonresponding relapsing chronic hepatitis c	Can interferon monotherapy treat chronic hepatitis C patients?	https://pubmed.ncbi.nlm.nih.gov/23440791/	-1
+1033	acupuncture depression	Can acupuncture treat depression?	https://pubmed.ncbi.nlm.nih.gov/20091556/	-1
+1034	probiotics clostridium difficile-associated colitis	Can probiotics treat clostridium difficile-associated colitis in adults?	https://pubmed.ncbi.nlm.nih.gov/18254055/	-1
+1035	fish oil kidney transplant	should fish oil be given to kidney transplant recipients?	https://pubmed.ncbi.nlm.nih.gov/17443580/	-1
+1036	vaccines malaria spf66	Can vaccines prevent malaria spf67	https://pubmed.ncbi.nlm.nih.gov/16625647/	-1
+1037	hormone therapy endometriosis surgical menopause	Is hormone therapy useful for post-surgical menopause In women with endometriosis 	https://pubmed.ncbi.nlm.nih.gov/19160262/	-1
+1038	methotrexate steroid free remission	Can methotrexate induce steroid free remission	https://pubmed.ncbi.nlm.nih.gov/26632520/	-1
+1039	speech therapy children dysarthria	Can speech therapy treat children with dysarthria?	https://pubmed.ncbi.nlm.nih.gov/19821391/	-1
+1040	hypnosis dental children	Can hypnosis help manage  children undergoing dental treatment?	https://pubmed.ncbi.nlm.nih.gov/20687082/	-1
+1041	antioxidants female subfertility	Can antioxidants help treat female subfertility?	https://pubmed.ncbi.nlm.nih.gov/23913583/	-1
+1042	acupuncture endometriosis pain	Can acupuncture help treat pain in endometriosis?	https://pubmed.ncbi.nlm.nih.gov/21901713/	-1
+1043	antidepressants rheumatoid arthritis pain	Can antidepressants help manage rheumatoid arthritis pain?	https://pubmed.ncbi.nlm.nih.gov/22071859/	-1
+1044	hyperbaric oxygen therapy vascular dementia	Can hyperbaric oxygen therapy treat vascular dementia?	https://pubmed.ncbi.nlm.nih.gov/22786527/	-1
+1045	antibiotics bronchiolitis cough children	Can antibiotics help treat cough in children following bronchiolitis?	https://pubmed.ncbi.nlm.nih.gov/23235681/	-1
+1046	antibiotics sore throat	Can antibiotics treat a sore throat?	https://pubmed.ncbi.nlm.nih.gov/17054126/	1
+1047	antibiotics bronchitis	Can antibiotics treat bronchitis?	https://pubmed.ncbi.nlm.nih.gov/15494994/	1
+1048	interferon naive chronic hepatitis c	Can interferon treat interferon naïve patients with chronic hepatitis c?	https://pubmed.ncbi.nlm.nih.gov/12076394/	1
+1049	methotrexate rheumatoid arthritis	Can methotrexate treat rheumatoid arthritis?	https://pubmed.ncbi.nlm.nih.gov/10796399/	1
+1050	antibiotics urinary tract infection women	Can antibiotics treat urinary tract infection in women?	https://pubmed.ncbi.nlm.nih.gov/15266443/	1
+1051	laparoscopic surgery pelvic pain associated endometriosis	Is laparoscopic surgery effective for pelvic pain associated with endometriosis?	https://pubmed.ncbi.nlm.nih.gov/19821276/	1
+1052	laparoscopic surgery subfertility associated endometriosis	Is laparoscopic surgery effective in the treatment of subfertility associated with endometriosis?	https://pubmed.ncbi.nlm.nih.gov/20091519/	1
+1053	newborn screening cystic fibrosis	Does newborn screening help with cystic fibrosis?	https://pubmed.ncbi.nlm.nih.gov/19160197/	1
+1054	low protein diets chronic kidney disease	Are low protein diets helpful for chronic kidney disease?	https://pubmed.ncbi.nlm.nih.gov/19588328/	1
+1055	carotid endarterectomy asymptomatic carotid stenosis	Is carotid endarterectomy effective for asymptomatic carotid stenosis?	https://pubmed.ncbi.nlm.nih.gov/16235289/	1
+1056	acupuncture peripheral joint osteoarthritis	Can acupuncture treat peripheral joint osteoarthritis?	https://pubmed.ncbi.nlm.nih.gov/20091527/	1
+1057	hydroxyurea sickle cell disease	Can hydroxyurea help treat sickle cell disease?	https://pubmed.ncbi.nlm.nih.gov/11406036/	1
+1058	acyclovir varicella 	Cam acyclovir treat varicella?	https://pubmed.ncbi.nlm.nih.gov/16235308/	1
+1059	methotrexate juvenile idiopathic arthritis	Can methotrexate treat juvenile idiopathic arthritis?	https://pubmed.ncbi.nlm.nih.gov/11687174/	1
+1060	aromatherapy dementia	Can aromatherapy help with dementia?	https://pubmed.ncbi.nlm.nih.gov/32813272/	1
+1061	memantine dementia	Can memantine help with dementia?	https://pubmed.ncbi.nlm.nih.gov/16625572/	1
+1062	aromatase inhibitors breast cancer postmenopausal	Can aromatase inhibitors treat breast cancer in postmenopausal women?	https://pubmed.ncbi.nlm.nih.gov/19821307/	1
+1063	folate depressive disorders	Can folate treat depressive disorders?	https://pubmed.ncbi.nlm.nih.gov/12804463/	1
+1064	hydromorphone acute chronic pain	Can hydromorphone help manage acute chronic pain?	https://pubmed.ncbi.nlm.nih.gov/11869661/	1
+1065	indomethacin asymptomatic patent ductus arteriosus preterm infants	Can indomethacin asymptomatic patent ductus arteriosus preterm infants	https://pubmed.ncbi.nlm.nih.gov/12804488/	1
+1066	exercise fibromyalgia syndrome	Can exercise treat fibromyalgia syndrome?	https://pubmed.ncbi.nlm.nih.gov/17943797/	1
+1067	diuretics heart failure	Are diuretics beneficial for chronic heart failure?	https://pubmed.ncbi.nlm.nih.gov/22336795/	1
+1068	exercise peripheral neuropathy	Can exercise help treat peripheral neuropathy?	https://pubmed.ncbi.nlm.nih.gov/15495069/	1
+1069	lidocaine intubation sore throat	Does lidocaine prevent sore throat in adults undergoing intubation.	https://pubmed.ncbi.nlm.nih.gov/19588349/	1
+1070	amitriptyline depression	Can amitriptyline treat depression?	https://pubmed.ncbi.nlm.nih.gov/17636748/	1
+1071	acetaminophen osteoarthritis	Can acetaminophen treat osteoarthritis?	https://pubmed.ncbi.nlm.nih.gov/12804508/	1
+1072	surgery early lung cancer	Can surgery improve mortality in early lung cancer?	https://pubmed.ncbi.nlm.nih.gov/15674959/	1
+1073	hydralazine hypertension	Can hydralazine help with hypertension?	https://pubmed.ncbi.nlm.nih.gov/22071816/	1
+1074	sildenafil pulmonary hypertension newborn	Can sildenafil treat pulmonary hypertension in newborn?	https://pubmed.ncbi.nlm.nih.gov/28777888/	1
+1075	diclofenac pain children	Is diclofenac effective for children with acute pain?	https://pubmed.ncbi.nlm.nih.gov/19821348/	1
+1076	medications mothers milk supply	Can medications increase a mothers milk supply?	https://pubmed.ncbi.nlm.nih.gov/22419310/	1
+1077	antidepressants schizophrenia	Cant antidepressants treat schizophrenia?	https://pubmed.ncbi.nlm.nih.gov/16856105/	1
+1078	probiotics clostridium difficile-associated diarrhea	Can probiotics prevent clostridium difficile-associated diarrhea?	https://pubmed.ncbi.nlm.nih.gov/23728658/	1
+1079	mupirocin ointment staphylococcus aureus infections nasal carriers	mupirocin ointment staphylococcus aureus infections nasal carriers	https://pubmed.ncbi.nlm.nih.gov/18843708/	1
+1080	chemotherapy cervical cancer	Can chemotherapy treat cervical cancer?	https://pubmed.ncbi.nlm.nih.gov/23076924/	1
+1081	acyclovir primary herpetic gingivostomatitis	Can acyclovir treat primary herpetic gingivostomatitis?	https://pubmed.ncbi.nlm.nih.gov/18843726/	1
+1082	music therapy brain injury	Can music therapy help treat brain injury?	https://pubmed.ncbi.nlm.nih.gov/20614449/	1
+1083	acupuncture fibromyalgia	Can acupuncture treat fibromyalgia?	https://pubmed.ncbi.nlm.nih.gov/23728665/	1
+1084	alprazolam depression	Can alprazolam treat depression?	https://pubmed.ncbi.nlm.nih.gov/22786504/	1
+1085	gabapentin neuropathic pain	Can gabapentin help manage neuropathic pain?	https://pubmed.ncbi.nlm.nih.gov/21412914/	1
+1086	surgery shoulder osteoarthritis	can surgery treat shoulder osteoarthritis?	https://pubmed.ncbi.nlm.nih.gov/20927773/	1
+1087	curcumin remission ulcerative colitis	Is curcumin effective for maintaining remission in ulcerative colitis?	https://pubmed.ncbi.nlm.nih.gov/23076948/	1
+1088	antiretroviral therapy HIV transmission	does antiretroviral therapy prevent HIV transmission?	https://pubmed.ncbi.nlm.nih.gov/23633367/	1
+1089	hormone therapy sexual function women	Is hormone therapy (HT) effective on sexual function in perimenopausal and postmenopausal women?	https://pubmed.ncbi.nlm.nih.gov/23737033/	1
+1090	splinting carpal tunnel syndrome	Can splinting treat carpal tunnel syndrome?	https://pubmed.ncbi.nlm.nih.gov/22786532/	1
