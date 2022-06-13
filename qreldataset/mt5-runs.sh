@@ -14,6 +14,6 @@ source ~/avakilit/PYTORCH/bin/activate
 
 echo "Starting script..."
 
-ipython --ipython-dir=/tmp mt5-runs.py -- --topic $SLURM_ARRAY_TASK_ID
+ipython --ipython-dir=/tmp qreldataset/mt5-runs.py -- --topic $SLURM_ARRAY_TASK_ID
 
 
