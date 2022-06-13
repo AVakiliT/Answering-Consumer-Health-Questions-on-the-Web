@@ -7,7 +7,7 @@ topic	query	description	pubmed_url	efficacy
 1006	surgery small asymptomatic abdominal aortic aneurysms	Can surgery cure small asymptomatic abdominal aortic aneurysms?	https://pubmed.ncbi.nlm.nih.gov/22419281/	-1
 1007	screening lung cancer reduce mortality	Can screening for lung cancer reduce mortality?	https://pubmed.ncbi.nlm.nih.gov/23794187/	-1
 1008	hormone therapy heart disease postmenopausal women	Can hormone therapy reduce the risk of heart disease in postmenopausal women?	https://pubmed.ncbi.nlm.nih.gov/23633307/	-1
-1009	flouride postmenopausal osteoporosis	Can flouride treat postmenopausal osteoporosis.	https://pubmed.ncbi.nlm.nih.gov/11034769/	-1
+1009	fluoride postmenopausal osteoporosis	Can fluoride treat postmenopausal osteoporosis.	https://pubmed.ncbi.nlm.nih.gov/11034769/	-1
 1010	melatonin cognitive impairment	Can melatonin treat cognitive impairment?	https://pubmed.ncbi.nlm.nih.gov/16437462/	-1
 1011	antidepressants tinnitus	Can antidepressants treat tinnitus?	https://pubmed.ncbi.nlm.nih.gov/22972065/	-1
 1012	acupuncture stroke	Can acupuncture teat stroke?	https://pubmed.ncbi.nlm.nih.gov/16856031/	-1
@@ -66,7 +66,7 @@ topic	query	description	pubmed_url	efficacy
 1065	indomethacin asymptomatic patent ductus arteriosus preterm infants	Can indomethacin asymptomatic patent ductus arteriosus preterm infants	https://pubmed.ncbi.nlm.nih.gov/12804488/	1
 1066	exercise fibromyalgia syndrome	Can exercise treat fibromyalgia syndrome?	https://pubmed.ncbi.nlm.nih.gov/17943797/	1
 1067	diuretics heart failure	Are diuretics beneficial for chronic heart failure?	https://pubmed.ncbi.nlm.nih.gov/22336795/	1
-1068	exercise peripheral neuropathy	Can exercise healp treat peripheral neuropathy?	https://pubmed.ncbi.nlm.nih.gov/15495069/	1
+1068	exercise peripheral neuropathy	Can exercise help treat peripheral neuropathy?	https://pubmed.ncbi.nlm.nih.gov/15495069/	1
 1069	lidocaine intubation sore throat	Does lidocaine prevent sore throat in adults undergoing intubation.	https://pubmed.ncbi.nlm.nih.gov/19588349/	1
 1070	amitriptyline depression	Can amitriptyline treat depression?	https://pubmed.ncbi.nlm.nih.gov/17636748/	1
 1071	acetaminophen osteoarthritis	Can acetaminophen treat osteoarthritis?	https://pubmed.ncbi.nlm.nih.gov/12804508/	1
@@ -87,5 +87,5 @@ topic	query	description	pubmed_url	efficacy
 1086	surgery shoulder osteoarthritis	can surgery treat shoulder osteoarthritis?	https://pubmed.ncbi.nlm.nih.gov/20927773/	1
 1087	curcumin remission ulcerative colitis	Is curcumin effective for maintaining remission in ulcerative colitis?	https://pubmed.ncbi.nlm.nih.gov/23076948/	1
 1088	antiretroviral therapy HIV transmission	does antiretroviral therapy prevent HIV transmission?	https://pubmed.ncbi.nlm.nih.gov/23633367/	1
-1089	hormone therapy sexual function women	Is hormone therapy (HT) effictive on sexual function in perimenopausal and postmenopausal women?	https://pubmed.ncbi.nlm.nih.gov/23737033/	1
+1089	hormone therapy sexual function women	Is hormone therapy (HT) effective on sexual function in perimenopausal and postmenopausal women?	https://pubmed.ncbi.nlm.nih.gov/23737033/	1
 1090	splinting carpal tunnel syndrome	Can splinting treat carpal tunnel syndrome?	https://pubmed.ncbi.nlm.nih.gov/22786532/	1
