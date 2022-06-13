@@ -1,8 +1,11 @@
 import numpy as np
 import pandas as pd
+import torch
 from scipy.sparse import coo_matrix
 from sklearn.linear_model import LogisticRegressionCV, LogisticRegression
 from sklearn.model_selection import train_test_split, StratifiedKFold
+
+from utils.util import url2host, url2domain
 
 qrels = pd.read_parquet("./data/qrel_2021_1p_sentences_with_probs")
 df = qrels[qrels.stance.ge(0)].groupby("topic host".split()).apply(
@@ -41,4 +44,34 @@ np.mean(a)
 #%%
 h = (qrels[((qrels.stance.eq(2) & qrels.efficacy.eq(1)) | (qrels.stance.eq(0) & qrels.efficacy.eq(-1)))].host.value_counts() - \
 qrels[((qrels.stance.eq(2) & qrels.efficacy.eq(-1)) | (qrels.stance.eq(0) & qrels.efficacy.eq(1)))].host.value_counts())\
-    .sort_values(ascending=False).iloc[:40].index
+    .sort_values(ascending=False).iloc[:100].index
+
+#%%
+df = pd.concat([pd.read_parquet("mdt5/output_Top1kBM25_2019_mt5_2019_base-med_with_text"),
+                pd.read_parquet("mdt5/output_Top1kBM25_2021_mt5_2021_base-med_with_text")])
+df = df.rename(columns={"docid": "docno"})
+df = df.merge(pd.read_csv("./data/topics.tsv", sep="\t")["topic description efficacy".split()], on="topic", how="inner")
+out_df = pd.read_parquet(["./mf/2019_passage_6_3.boolq_logits.parquet", "./mf/2021_passage_6_3.boolq_logits.parquet"])
+df = df.merge(out_df, on="topic docno".split(), how="inner")
+df["prob_pos"] = df.logits.apply(lambda x: torch.tensor(x).softmax(-1)[2].item())
+df["prob_neg"] = df.logits.apply(lambda x: torch.tensor(x).softmax(-1)[0].item())
+
+df["host"] = df.url.apply(url2host)
+df["domain"] = df.url.apply(url2domain)
+#%%
+def g(d):
+    a = d.sort_values("prob_neg", ascending=True)
+    a["r"] = range(1, a.shape[0] + 1)
+    a.r = 1 / a.r
+    p = (a.host.isin(h) * a.r).sum()
+
+    a = d.sort_values("prob_neg", ascending=False)
+    a["r"] = range(1, a.shape[0] + 1)
+    a.r = 1 / a.r
+    n = (a.host.isin(h) * a.r).sum()
+
+    m = (d.efficacy.max() >= 1) == ((p-n) >= 0)
+    return p-n, m
+
+#%%
+df[df.topic.le(51) & df.efficacy.ne(0)].groupby("topic").apply(g)

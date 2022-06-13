@@ -19,12 +19,13 @@ from random import sample
 from timeit import default_timer as timer
 
 
+topic_no = 1001
 
 import pandas as pd
 # df = pd.read_parquet("qreldataset/2019qrels.passages.parquet")
-df = pd.read_parquet("data/2019qrels.passages.parquet")
-df = df[df.text.apply(len).gt(0)]
-topics = pd.read_csv("./data/topics.csv", sep="\t")
+df = pd.read_parquet("data/RunBM25.1k.passages_6_3/")
+df = df[df.topic.eq(topic_no)]
+topics = pd.read_csv("./data/topics.tsv", sep="\t")
 df = df.merge(topics["topic description efficacy".split()], on="topic", how="inner")
 runs = []
 for topic in tqdm(df.topic.unique().tolist()):
