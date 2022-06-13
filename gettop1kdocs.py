@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 from tqdm import trange
 
-files = sorted(glob.glob("/project/6004803/smucker/group-data/c4_parquet/*.parquet"))
+files = sorted(glob.glob("/project/6004803/smucker/group-data/c4-parquet/*.parquet"))
 n = int(sys.argv[2])
 start = int(sys.argv[1])
 output_dir = sys.argv[3]
