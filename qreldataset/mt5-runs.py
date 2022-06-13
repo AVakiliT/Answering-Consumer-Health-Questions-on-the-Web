@@ -17,43 +17,38 @@ print("Importing...", flush=True)
 import argparse
 from random import sample
 from timeit import default_timer as timer
-
-
-topic_no = 1000 + 1
+parser = argparse.ArgumentParser()
+parser.add_argument("--topic", default=101, type=int)
+args = parser.parse_known_args()
+topic = args[0].topic
 
 import pandas as pd
 # df = pd.read_parquet("qreldataset/2019qrels.passages.parquet")
 df = pd.read_parquet("data/RunBM25.1k.passages_6_3/")
-df = df[df.topic.eq(topic_no)]
-topics = pd.read_csv("./data/RW.tsv", sep="\t")
+df = df[df.topic.eq(topic)]
+topics = pd.read_csv("./data/RW.txt", sep="\t")
 df = df.merge(topics["topic description efficacy".split()], on="topic", how="inner")
-runs = []
-for topic in tqdm(df.topic.unique().tolist()):
 
-    # df = df[df.topic == topic].merge(topics[topics.topic == topic]["topic description efficacy".split()], on="topic", how="inner")
-    query = Query(topics[topics.topic == topic].iloc[0].description)
 
-    texts = [Text(p.passage, {"metadata": (*p[1:6],p[7],*p[9:])}, 0) for p in
-             df[df.topic==topic].itertuples()]
+# df = df[df.topic == topic].merge(topics[topics.topic == topic]["topic description efficacy".split()], on="topic", how="inner")
+query = Query(topics[topics.topic == topic].iloc[0].description)
 
-    reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-base-med-msmarco")
+texts = [Text(p[1].passage, p[1]) for p in
+         df.iterrows()]
 
-    # print("Reranking with MonoT5...", flush=True)
-    start = timer()
-    with amp.autocast():
-        reranked = reranker.rerank(query, texts)
-    end = timer()
-    # print(f"Done. reraking {len(texts)} passages with monot5-{type}-med-msmarco took {end - start} seconds.", flush=True)
+reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-base-med-msmarco")
 
-    top_passage_per_doc = sorted(list(
-        {x.metadata['metadata']: x for x in sorted(reranked, key=lambda i: i.score)}
-            .values()),
-        key=lambda i: i.score, reverse=True)
+# print("Reranking with MonoT5...", flush=True)
+start = timer()
+with amp.autocast():
+    reranked = reranker.rerank(query, texts)
+end = timer()
+# print(f"Done. reraking {len(texts)} passages with monot5-{type}-med-msmarco took {end - start} seconds.", flush=True)
 
-    run = [(topic, 0,  i + 1, x.score, *x.metadata["metadata"][1:], x.text) for i, x in enumerate(top_passage_per_doc)]
+top_passage_per_doc = sorted(reranked, key=lambda x: x.score, reverse=True)
 
-    run_df = pd.DataFrame(run, columns="topic iter rank score docno usefulness credibility stance url description efficacy text".split())
-    runs.append(run_df)
+run = [{"ranking":i + 1, "score":x.score, **x.metadata.to_dict()} for i, x in enumerate(top_passage_per_doc)]
 
-final_df = pd.concat(runs)
-final_df.to_parquet("./qreldataset/2019_mt5_dataset.parquet")
+run_df = pd.DataFrame(run)
+
+run_df.to_parquet(f"data/RunBM25.1k.passages_6_3.mt5/{topic}.snappy.parquet")
