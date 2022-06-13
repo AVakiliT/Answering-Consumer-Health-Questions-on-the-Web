@@ -38,7 +38,8 @@ from pyspark.sql.types import *
 # df = spark.read.load("/project/6004803/avakilit/Trec21_Data/data/qrel_2021")
 df = spark.read.parquet(
     "/project/6004803/avakilit/Trec21_Data/data/Top1kBM25_2019",
-    "/project/6004803/avakilit/Trec21_Data/data/Top1kBM25")
+    "/project/6004803/avakilit/Trec21_Data/data/Top1kBM25",
+"/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p")
 
 
 window_size, step = 6, 3
@@ -67,8 +68,8 @@ df_new = df.withColumn("passage", lol_udf("text"))
 # df_new = df_new.selectExpr('topic,docno,timestamp,url,usefulness,stance,credibility,passage["passage_index"] as passage_index,passage["passage"] as passage'.split(','))
 # df_new.repartition(1).write.save(f"/project/6004803/avakilit/Trec21_Data/data/qrels.2021.passages_{window_size}_{step}", mode="overwrite")
 
-df_new = df_new.selectExpr('topic,docno,timestamp,url,bm25 as bm25,explode(passage) as passage'.split(','))
-df_new = df_new.selectExpr('topic,docno,timestamp,url,bm25 as bm25,passage["passage_index"] as passage_index,passage["passage"] as passage'.split(','))
+df_new = df_new.selectExpr('topic,docno,timestamp,url,score as bm25,explode(passage) as passage'.split(','))
+df_new = df_new.selectExpr('topic,docno,timestamp,url,bm25,passage["passage_index"] as passage_index,passage["passage"] as passage'.split(','))
 df_new.repartition(1).write.save(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}", mode="overwrite")
 
 #%%

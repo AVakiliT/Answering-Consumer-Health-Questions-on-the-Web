@@ -16,7 +16,7 @@ else:
     out = "Top1kBM25_2019"
 
 df = spark.read.load(f"./data/{inp}")
-window_size, step = 1, 1
+window_size, step = 6, 3
 
 
 print(df.count())
@@ -50,4 +50,4 @@ lol_udf = udf(sentencize, schema)
 df_new = df.withColumn("passage", lol_udf("text")).selectExpr("docno", "topic", "score as bm25",
                                                               "explode(passage) as passage", "url")
 
-df_new.repartition(1).write.mode("overwrite").save(f"./data/{out}_1p_sentences")
+df_new.repartition(1).write.mode("overwrite").save(f"./data/{out}_passages_{window_size}_{step}")
