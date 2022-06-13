@@ -2,7 +2,6 @@
 #SBATCH --account=rrg-smucker
 #SBATCH --time=0-0:30:0
 #SBATCH --array=1001-1090
-# --array=1-51
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=16G
 #SBATCH --gres=gpu:v100l:1

@@ -21,6 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--topic", default=101, type=int)
 args = parser.parse_known_args()
 topic = args[0].topic
+# topic = 1001
 
 import pandas as pd
 # df = pd.read_parquet("qreldataset/2019qrels.passages.parquet")
@@ -45,10 +46,11 @@ with amp.autocast():
 end = timer()
 # print(f"Done. reraking {len(texts)} passages with monot5-{type}-med-msmarco took {end - start} seconds.", flush=True)
 
-top_passage_per_doc = sorted(reranked, key=lambda x: x.score, reverse=True)
+top_passage_per_doc = {x.metadata["docno"] : (x,x.score) for x in sorted(reranked, key=lambda x: x.score)}
 
-run = [{"ranking":i + 1, "score":x.score, **x.metadata.to_dict()} for i, x in enumerate(top_passage_per_doc)]
+run = [{"ranking":i + 1, "score":x[1], **x[0].metadata.to_dict()} for i, x in enumerate(
+    sorted(top_passage_per_doc.values(), key=lambda x: x[1], reverse=True))]
 
 run_df = pd.DataFrame(run)
 
-run_df.to_parquet(f"data/RunBM25.1k.passages_6_3.mt5/{topic}.snappy.parquet")
+run_df.to_parquet(f"data/RunBM25.1k.passages_6_3.top_mt5/{topic}.snappy.parquet")

@@ -61,8 +61,9 @@ if __name__ == '__main__':
     # from boolq.BaseModules import prep_boolq_dataset, NO, YES
 
     # %%
-    df = pd.concat([pd.read_parquet("mdt5/output_Top1kBM25_2019_mt5_2019_base-med_with_text"),
-                    pd.read_parquet("mdt5/output_Top1kBM25_2021_mt5_2021_base-med_with_text")])
+    # df = pd.concat([pd.read_parquet("mdt5/output_Top1kBM25_2019_mt5_2019_base-med_with_text"),
+    #                 pd.read_parquet("mdt5/output_Top1kBM25_2021_mt5_2021_base-med_with_text")])
+    df = pd.read_parquet("data/RunBM25.1k.passages_6_3.mt5/")
     df = df.rename(columns={"docid": "docno"})
     df = df.merge(pd.read_csv("./data/topics.tsv", sep="\t")["topic description".split()], on="topic", how="inner")
 
@@ -136,7 +137,7 @@ if __name__ == '__main__':
         'mt5': df.score,
         'logits': all_logits.tolist()
     })
-    out_df.to_parquet("./mf/2019_passage_6_3.boolq_logits.parquet")
+    out_df.to_parquet("./mf/RW_passage_6_3.boolq_logits.parquet")
 
     # %%
     out_df = pd.read_parquet(["./mf/2019_passage_6_3.boolq_logits.parquet","./mf/2021_passage_6_3.boolq_logits.parquet"])
