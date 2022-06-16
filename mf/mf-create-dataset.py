@@ -1,3 +1,4 @@
+import lightgbm
 import numpy as np
 import pandas as pd
 import torch
@@ -18,11 +19,11 @@ if __name__ == '__main__':
 #%%
 
     df = pd.read_parquet("./mf/run.passage_6_3.boolq_logits.host_max.parquet")
-    df = df.merge(pd.read_csv("./data/topics.tsv", sep="\t")["topic description".split()], on="topic", how="inner")
+    # df = df.merge(pd.read_csv("./data/topics.tsv", sep="\t")["topic description".split()], on="topic", how="inner")
 
 
-    topics = pd.read_csv("./data/topics.tsv", sep="\t")
-    df = df.merge(topics["topic efficacy".split()], on="topic", how="inner")
+    # topics = pd.read_csv("data/topics_fixed_extended.tsv.txt", sep="\t")
+    # df = df.merge(topics["topic efficacy".split()], on="topic", how="inner")
     df = df[df.efficacy != 0]
     # user_ratings = topics[topics.efficacy != 0].apply(lambda x: pd.Series(
     #     [x.topic, "USER", float(x.efficacy == -1), float(x.efficacy == 1), x.efficacy],
@@ -33,11 +34,11 @@ if __name__ == '__main__':
 
     df["pos"] = df.prob_pos.ge(.3).astype("float")
     df["neg"] = df.prob_neg.ge(.3).astype("float")
-    df["pred"] = df.apply(lambda x: np.array([x.prob_neg, x.prob_pos]).argmax(), axis=1)
+    # df["pred"] = df.apply(lambda x: np.array([x.prob_neg, x.prob_pos]).argmax(), axis=1)
     df["pred"] = df.apply(lambda x: np.array([x.prob_neg, x.prob_pos]).argmax(), axis=1)
     df.pred = df.pred * 2 -1
     df.pred = df.pred * df.apply(lambda x: np.array([x.prob_neg, x.prob_pos]).max(), axis=1)
-    df.loc[df.prob_neg.lt(.3) & df.prob_pos.lt(.3), "pred"] = 0
+    # df.loc[df.pred.lt(.3) & df.pred.gt(-0.3), "pred"] = 0
     df.pred = df.pred.astype("float32")
 
     # df.topic = df.topic.astype("category")
@@ -46,7 +47,8 @@ if __name__ == '__main__':
     df["host_id"] = df.host.cat.codes
 
 
-    #%%
+
+
     # X_train = df[~(df.host.eq("USER")) & df.pred.ne(0)]["host_id topic".split()].to_numpy()
     # y_train = df[~(df.host.eq("USER")) & df.pred.ne(0)].pred.to_numpy()
     # # X_train = np.vstack([X_train, np.vstack([df[df.host.eq("USER") & df.topic.le(51) & df.pred.ne(0)]["host_id topic".split()].to_numpy()] * 10)])
@@ -54,7 +56,7 @@ if __name__ == '__main__':
     # X_test = df[(df.host.eq("USER") & df.topic.ge(100))]["host_id topic".split()].to_numpy()
     # y_test = df[(df.host.eq("USER") & df.topic.ge(100))].pred.to_numpy()
 
-#%%
+
     X = df[df.pred.ne(0)]["host_id topic".split()].to_numpy()
     y = df[df.pred.ne(0)].pred.to_numpy()
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=.8)
@@ -155,33 +157,54 @@ if __name__ == '__main__':
 from sklearn.linear_model import LogisticRegression, Lasso
 import lightgbm as lgbm
 # df.pred = ((df.prob_pos - df.prob_pos.mean())/df.prob_pos.std()) * df.pos - (df.prob_neg-df.prob_neg.mean())/df.prob_neg.std() * df.neg
-df.pred = 2 * df.prob_pos - 1
-y_train, y_test = train_test_split(df[df.efficacy.ne(0)].groupby("topic").efficacy.max().clip(lower=0), train_size=0.8, test_size=0.2)
 
-# y_train = df[df.efficacy.ne(0) & df.topic.le(51)].groupby("topic").efficacy.max().clip(lower=0)
-m = coo_matrix((df.pred, (df.topic, df.host_id)), shape=(df.topic.max() + 1, df.host_id.max()+1))
+df = df[df.efficacy.ne(0)]
+
+df.topic = df.topic.astype(int)
+topics = df[df.efficacy.ne(0)].groupby("topic").topic.max().reset_index(drop=True)
+df.topic = df.topic.astype("category")
+df["topic_id"] = df.topic.cat.codes
+
+m = coo_matrix((df.pred, (df.topic_id, df.host_id)), shape=(df.topic_id.max() + 1, df.host_id.max()+1))
 m = np.array(m.todense())
-X_train = m[y_train.index.to_list()]
-# y_test = df[df.efficacy.ne(0) & df.topic.ge(101)].groupby("topic").efficacy.max().clip(lower=0)
-X_test = m[y_test.index.to_list()]
+y = df[df.efficacy.ne(0)].groupby("topic").efficacy.max().clip(lower=0).to_numpy()
 
-# clf = LogisticRegression(penalty='l1', solver='liblinear', random_state=0, class_weight='balanced', C=1, verbose=1)\
-#     .fit(X_train, y_train)
+# df.topic = df.topic.astype(int)
 
-# clf = lgbm.LGBMClassifier(objective='binary', random_state=5).fit(X_train, y_train, verbose=1)
-clf = LogisticRegression().fit(X_train, y_train)
+train_index = topics.index[topics.astype(int).ge(1000) | topics.astype(int).le(51)]
+test_index = topics.index[topics.astype(int).ge(101) & topics.astype(int).le(150)]
 
-clf.score(X_test, y_test)
-# clf.predict_proba(X_test)
+# train_index = topics.index[topics.astype(int).ge(1000) | topics.astype(int).ge(101)]
+# test_index = topics.index[topics.astype(int).ge(1) & topics.astype(int).le(51)]
+
+X_train = m[train_index]
+y_train = y[train_index]
+X_test = m[test_index]
+y_test = y[test_index]
+# clf = LogisticRegression(penalty='l1', solver='liblinear').fit(X_train, y_train)
+clf = Pipeline([
+    # ('feature_selection', SelectFromModel(LogisticRegression(penalty='l1', solver='liblinear'))),
+    # ('feature_selection', SelectFromModel(LogisticRegression(penalty='none'))),
+    ('classification', LogisticRegression(penalty='l1', solver='liblinear'))
+    # ('classification', LogisticRegression(penalty='elasticnet', solver='saga', l1_ratio=0.5, max_iter=200))
+    # ('classification', LogisticRegression())
+])
+clf.fit(X_train, y_train)
+print(clf.score(X_test, y_test))
+# pd.DataFrame(list(zip(topics[topics.ge(1) & topics.le(51)].to_list(), clf.predict(X_test).tolist()))).merge(topics)
 #%%
-a = []
+from sklearn.linear_model import LogisticRegression, Lasso
+
+y = df[df.efficacy.ne(0)].groupby("topic").efficacy.max().clip(lower=0).to_numpy()
 df.topic = df.topic.astype("category")
 df["topic_id"] = df.topic.cat.codes
 df = df[df.efficacy.ne(0)]
+# df.pred = df.prob_pos * 2 - 1
 m = coo_matrix((df.pred, (df.topic_id, df.host_id)), shape=(df.topic_id.max() + 1, df.host_id.max()+1))
 m = np.array(m.todense())
-kf = StratifiedKFold(n_splits=10, shuffle=True)
-y = df[df.efficacy.ne(0)].groupby("topic").efficacy.max().clip(lower=0).to_numpy()
+kf = StratifiedKFold(n_splits=10, shuffle=False)
+
+a = []
 for train_index, test_index in kf.split(m,y):
     X_train = m[train_index]
     y_train = y[train_index]
@@ -190,10 +213,17 @@ for train_index, test_index in kf.split(m,y):
     y_test = y[test_index]
     # clf = LogisticRegression(penalty='l1', solver='liblinear').fit(X_train, y_train)
     clf = Pipeline([
-        ('feature_selection', SelectFromModel(LogisticRegression(penalty='l1', solver='liblinear'))),
-        ('classification', LogisticRegression(penalty='l1', solver='liblinear'))
+        # ('feature_selection', SelectFromModel(LogisticRegression(penalty='l1', solver='liblinear'))),
+        ('classification', LogisticRegression())
+        # ('classification', LogisticRegression(penalty='l1', solver='liblinear')),
+        # ('classification', LogisticRegression(penalty='elasticnet', solver='saga', l1_ratio=0.5, max_iter=200))
     ])
     clf.fit(X_train, y_train)
     a.append(clf.score(X_test, y_test))
 
 np.mean(a)
+
+#%%
+clf = LogisticRegression()
+clf.fit(m,y)
+a = pd.DataFrame(sorted(list(zip((np.std(m, 0)*clf.coef_)[0].tolist(),df.host.cat.categories)), key=lambda x: abs(x[0]), reverse=True))

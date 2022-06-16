@@ -61,15 +61,29 @@ if __name__ == '__main__':
     # from boolq.BaseModules import prep_boolq_dataset, NO, YES
 
     # %%
-    # df = pd.concat([pd.read_parquet("mdt5/output_Top1kBM25_2019_mt5_2019_base-med_with_text"),
-    #                 pd.read_parquet("mdt5/output_Top1kBM25_2021_mt5_2021_base-med_with_text")])
-    df = pd.read_parquet("data/RunBM25.1k.passages_6_3.mt5/")
-    df = df.rename(columns={"docid": "docno"})
-    df = df.merge(pd.read_csv("./data/topics.tsv", sep="\t")["topic description".split()], on="topic", how="inner")
+    df = pd.concat([pd.read_parquet("mdt5/output_Top1kBM25_2019_mt5_2019_base-med_with_text").\
+                   rename(columns={"docid": "docno", "rang":"ranking"}).\
+                       merge(
+        pd.read_csv("./data/topics_fixed_extended.tsv.txt", sep="\t")["topic description efficacy".split()],
+        on="topic",
+        how="inner"
+    ),
+                    pd.read_parquet("mdt5/output_Top1kBM25_2021_mt5_2021_base-med_with_text")
+                        .rename(columns={"docid": "docno","rang":"ranking"}).\
+                       merge(
+        pd.read_csv("./data/topics_fixed_extended.tsv.txt", sep="\t")["topic description efficacy".split()],
+        on="topic",
+        how="inner"
+    ),
+                    pd.read_parquet("data/RunBM25.1k.passages_6_3.top_mt5/")])
+    # df = pd.read_parquet("data/RunBM25.1k.passages_6_3.top_mt5/")
+    # df = df.rename(columns={"docid": "docno"})
+    # df = df.merge(pd.read_csv("./data/RW.txt", sep="\t")["topic description".split()], on="topic", how="inner")
 
-    df["source_text"] = df.apply(lambda row: f"{row.description} [SEP] {row.passage}", axis=1)
+
 
     #%%
+    df["source_text"] = df.apply(lambda row: f"{row.description} [SEP] {row.passage}", axis=1)
     dataLoader = DataLoader(df, shuffle=False, batch_size=4)
     # df = df.rename(columns={"stance": "credibility", "credibility": "stance"})
     # df = df[df.stance.ge(0)]
@@ -140,7 +154,9 @@ if __name__ == '__main__':
     out_df.to_parquet("./mf/RW_passage_6_3.boolq_logits.parquet")
 
     # %%
-    out_df = pd.read_parquet(["./mf/2019_passage_6_3.boolq_logits.parquet","./mf/2021_passage_6_3.boolq_logits.parquet"])
+    out_df = pd.read_parquet(["./mf/2019_passage_6_3.boolq_logits.parquet",
+                              "./mf/2021_passage_6_3.boolq_logits.parquet",
+                              "./mf/RW_passage_6_3.mt5_top.boolq_logits.parquet"])
     df = df.merge(out_df, on="topic docno".split(), how="inner")
     df["prob_pos"] = df.logits.apply(lambda x: torch.tensor(x).softmax(-1)[2].item())
     df["prob_neg"] = df.logits.apply(lambda x: torch.tensor(x).softmax(-1)[0].item())
@@ -152,13 +168,21 @@ if __name__ == '__main__':
     # run = run.rename(columns={"docid": "docno"})
     # df = df.merge(run["topic docno score".split()], on="topic docno".split(), how="inner")
 
-    x = df.groupby("topic host".split()).apply(lambda x: pd.Series([x.prob_neg.mean(), x.prob_pos.mean()], index="prob_neg prob_pos".split())).reset_index()
+    # x = df.groupby("topic host".split()).apply(lambda x: pd.Series([x.prob_neg.mean(), x.prob_pos.mean(), x.description.max(), x.efficacy.max()], index="prob_neg prob_pos description efficacy".split())).reset_index()
 
     # df = df.groupby("topic").apply(lambda x: x.sort_values("score", ascending=False).head(100)).reset_index(drop=True)
-    x = df.groupby("topic host".split()).apply(lambda x: x.nlargest(1, 'score').head(1)["prob_neg prob_pos".split()]).reset_index()
+    x = df.groupby("topic host".split()).apply(lambda x: x.nlargest(1, 'score').head(1)).reset_index()
+
+    x = x[['docno', 'score', 'passage', 'url',
+       'description', 'efficacy', 'timestamp', 'bm25', 'passage_index',
+       'logits', 'prob_pos', 'prob_neg', 'domain']]
+
+    x = x.reset_index()
 
     # x = df.groupby("topic host".split()).apply(lambda x: pd.Series([x.prob_neg.max(), x.prob_pos.max()], index="neg pos".split())).reset_index()
     x.to_parquet("./mf/run.passage_6_3.boolq_logits.host_max.parquet")
+
+
 
 
 

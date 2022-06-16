@@ -30,12 +30,22 @@ topics_answers = pd.read_csv("./data/2019topics_efficacy.txt", header=None, sep=
                              names=['topic', 'efficacy'])
 topics_2021 = pd.merge(topics_2021, topics_answers, how='left', on='topic')
 topics_2021["efficacy"] = topics_2021.stance.map({"helpful": 1, "unhelpful": -1})
+
+#%%
+
 # %%
 final_columns = ['topic', 'query', 'evidence', 'description', 'narrative', 'efficacy']
 topics: pd.DataFrame = pd.concat([
     topics2019[final_columns], topics_2021[final_columns],
 ])
 
+
+
 topics.to_csv("data/topics.csv", index=False, sep="\t")
 #%%
-topics = pd.read_csv("data/topics.csv", index_col="topic", sep="\t")
+topics = pd.read_csv("data/topics_fixed.tsv.txt", sep="\t")
+
+RW = pd.read_csv("./data/RW.txt", sep="\t")
+RW = RW.rename(columns={"pubmed_url":"evidence"})
+topics = pd.concat([topics,RW])
+topics.to_csv("data/topics_fixed_extended.tsv.txt", index=False, sep="\t")
