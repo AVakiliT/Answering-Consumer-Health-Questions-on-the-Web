@@ -1,10 +1,10 @@
 # dataset question context binary
-
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 import json
 from pathlib import Path
 import pandas as pd
 import torch
-from datasets import Dataset, DatasetDict
+from datasets import Dataset, DatasetDict, concatenate_datasets
 from torch import nn
 from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingArguments, Trainer, \
     default_data_collator, AutoModelForSequenceClassification
@@ -29,21 +29,27 @@ for split in splits:
                 stuff.append((q, sentence, 1 if sent_number in answer_aspans else 0))
     dfs.append(pd.DataFrame(stuff, columns=columns))
 
-for i in range(0,3):
-    dfs[i] = dfs[i].drop(dfs[i][dfs[i].label.eq(0)].sample(frac=.99).index)
-    dfs[i] = dfs[i].drop(dfs[i][dfs[i].label.eq(1)].sample(frac=.9).index)
+for i in range(0,1):
+    dfs[i] = dfs[i].drop(dfs[i][dfs[i].label.eq(0)].sample(frac=.9).index)
+    dfs[i] = dfs[i].drop(dfs[i][dfs[i].label.eq(1)].sample(frac=.0).index)
 
 print(dfs[0].label.value_counts())
 datasets = DatasetDict({split: ds for split, ds in zip(splits, [Dataset.from_pandas(df) for df in dfs])})
 
 # %%
-# model_checkpoint = "google/bigbird-pegasus-large-pubmed"
-model_checkpoint = "t5-base"
 max_length = 384  # The maximum length of a feature (question and context)
 doc_stride = 128  # The authorized overlap between two part of the context when splitting it is needed.
+
+# model_checkpoint = 'microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract'
+# model_checkpoint = 'microsoft/BiomedNLP-KRISSBERT-PubMed-UMLS-EL'
+# model_checkpoint = 'microsoft/deberta-base'
 # tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
+# model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint)
+
+
+model_checkpoint = "t5-large"
+# model_checkpoint = "razent/SciFive-base-Pubmed"
 tokenizer = EncT5Tokenizer.from_pretrained(model_checkpoint)
-# model = AutoModelForSequenceClassification.from_pretrained()
 model = EncT5ForSequenceClassification.from_pretrained(model_checkpoint)
 # Resize embedding size as we added bos token
 if model.config.vocab_size < len(tokenizer.get_vocab()):
@@ -127,7 +133,12 @@ trainer = MyTrainer(
     compute_metrics=compute_metrics,
 )
 
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+
 
 # %%
-trainer.train()
+# trainer.train('BiomedNLP-PubMedBERT-base-uncased-abstract-mash-qa-binary-finetuned/checkpoint-29500')
+trainer.train('t5-large-mash-qa-binary-finetuned/checkpoint-16000')
+# trainer.train()
+
+#%%
+concatenate_datasets([datasets["train"], datasets["validate"], datasets["test"]])

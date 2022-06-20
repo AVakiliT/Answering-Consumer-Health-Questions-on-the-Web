@@ -171,11 +171,11 @@ y = df[df.efficacy.ne(0)].groupby("topic").efficacy.max().clip(lower=0).to_numpy
 
 # df.topic = df.topic.astype(int)
 
-train_index = topics.index[topics.astype(int).ge(1000) | topics.astype(int).le(51)]
-test_index = topics.index[topics.astype(int).ge(101) & topics.astype(int).le(150)]
+# train_index = topics.index[topics.astype(int).ge(1000) | topics.astype(int).le(51)]
+# test_index = topics.index[topics.astype(int).ge(101) & topics.astype(int).le(150)]
 
-# train_index = topics.index[topics.astype(int).ge(1000) | topics.astype(int).ge(101)]
-# test_index = topics.index[topics.astype(int).ge(1) & topics.astype(int).le(51)]
+train_index = topics.index[topics.astype(int).ge(1000) | topics.astype(int).ge(101)]
+test_index = topics.index[topics.astype(int).ge(1) & topics.astype(int).le(51)]
 
 X_train = m[train_index]
 y_train = y[train_index]

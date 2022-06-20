@@ -42,7 +42,7 @@ df = spark.read.parquet(
 "/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p")
 
 
-window_size, step = 6, 3
+window_size, step = 1, 1
 
 
 # print(df.count())
