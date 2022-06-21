@@ -14,10 +14,10 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-from boolq.BaseModules import prep_boolq_dataset, NO, YES, IRRELEVANT
-from boolq.bert_modules import BoolQBertModule
+from boolqstuff.BaseModules import prep_boolq_dataset, NO, YES, IRRELEVANT
+from boolqstuff.bert_modules import BoolQBertModule
 
-from boolq.t5_modules import MyLightningDataModule
+from boolqstuff.t5_modules import MyLightningDataModule
 
 
 if __name__ == '__main__':
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     parser.add_argument('--no_train', action='store_true')
     parser.add_argument('--no-augment', action='store_false')
     parser.set_defaults(augment=False)
-    # parser.add_argument("--load_from", default="checkpoints/boolq-simple/deberta-base-num_class=3-lr=1e-05-batch_size=16/epoch=03-valid_F1Score=0.906-valid_Accuracy=0.906.ckpt", type=str)
+    # parser.add_argument("--load_from", default="checkpoints/boolqstuff-simple/deberta-base-num_class=3-lr=1e-05-batch_size=16/epoch=03-valid_F1Score=0.906-valid_Accuracy=0.906.ckpt", type=str)
     # parser.add_argument("--transformer-type", default="t5", type=str)
     parser.add_argument("--load_epoch", default=None, type=int)
     args = parser.parse_known_args()
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     LOAD_EPOCH = args[0].load_epoch
     INFER_ALL = args[0].infer_all
     NO_TRAIN = args[0].no_train
-    from boolq.BaseModules import prep_boolq_dataset, NO, YES
+    from boolqstuff.BaseModules import prep_boolq_dataset, NO, YES
 
     # %%
     df = pd.read_parquet("./qreldataset/2019_mt5_dataset.parquet")

@@ -5,9 +5,9 @@ from transformers import T5ForConditionalGeneration, AutoTokenizer, AutoModel, A
 import pandas as pd
 import torch
 
-from boolq.BaseModules import prep_boolq_dataset, NO, YES
-from boolq.bert_modules import BoolQBertModule
-from boolq.t5_modules import MyLightningDataModule, MyLightningModel
+from boolqstuff.BaseModules import prep_boolq_dataset, NO, YES
+from boolqstuff.bert_modules import BoolQBertModule
+from boolqstuff.t5_modules import MyLightningDataModule, MyLightningModel
 import pytorch_lightning as pl
 from argparse import ArgumentParser
 import glob

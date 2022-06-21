@@ -16,10 +16,10 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-from boolq.BaseModules import prep_boolq_dataset, NO, YES, IRRELEVANT
-from boolq.bert_modules import BoolQBertModule
+from boolqstuff.BaseModules import prep_boolq_dataset, NO, YES, IRRELEVANT
+from boolqstuff.bert_modules import BoolQBertModule
 
-from boolq.t5_modules import MyLightningDataModule, MyDataset
+from boolqstuff.t5_modules import MyLightningDataModule, MyDataset
 
 
 from utils.util import url2host, url2domain
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     # parser.add_argument('--no_train', action='store_true')
     # parser.add_argument('--no-augment', action='store_false')
     # parser.set_defaults(augment=False)
-    # # parser.add_argument("--load_from", default="checkpoints/boolq-simple/deberta-base-num_class=3-lr=1e-05-batch_size=16/epoch=03-valid_F1Score=0.906-valid_Accuracy=0.906.ckpt", type=str)
+    # # parser.add_argument("--load_from", default="checkpoints/boolqstuff-simple/deberta-base-num_class=3-lr=1e-05-batch_size=16/epoch=03-valid_F1Score=0.906-valid_Accuracy=0.906.ckpt", type=str)
     # # parser.add_argument("--transformer-type", default="t5", type=str)
     # parser.add_argument("--load_epoch", default=None, type=int)
     # args = parser.parse_known_args()
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     # LOAD_EPOCH = args[0].load_epoch
     # INFER_ALL = args[0].infer_all
     # NO_TRAIN = args[0].no_train
-    # from boolq.BaseModules import prep_boolq_dataset, NO, YES
+    # from boolqstuff.BaseModules import prep_boolq_dataset, NO, YES
 
     # %%
     df = pd.concat([pd.read_parquet("mdt5/output_Top1kBM25_2019_mt5_2019_base-med_with_text").\
@@ -133,7 +133,7 @@ if __name__ == '__main__':
         valid_metrics="Accuracy F1Score".split(),
     )
 
-    lightning_module.load_from_checkpoint("./checkpoints/boolq-qrel/deberta-base-lr=1e-05-batch_size=16-aug-noirrel-alltrain/epoch=04.ckpt", tokenizer=tokenizer, model=model)
+    lightning_module.load_from_checkpoint("./checkpoints/boolqstuff-qrel/deberta-base-lr=1e-05-batch_size=16-aug-noirrel-alltrain/epoch=04.ckpt", tokenizer=tokenizer, model=model)
     lightning_module.to('cuda')
     logits = []
     for stuff in tqdm(dataLoader):

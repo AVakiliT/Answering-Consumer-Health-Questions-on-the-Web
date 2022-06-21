@@ -5,7 +5,7 @@ import time
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-from boolq.bert_modules import BoolQBertModule
+from boolqstuff.bert_modules import BoolQBertModule
 
 
 def search(query):
@@ -59,7 +59,7 @@ lightning_module = BoolQBertModule(
 )
 
 lightning_module.load_from_checkpoint(
-    "checkpoints/boolq-qrel/deberta-base-lr=1e-05-batch_size=16-aug/epoch=02-valid_F1=0.902-valid_Accuracy=0.902.ckpt",
+    "checkpoints/boolqstuff-qrel/deberta-base-lr=1e-05-batch_size=16-aug/epoch=02-valid_F1=0.902-valid_Accuracy=0.902.ckpt",
     model=model,
     tokenizer=tokenizer,
 )

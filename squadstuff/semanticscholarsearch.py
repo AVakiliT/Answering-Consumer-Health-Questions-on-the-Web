@@ -48,7 +48,7 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingA
     default_data_collator, AutoModelForSequenceClassification
 
 squad_v2 = True
-model_checkpoint = "./transformer_models/boolq"
+model_checkpoint = "./transformer_models/boolqstuff"
 batch_size = 8
 
 from datasets import load_dataset, load_metric, Dataset
@@ -59,7 +59,7 @@ from datasets import load_dataset, load_metric, Dataset
 max_length = 2000 # The maximum length of a feature (question and context)
 doc_stride = 128 # The authorized overlap between two part of the context when splitting it is needed.
 tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
-model = AutoModelForSequenceClassification.from_pretrained("./transformer_models/boolq")
+model = AutoModelForSequenceClassification.from_pretrained("./transformer_models/boolqstuff")
 
 df = df.merge(topics["topic description efficacy".split()], on="topic", how="inner")
 df = df[~ df.abstract.isnull() & df.topic.eq(1)].reset_index(drop=True)

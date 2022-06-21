@@ -8,7 +8,7 @@ from tqdm import trange, tqdm
 import numpy as np
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, PreTrainedTokenizer
 from tldextract import extract
-from boolq.bert_modules import BoolQBertModule
+from boolqstuff.bert_modules import BoolQBertModule
 import networkx as nx
 # df = pd.read_parquet("./mdt5/output_Top1kBM25_2019_mt5_2019_base-med_with_text")
 topics = pd.read_csv("./data/topics.csv", sep="\t", index_col="topic")

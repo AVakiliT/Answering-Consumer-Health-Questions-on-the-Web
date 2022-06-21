@@ -8,7 +8,7 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
 from transformers import PreTrainedTokenizer
 from torch.nn import functional as F
-from boolq.BaseModules import ClassifierLightningModel
+from boolqstuff.BaseModules import ClassifierLightningModel
 
 
 class PipelineDataset(Dataset):

@@ -16,7 +16,7 @@ from torch.utils.data import Dataset, DataLoader
 from torch import nn
 from transformers import PreTrainedTokenizer, AutoTokenizer, AutoModelForSequenceClassification, T5ForConditionalGeneration
 
-from boolq.BaseModules import ClassifierLightningModel
+from boolqstuff.BaseModules import ClassifierLightningModel
 from pytorch_lightning.callbacks import TQDMProgressBar, EarlyStopping, ModelCheckpoint
 parser = ArgumentParser()
 parser.add_argument("--boolq_resume_version", default=52, type=int)
@@ -37,7 +37,7 @@ else:
 
 
 # %%
-from boolq.bert_modules import BoolQBertModule
+from boolqstuff.bert_modules import BoolQBertModule
 from pipeline.pipeline_modules import PipelineDataModule, PipelineModule
 
 

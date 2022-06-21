@@ -46,7 +46,9 @@ doc_stride = 128  # The authorized overlap between two part of the context when 
 # model_checkpoint = 'microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract'
 # model_checkpoint = 'microsoft/BiomedNLP-KRISSBERT-PubMed-UMLS-EL'
 # model_checkpoint = 'microsoft/deberta-base'
-model_checkpoint = 'l-yohai/bigbird-roberta-base-mnli'
+# model_checkpoint = 'l-yohai/bigbird-roberta-base-mnli'
+model_checkpoint = 'google/bigbird-roberta-base'
+# model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
 model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=2, ignore_mismatched_sizes=True)
 
@@ -113,7 +115,7 @@ args = TrainingArguments(
     learning_rate=2e-5,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
-    num_train_epochs=1,
+    num_train_epochs=5,
     weight_decay=0.01,
     push_to_hub=False,
 )
@@ -167,7 +169,7 @@ trainer = MyTrainer(
 # %%
 # trainer.train('BiomedNLP-PubMedBERT-base-uncased-abstract-mash-qa-binary-finetuned/checkpoint-29500')
 # trainer.train('t5-large-mash-qa-binary-finetuned/checkpoint-16000')
-trainer.train()
-
+# trainer.train()
+trainer.train('bigbird-roberta-base-mash-qa-tokenclassifier-binary-finetuned/checkpoint-45000')
 # %%
 concatenate_datasets([datasets["train"], datasets["validate"], datasets["test"]])

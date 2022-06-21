@@ -69,7 +69,7 @@ class ClassifierLightningModel(pl.LightningModule):
         print(f'\nVALID Epoch: [{self.current_epoch}]\n{classification_report(target, prediction, zero_division=1)}\n')
 
 def prep_boolq_dataset(prep_sentence, neg_sampling=True):
-    dataset = load_dataset('super_glue', 'boolq')
+    dataset = load_dataset('super_glue', 'boolqstuff')
     df_train: pd.DataFrame
     df_validation: pd.DataFrame
     df_train, df_validation = [pd.concat({

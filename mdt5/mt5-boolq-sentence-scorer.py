@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from tldextract import extract
-from boolq.bert_modules import BoolQBertModule
+from boolqstuff.bert_modules import BoolQBertModule
 from gnn_fraud.fraud_utils import HMIDataset
 
 print("Parsing args...", flush=True)
@@ -33,12 +33,12 @@ NUM_CLASSES =  3
 YES = "▁yes"
 NO = "▁no"
 IRRELEVANT = "▁irrelevant"
-# CHECKPOINT_PATH = f"checkpoints/boolq-simple/deberta-base-num_class=2-lr=1e-5-batch_size=16"
+# CHECKPOINT_PATH = f"checkpoints/boolqstuff-simple/deberta-base-num_class=2-lr=1e-5-batch_size=16"
 tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-base")
 model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-base", num_labels=NUM_CLASSES).to(0)
 lightning_module = BoolQBertModule.load_from_checkpoint(
-    "./checkpoints/boolq-qrel/deberta-base-lr=1e-05-batch_size=16-aug/epoch=01-valid_F1=0.901-valid_Accuracy=0.901.ckpt",
-    # "../checkpoints/boolq-simple/deberta-base-num_class=2-lr=1e-05-batch_size=16/epoch=04-valid_F1=0.818-valid_Accuracy=0.818.ckpt",
+    "./checkpoints/boolqstuff-qrel/deberta-base-lr=1e-05-batch_size=16-aug/epoch=01-valid_F1=0.901-valid_Accuracy=0.901.ckpt",
+    # "../checkpoints/boolqstuff-simple/deberta-base-num_class=2-lr=1e-05-batch_size=16/epoch=04-valid_F1=0.818-valid_Accuracy=0.818.ckpt",
     tokenizer=tokenizer,
     model=model,
     save_only_last_epoch=True,

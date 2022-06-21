@@ -4,7 +4,7 @@ from pytorch_lightning.utilities.types import TRAIN_DATALOADERS, EVAL_DATALOADER
 from torch import nn
 from transformers import PreTrainedTokenizer, BertModel
 
-from boolq.t5_modules import MyLightningModel
+from boolqstuff.t5_modules import MyLightningModel
 from torch.nn import functional as F
 
 
