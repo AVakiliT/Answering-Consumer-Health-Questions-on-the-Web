@@ -15,6 +15,14 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingA
 # %%
 from github.EncT5.enc_t5 import EncT5ForSequenceClassification, EncT5Tokenizer
 
+window_size, step = 1, 1
+df = pd.read_parquet(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}")
+
+df = pd.concat([
+    pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25_2019"),
+    pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25"),
+pd.read_parquet("/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p")])
+
 dfs = []
 splits = "train val test".split()
 columns = "question sentences sentence_labels".split()
