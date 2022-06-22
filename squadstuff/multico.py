@@ -107,7 +107,7 @@ tokenized_datasets = datasets.map(f, batched=False, batch_size=1024)
 # #%%
 # tokenized_datasets = DatasetDict.load_from_disk(disk_path)
 # %%
-batch_size = 4
+batch_size = 2
 
 model_name = model_checkpoint.split("/")[-1]
 args = TrainingArguments(
