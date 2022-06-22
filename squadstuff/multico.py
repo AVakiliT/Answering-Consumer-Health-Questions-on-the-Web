@@ -10,7 +10,7 @@ from datasets import Dataset, DatasetDict, concatenate_datasets
 from torch import nn
 from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingArguments, Trainer, \
     default_data_collator, AutoModelForSequenceClassification, DataCollatorForTokenClassification, \
-    AutoModelForTokenClassification
+    AutoModelForTokenClassification, TrainerCallback, IntervalStrategy
 
 # %%
 from github.EncT5.enc_t5 import EncT5ForSequenceClassification, EncT5Tokenizer
@@ -33,14 +33,14 @@ for split in splits:
     dfs.append(pd.DataFrame(stuff, columns=columns))
 
 # for i in range(0, 3):
-    # dfs[i] = dfs[i].drop(dfs[i].sample(frac=.9).index)
-    # dfs[i] = dfs[i].drop(dfs[i].sample(frac=.0).index)
+# dfs[i] = dfs[i].drop(dfs[i].sample(frac=.9).index)
+# dfs[i] = dfs[i].drop(dfs[i].sample(frac=.0).index)
 
 # print(dfs[0].label.value_counts())
 datasets = DatasetDict({split: ds for split, ds in zip(splits, [Dataset.from_pandas(df) for df in dfs])})
 
 # %%
-max_length = 1024  # The maximum length of a feature (question and context)
+max_length = 2048  # The maximum length of a feature (question and context)
 doc_stride = 128  # The authorized overlap between two part of the context when splitting it is needed.
 
 # model_checkpoint = 'microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract'
@@ -48,6 +48,7 @@ doc_stride = 128  # The authorized overlap between two part of the context when 
 # model_checkpoint = 'microsoft/deberta-base'
 # model_checkpoint = 'l-yohai/bigbird-roberta-base-mnli'
 model_checkpoint = 'google/bigbird-roberta-base'
+# model_checkpoint = 'distilbert-base-uncased'
 # model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
 model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=2, ignore_mismatched_sizes=True)
@@ -106,18 +107,22 @@ tokenized_datasets = datasets.map(f, batched=False, batch_size=1024)
 # #%%
 # tokenized_datasets = DatasetDict.load_from_disk(disk_path)
 # %%
-batch_size = 2
+batch_size = 4
 
 model_name = model_checkpoint.split("/")[-1]
 args = TrainingArguments(
-    f"{model_name}-mash-qa-tokenclassifier-binary-finetuned",
-    evaluation_strategy="epoch",
+    f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned",
+
     learning_rate=2e-5,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
-    num_train_epochs=5,
+    num_train_epochs=2,
     weight_decay=0.01,
     push_to_hub=False,
+    load_best_model_at_end=True,
+    save_total_limit=5,
+    save_strategy="epoch",
+    evaluation_strategy="epoch",
 )
 class_weights = dfs[0]['sentence_labels'].apply(Counter).sum()
 class_weights = [sum(class_weights.values()) / class_weights[0], sum(class_weights.values()) / class_weights[1]]
@@ -156,7 +161,10 @@ class MyTrainer(Trainer):
         return (loss, outputs) if return_outputs else loss
 
 
-trainer = MyTrainer(
+
+
+
+trainer: Trainer = MyTrainer(
     model,
     args,
     train_dataset=tokenized_datasets["train"],
@@ -164,12 +172,22 @@ trainer = MyTrainer(
     data_collator=data_collator,
     tokenizer=tokenizer,
     compute_metrics=compute_metrics,
+
 )
 
+
+class EvaluationCallback(TrainerCallback):
+    metrics = []
+    def on_evaluate(self, args, state, control, **kwargs):
+        self.metrics.append(kwargs['metrics'])
+        with open(f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/metrics.txt", 'w') as f:
+            json.dump(self.metrics, f, indent=4)
+trainer.add_callback(EvaluationCallback())
 # %%
 # trainer.train('BiomedNLP-PubMedBERT-base-uncased-abstract-mash-qa-binary-finetuned/checkpoint-29500')
 # trainer.train('t5-large-mash-qa-binary-finetuned/checkpoint-16000')
 # trainer.train()
-trainer.train('bigbird-roberta-base-mash-qa-tokenclassifier-binary-finetuned/checkpoint-45000')
+trainer.train()
 # %%
-concatenate_datasets([datasets["train"], datasets["validate"], datasets["test"]])
+trainer.save_model(f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/best",)
+# concatenate_datasets([datasets["train"], datasets["validate"], datasets["test"]])

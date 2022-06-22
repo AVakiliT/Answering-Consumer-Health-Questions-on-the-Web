@@ -1,3 +1,4 @@
+import json
 from collections import Counter
 
 import torch
@@ -5,12 +6,13 @@ from datasets import load_dataset
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch import nn
 from transformers import default_data_collator, TrainingArguments, Trainer, AutoModelForSequenceClassification, \
-    AutoTokenizer
+    AutoTokenizer, TrainerCallback
 
 from github.EncT5.enc_t5 import EncT5ForSequenceClassification, EncT5Tokenizer
 
-
-datasets = load_dataset("boolq")
+dataset_name = 'boolq'
+experiment_name = 'binary-classifier'
+datasets = load_dataset(dataset_name)
 
 #%%
 model_checkpoint = 'facebook/muppet-roberta-base'
@@ -39,11 +41,10 @@ def tokenize_dataset(examples):
 tokenized_datasets = datasets.map(tokenize_dataset, batched=True, batch_size=1024)
 #%%
 batch_size = 8
-
-
 model_name = model_checkpoint.split("/")[-1]
+output_dir = f"checkpoints/{model_name}-{dataset_name}-{experiment_name}-finetuned"
 args = TrainingArguments(
-    f"{model_name}-boolq-binary-finetuned",
+    output_dir,
     evaluation_strategy="epoch",
     learning_rate=2e-5,
     per_device_train_batch_size=batch_size,
@@ -83,6 +84,7 @@ class MyTrainer(Trainer):
         return (loss, outputs) if return_outputs else loss
 
 
+
 trainer = MyTrainer(
     model,
     args,
@@ -93,7 +95,14 @@ trainer = MyTrainer(
     compute_metrics=compute_metrics,
 )
 
+metrics = []
+class EvaluationCallback(TrainerCallback):
+    def on_evaluate(self, args, state, control, **kwargs):
+        metrics.append(kwargs['metrics'])
+        with open(f"{output_dir}/metrics.txt", 'w') as f:
+            json.dump(metrics, f, indent=4)
+trainer.add_callback(EvaluationCallback())
 
 
 # %%
-trainer.train()
+trainer.evaluate()
