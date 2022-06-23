@@ -18,16 +18,17 @@ from github.EncT5.enc_t5 import EncT5ForSequenceClassification, EncT5Tokenizer
 window_size, step = 1, 1
 # df = pd.read_parquet(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}")
 
-df = pd.concat([
-    pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25_2019"),
-    pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25"),
-pd.read_parquet("/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p")]).reset_index()
+# df = pd.concat([
+#     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25_2019"),
+#     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25"),
+# pd.read_parquet("/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p")]).reset_index()
 
+df = pd.read_parquet("data/RunBM25.1k.passages_12_6.top_mt5")
 topics = pd.read_csv("data/topics_fixed_extended.tsv.txt", sep='\t')
 
 
-df2 = df["topic docno url text score".split()].merge(topics["topic description".split()], on="topic", how="inner")
-dataset = Dataset.from_pandas(df2)
+# df2 = df["topic docno url text score".split()].merge(topics["topic description".split()], on="topic", how="inner")
+dataset = Dataset.from_pandas(df)
 
 
 # %%
@@ -59,7 +60,7 @@ def f(examples):
     # sl = [len(s) for s in ss]
     tokenized_examples = tokenizer(
         examples["description"],
-        examples["text"],
+        examples["passage"],
         truncation="only_second",
         max_length=max_length,
         padding="max_length",
@@ -80,93 +81,32 @@ batch_size = 2
 
 args = TrainingArguments(
     f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned",
-
-    learning_rate=2e-5,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
-    num_train_epochs=4,
-    weight_decay=0.01,
-    push_to_hub=False,
-    load_best_model_at_end=True,
-    metric_for_best_model='f1',
-    save_strategy="epoch",
-    evaluation_strategy="epoch",
 )
-class_weights = dfs[0]['sentence_labels'].apply(Counter).sum()
-class_weights = [sum(class_weights.values()) / class_weights[0], sum(class_weights.values()) / class_weights[1]]
+
 
 
 # %%
-def compute_metrics(pred):
-    labels = pred.label_ids
-    preds = pred.predictions.argmax(-1)
-    l = labels.reshape(-1)[labels.reshape(-1) != -100]
-    p = preds.reshape(-1)[labels.reshape(-1) != -100]
-    precision, recall, f1, _ = precision_recall_fscore_support(l, p, average='macro')
-    acc = accuracy_score(l, p)
-    print(classification_report(l, p))
-    return {
-        'accuracy': acc,
-        'f1': f1,
-        'precision': precision,
-        'recall': recall
-    }
+
 
 
 data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
 
 
-class MyTrainer(Trainer):
-    def compute_loss(self, model, inputs, return_outputs=False):
-        labels = inputs.get("labels")
-        # forward pass
-        outputs = model(**inputs)
-        logits = outputs.get("logits")
-        # compute custom loss (suppose one has 3 labels with different weights)
-        loss_fct = nn.CrossEntropyLoss(
-            weight=torch.tensor(class_weights).to(model.device)
-        )
-        loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
-        return (loss, outputs) if return_outputs else loss
 
 
-trainer: Trainer = MyTrainer(
+
+trainer: Trainer = Trainer(
     model,
     args,
-    train_dataset=tokenized_datasets["train"],
-    eval_dataset=tokenized_datasets["val"],
+    train_dataset=tokenized_datasets,
     data_collator=data_collator,
     tokenizer=tokenizer,
-    compute_metrics=compute_metrics,
-
 )
 
-
-class EvaluationCallback(TrainerCallback):
-    metrics = []
-    def on_evaluate(self, args, state, control, **kwargs):
-        try:
-            with open(f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/metrics.txt", 'r') as f:
-                self.metrics = json.load(f)
-        except Exception:
-            self.metrics = []
-        self.metrics.append(kwargs['metrics'])
-        with open(f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/metrics.txt", 'w') as f:
-            json.dump(self.metrics, f, indent=4)
-
-
-evaluation_callback = EvaluationCallback()
-trainer.add_callback(evaluation_callback)
 # %%
-# trainer.train('BiomedNLP-PubMedBERT-base-uncased-abstract-mash-qa-binary-finetuned/checkpoint-29500')
-# trainer.train('t5-large-mash-qa-binary-finetuned/checkpoint-16000')
-# trainer.train()
-# trainer.train('checkpoints/bigbird-roberta-base-mash-qa-tokenclassifier-binary-finetuned/')
-# %%
-
-# trainer.save_model(f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/best",)
-# concatenate_datasets([datasets["train"], datasets["validate"], datasets["test"]])
 
 #%%
-trainer.evaluate(tokenized_datasets['test'])
-p = trainer.predict(tokenized_datasets['test'])
+pred = trainer.predict(tokenized_datasets)
+torch.save(pred, 'data/tmp_pred_multico')
