@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --account=rrg-smucker
+#SBATCH --account=def-smucker
 #SBATCH --time=0-1:00:0
 #SBATCH --array=0-7
 #SBATCH --cpus-per-task=2
