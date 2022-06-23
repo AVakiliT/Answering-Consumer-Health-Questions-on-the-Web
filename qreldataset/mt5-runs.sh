@@ -7,7 +7,8 @@
 #SBATCH --gres=gpu:a100:1
 #SBATCH --output=slurm/%A_%a.out
 
-
+export TRANSFORMERS_OFFLINE=1
+export HF_DATASETS_OFFLINE=1
 module load StdEnv gcc cuda/11 faiss arrow/5 python java
 source ~/avakilit/PYTORCH/bin/activate
 
