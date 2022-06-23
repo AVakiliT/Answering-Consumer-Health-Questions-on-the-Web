@@ -28,7 +28,7 @@ import pandas as pd
 window, step = 12, 6
 # df = pd.read_parquet("qreldataset/2019qrels.passages.parquet")
 df_all = pd.read_parquet(f"data/RunBM25.1k.passages_{window}_{step}/")
-for topic in tqdm():
+for topic in tqdm(topics_subset):
     df = df_all[df_all.topic.eq(topic)]
     topics = pd.read_csv("./data/topics_fixed_extended.tsv.txt", sep="\t")
     df = df.merge(topics["topic description efficacy".split()], on="topic", how="inner")
