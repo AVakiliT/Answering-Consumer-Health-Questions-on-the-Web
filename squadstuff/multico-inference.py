@@ -108,6 +108,5 @@ trainer: Trainer = Trainer(
 # %%
 
 #%%
-x = tokenized_datasets.train_test_split(.001)['test']
-pred = trainer.predict(x)
+pred = trainer.predict(tokenized_datasets)
 torch.save(pred, 'data/tmp_pred_multico')
