@@ -109,4 +109,4 @@ trainer: Trainer = Trainer(
 
 #%%
 pred = trainer.predict(tokenized_datasets)
-torch.save(pred, 'data/tmp_pred_multico')
+torch.save(pred, 'data/tmp_pred_multico',pickle_protocol=4)
