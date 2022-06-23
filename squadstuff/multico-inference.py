@@ -16,36 +16,19 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingA
 from github.EncT5.enc_t5 import EncT5ForSequenceClassification, EncT5Tokenizer
 
 window_size, step = 1, 1
-df = pd.read_parquet(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}")
+# df = pd.read_parquet(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}")
 
 df = pd.concat([
     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25_2019"),
     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25"),
-pd.read_parquet("/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p")])
+pd.read_parquet("/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p")]).reset_index()
 
-dfs = []
-splits = "train val test".split()
-columns = "question sentences sentence_labels".split()
-for split in splits:
-    with open(f"./data/mashqa_data/{split}_webmd_squad_v2_full.json") as f:
-        s = json.load(f)
+topics = pd.read_csv("data/topics_fixed_extended.tsv.txt", sep='\t')
 
-    stuff = []
-    for i in s['data']:
-        sent_list = i['paragraphs'][0]['sent_list']
-        for question in i['paragraphs'][0]['qas']:
-            query = question['question']
-            answer_aspans = question['answers'][0]['answer_span']
-            span_labels = [1 if sent_number in answer_aspans else 0 for sent_number in range(len(sent_list))]
-            stuff.append((query, sent_list, span_labels))
-    dfs.append(pd.DataFrame(stuff, columns=columns))
 
-# for i in range(0, 3):
-# dfs[i] = dfs[i].drop(dfs[i].sample(frac=.9).index)
-# dfs[i] = dfs[i].drop(dfs[i].sample(frac=.0).index)
+df2 = df["topic docno url text score".split()].merge(topics["topic description".split()], on="topic", how="inner")
+dataset = Dataset.from_pandas(df2)
 
-# print(dfs[0].label.value_counts())
-datasets = DatasetDict({split: ds for split, ds in zip(splits, [Dataset.from_pandas(df) for df in dfs])})
 
 # %%
 max_length = 2048  # The maximum length of a feature (question and context)
@@ -67,48 +50,24 @@ if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
 
-# model_checkpoint = "t5-large"
-# # model_checkpoint = "razent/SciFive-base-Pubmed"
-# tokenizer = EncT5Tokenizer.from_pretrained(model_checkpoint)
-# model = EncT5ForSequenceClassification.from_pretrained(model_checkpoint)
-# # Resize embedding size as we added bos token
-# if model.config.vocab_size < len(tokenizer.get_vocab()):
-#     model.resize_token_embeddings(len(tokenizer.get_vocab()))
+
 # %%
-def toeknize_dataset(examples):
+def f(examples):
     # examples["question"] = [q.lstrip() for q in examples["question"]]
     # ss = tokenizer(examples['sentences'], add_epscial_toekns=False)
     # q = tokenizer(examples['question'])
     # sl = [len(s) for s in ss]
     tokenized_examples = tokenizer(
-        examples["question"],
-        ' '.join(examples["sentences"]),
+        examples["description"],
+        examples["text"],
         truncation="only_second",
         max_length=max_length,
         padding="max_length",
     )
-    tokenized_examples["label"] = examples["sentence_labels"][-1]
     return tokenized_examples
 
 
-def f(example):
-    ss = tokenizer(example['sentences'], add_special_tokens=False)['input_ids']
-    ls = [-100] * len(tokenizer(example["question"])['input_ids'])
-    for s, l in zip(ss, example["sentence_labels"]):
-        ls.append(l)
-        ls.extend([-100] * (len(s) - 1))
-    ls.append(-100)
-    tokenized_examples = tokenizer(
-        example["question"]
-        , ' '.join(example['sentences']),
-        max_length=max_length,
-        truncation='only_second'
-    )
-    tokenized_examples['labels'] = ls[:len(tokenized_examples['input_ids'])]
-    return tokenized_examples
-
-
-tokenized_datasets = datasets.map(f, batched=False, batch_size=1024)
+tokenized_datasets = dataset.map(f, batched=True, batch_size=32)
 # %%
 # disk_path = 'data/mahqa_classification_tokenized'
 # Path(disk_path).mkdir(parents=True, exist_ok=True)
