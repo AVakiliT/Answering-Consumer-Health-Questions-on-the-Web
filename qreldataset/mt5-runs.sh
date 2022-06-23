@@ -4,7 +4,7 @@
 #SBATCH --array=0-7
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=16G
-#SBATCH --gres=gpu:v100l:1
+#SBATCH --gres=gpu:a100:1
 #SBATCH --output=slurm/%A_%a.out
 
 
