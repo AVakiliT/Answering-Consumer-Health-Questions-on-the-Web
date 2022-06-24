@@ -15,7 +15,7 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingA
 # %%
 from github.EncT5.enc_t5 import EncT5ForSequenceClassification, EncT5Tokenizer
 
-window_size, step = 1, 1
+window_size, step = 12, 6
 # df = pd.read_parquet(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}")
 
 # df = pd.concat([
@@ -41,7 +41,8 @@ doc_stride = 128  # The authorized overlap between two part of the context when 
 # model_checkpoint = 'l-yohai/bigbird-roberta-base-mnli'
 model_checkpoint = 'google/bigbird-roberta-base'
 model_name = model_checkpoint.split("/")[-1]
-model_checkpoint = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/best"
+# model_checkpoint = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/best"
+model_checkpoint = out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-tokenchain-finetuned/best"
 # model_checkpoint = 'distilbert-base-uncased'
 # model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
@@ -68,7 +69,7 @@ def f(examples):
     return tokenized_examples
 
 
-tokenized_datasets = dataset.map(f, batched=True, batch_size=32)
+tokenized_datasets = dataset.map(f, batched=True,num_proc=2)
 # %%
 # disk_path = 'data/mahqa_classification_tokenized'
 # Path(disk_path).mkdir(parents=True, exist_ok=True)
@@ -77,7 +78,7 @@ tokenized_datasets = dataset.map(f, batched=True, batch_size=32)
 # #%%
 # tokenized_datasets = DatasetDict.load_from_disk(disk_path)
 # %%
-batch_size = 2
+batch_size = 96
 
 args = TrainingArguments(
     f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned",
@@ -108,5 +109,8 @@ trainer: Trainer = Trainer(
 # %%
 
 #%%
-pred = trainer.predict(tokenized_datasets)
+x = tokenized_datasets.filter(lambda x: x['topic'] == 1, batched=True)
+pred_x = trainer.predict(x)
+pred = trainer.predict( tokenized_datasets)
 torch.save(pred, 'data/tmp_pred_multico',pickle_protocol=4)
+pred = torch.load('data/tmp_pred_multico',)

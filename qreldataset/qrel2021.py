@@ -42,7 +42,7 @@ df = spark.read.parquet(
 "/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p")
 
 
-window_size, step = 12, 6
+window_size, step = 1200, 600
 
 
 # print(df.count())
@@ -61,7 +61,17 @@ def sentencize(s):
         return [(0,s)]
     return [(i,' '.join(sentences[i: i + window_size])) for i in range(0, len(sentences), step)]
 
-lol_udf = udf(sentencize, schema)
+def wordize(s):
+    s = re.sub('\s+', " ", s.strip())
+    doc = nlp(s)
+    sentences = [sent.sent.text.strip() for sent in doc.sents if len(sent) > 5]
+    tokens = nlp(' '.join(sentences))
+
+    if len(tokens) <= window_size:
+        return tokens.text.strip()
+    return [tokens[i: i + window_size].text.strip() for i in range(0, len(tokens), step)]
+
+lol_udf = udf(wordize, schema)
 df_new = df.withColumn("passage", lol_udf("text"))
 
 # df_new = df_new.selectExpr("topic,docno,timestamp,url,usefulness,stance,credibility,explode(passage) as passage".split(','))

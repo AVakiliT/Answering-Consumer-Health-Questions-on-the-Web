@@ -87,8 +87,9 @@ def f(example):
     ss = tokenizer(example['sentences'], add_special_tokens=False)['input_ids']
     ls = [-100] * len(tokenizer(example["question"])['input_ids'])
     for s, l in zip(ss, example["sentence_labels"]):
-        ls.append(l)
-        ls.extend([-100] * (len(s) - 1))
+        # ls.append(l)
+        # ls.extend([-100] * (len(s) - 1))
+        ls.extend([l] * len(s))
     ls.append(-100)
     tokenized_examples = tokenizer(
         example["question"]
@@ -110,14 +111,13 @@ tokenized_datasets = datasets.map(f, batched=False, batch_size=1024)
 # tokenized_datasets = DatasetDict.load_from_disk(disk_path)
 # %%
 batch_size = 2
-
+out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-tokenchain-finetuned"
 args = TrainingArguments(
-    f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned",
-
+    out_dir,
     learning_rate=2e-5,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
-    num_train_epochs=4,
+    num_train_epochs=3,
     weight_decay=0.01,
     push_to_hub=False,
     load_best_model_at_end=True,
@@ -178,13 +178,14 @@ trainer: Trainer = MyTrainer(
 class EvaluationCallback(TrainerCallback):
     metrics = []
     def on_evaluate(self, args, state, control, **kwargs):
+        print(kwargs['metrics'])
         try:
-            with open(f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/metrics.txt", 'r') as f:
+            with open(f"{out_dir}/metrics.txt", 'r') as f:
                 self.metrics = json.load(f)
         except Exception:
             self.metrics = []
         self.metrics.append(kwargs['metrics'])
-        with open(f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/metrics.txt", 'w') as f:
+        with open(f"{out_dir}/metrics.txt", 'w') as f:
             json.dump(self.metrics, f, indent=4)
 
 
@@ -201,5 +202,7 @@ trainer.add_callback(evaluation_callback)
 # concatenate_datasets([datasets["train"], datasets["validate"], datasets["test"]])
 
 #%%
-trainer.evaluate(tokenized_datasets['test'])
-p = trainer.predict(tokenized_datasets['test'])
+trainer.train()
+trainer.save_model(f"{out_dir}/best")
+# trainer.evaluate(tokenized_datasets['test'])
+# p = trainer.predict(tokenized_datasets['test'])

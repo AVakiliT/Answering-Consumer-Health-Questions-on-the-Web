@@ -1,0 +1,11 @@
+#!/bin/bash
+#SBATCH--time=1:0:0
+#SBATCH --nodes=1
+#SBATCH --account=rrg-smucker
+#SBATCH--mem-per-cpu=8G
+#SBATCH --array=0-20
+
+module load StdEnv gcc cuda/11 faiss arrow/5 python java
+source ~/avakilit/PYTORCH/bin/activate
+
+spark-submit split_sent_pandas.py $SLURM_ARRAY_TASK_ID
