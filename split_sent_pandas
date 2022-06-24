@@ -8,4 +8,4 @@
 module load StdEnv gcc cuda/11 faiss arrow/5 python java
 source ~/avakilit/PYTORCH/bin/activate
 
-spark-submit split_sent_pandas.py $SLURM_ARRAY_TASK_ID
+python split_sent_pandas.py $SLURM_ARRAY_TASK_ID

@@ -45,9 +45,9 @@ def wordize(s):
         return [tokens.text.strip()]
     return [tokens[i: i + window_size].text.strip() for i in range(0, len(tokens), step)]
 
-
+tqdm.pandas()
 x = df[n * k: n * k + k].reset_index()
-x["passage"] = x.text.apply(wordize)
+x["passage"] = x.text.progress_apply(wordize)
 x = x.explode("passage")
 x.to_parquet(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}/{n}.snappy.parquet")
 # df_new = df_new.selectExpr("topic,docno,timestamp,url,usefulness,stance,credibility,explode(passage) as passage".split(','))
