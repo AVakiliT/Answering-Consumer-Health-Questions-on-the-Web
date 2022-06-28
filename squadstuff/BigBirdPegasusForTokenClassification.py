@@ -2,7 +2,7 @@ from typing import Optional, Union, Tuple
 
 from torch import nn
 from torch.nn import CrossEntropyLoss
-from transformers import BigBirdPegasusPreTrainedModel, BigBirdModel
+from transformers import BigBirdPegasusPreTrainedModel, BigBirdModel, BigBirdPegasusModel
 import torch
 from transformers.modeling_outputs import TokenClassifierOutput
 
