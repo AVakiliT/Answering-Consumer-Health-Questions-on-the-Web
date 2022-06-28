@@ -42,11 +42,11 @@ doc_stride = 128  # The authorized overlap between two part of the context when 
 model_checkpoint = 'google/bigbird-roberta-base'
 model_name = model_checkpoint.split("/")[-1]
 # model_checkpoint = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/best"
-model_checkpoint = out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-tokenchain-finetuned/best"
+model_checkpoint_best = out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-tokenchain-finetuned/best"
 # model_checkpoint = 'distilbert-base-uncased'
 # model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
-model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=2, ignore_mismatched_sizes=True)
+model = AutoModelForTokenClassification.from_pretrained(model_checkpoint_best, num_labels=2, ignore_mismatched_sizes=True)
 
 if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
