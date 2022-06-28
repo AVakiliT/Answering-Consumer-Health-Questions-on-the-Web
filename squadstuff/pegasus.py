@@ -2,12 +2,12 @@ from typing import Optional, Union, Tuple
 
 from torch import nn
 from torch.nn import CrossEntropyLoss
-from transformers import BigBirdPegasusPreTrainedModel, BigBirdModel, BigBirdPegasusModel
 import torch
+from transformers import BigBirdPegasusPreTrainedModel, BigBirdPegasusModel
 from transformers.modeling_outputs import TokenClassifierOutput
 
 
-class BigBirdForTokenClassification(BigBirdPegasusPreTrainedModel):
+class BigBirdPegasusForTokenClassification(BigBirdPegasusPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.num_labels = config.num_labels

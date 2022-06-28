@@ -15,7 +15,7 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingA
 #%%
 
 # %%
-from squadstuff import BigBirdPegasusForTokenClassification
+from squadstuff.pegasus import BigBirdPegasusForTokenClassification
 
 max_length = 2048  # The maximum length of a feature (question and context)
 doc_stride = 128  # The authorized overlap between two part of the context when splitting it is needed.
