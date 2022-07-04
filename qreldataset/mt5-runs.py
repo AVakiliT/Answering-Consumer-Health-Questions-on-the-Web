@@ -25,7 +25,7 @@ topics = list(chain(range(1, 51 + 1), range(101, 150 + 1), range(1001, 1090 + 1)
 topics_subset = topics[n * k: n * k + k]
 import pandas as pd
 
-window, step = 12, 6
+# window, step = 12, 6
 # df = pd.read_parquet("qreldataset/2019qrels.passages.parquet")
 # df_all = pd.read_parquet(f"data/RunBM25.1k.passages_{window}_{step}/")
 df_all = pd.read_parquet(f"data/bigbird2_passages.snappy.parquet")
