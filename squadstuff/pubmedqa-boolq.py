@@ -1,6 +1,7 @@
 import json
 from collections import Counter
 
+import numpy as np
 import torch
 from datasets import load_dataset, concatenate_datasets
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, classification_report
@@ -10,8 +11,8 @@ from transformers import AutoTokenizer, PreTrainedTokenizerFast, AutoModelForSeq
 
 dataset_name = "pubmed_qa"
 experiment_name = "phaseI"
-datasets_artificial = load_dataset(dataset_name, "pqa_artificial")
-datasets_labeled = load_dataset(dataset_name, "pqa_labeled")["train"].train_test_split(0.5)
+datasets_artificial = load_dataset(dataset_name, "pqa_artificial")['train'].train_test_split(0.01)
+datasets_labeled = load_dataset(dataset_name, "pqa_labeled")#["train"].train_test_split(0.5)
 # datasets_artificial["train"] = concatenate_datasets([datasets_artificial["train"], datasets_labeled["train"]], axis=0)
 # datasets_artificial["test"] = datasets_labeled["test"]
 # dataset = DatasetDict({
@@ -19,21 +20,23 @@ datasets_labeled = load_dataset(dataset_name, "pqa_labeled")["train"].train_test
 #     'text': load_dataset("pubmed_qa", "pqa_labeled")['train']
 # })
 # metric = load_metric('pubmed_qa')
+ds = datasets_artificial
 # %%
 max_length = 512  # The maximum length of a feature (question and context)
 doc_stride = 128  # The authorized overlap between two part of the context when splitting it is needed.
 # model_checkpoint = 'blizrys/biobert-v1.1-finetuned-pubmedqa'
 model_checkpoint = 'facebook/muppet-roberta-base'
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
-model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=3)
+NUM_LABELS=2
+model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=NUM_LABELS)
 
 pad_on_right = tokenizer.padding_side == "right"
 assert isinstance(tokenizer, PreTrainedTokenizerFast)
 
-answer_key = {'yes': 2, 'maybe': 1, 'no': 0}
+answer_key = {'yes': 2, 'maybe': 1, 'no': 0} if ds == datasets_labeled else { 'yes': 1, 'no': 0}
 
 
-def prepare_features(examples):
+def prepare_features_context(examples):
     question = examples["question"]
     context = [' '.join(x['contexts']) for x in examples["context"]]
     tokenized_examples = tokenizer(
@@ -43,18 +46,29 @@ def prepare_features(examples):
         max_length=max_length,
         padding="max_length",
     )
-    2+2
-    tokenized_examples["label"] = [answer_key[x] for x in examples["final_decision"]]
+    tokenized_examples["labels"] = [answer_key[x] for x in examples["final_decision"]]
 
     return tokenized_examples
 
+def prepare_features_answer(examples):
+    question = examples["question"]
+    context = examples['long_answer']
+    tokenized_examples = tokenizer(
+        question if pad_on_right else context,
+        context if pad_on_right else context,
+        truncation="only_second" if pad_on_right else "only_first",
+        max_length=max_length,
+        padding="max_length",
+    )
+    tokenized_examples["labels"] = [answer_key[x] for x in examples["final_decision"]]
 
+    return tokenized_examples
 # tokenized_datasets = datasets_artificial.map(prepare_features, batched=True, batch_size=1024, remove_columns=datasets_artificial["train"].column_names)
 # tokenized_datasets2 = datasets_labeled.map(prepare_features, batched=True, remove_columns=datasets_labeled["train"].column_names)
 
 # tokenized_datasets["train"] = concatenate_datasets([tokenized_datasets["train"], tokenized_datasets2["train"]])
 # tokenized_datasets['test'] = tokenized_datasets2['test']
-tokenized_datasets = datasets_labeled.map(prepare_features, batch_size=1024, batched=True)
+tokenized_datasets = ds.map(prepare_features_answer, batch_size=1024, batched=True)
 # %%
 batch_size = 8
 model_name = model_checkpoint.split("/")[-1]
@@ -72,12 +86,14 @@ args = TrainingArguments(
     weight_decay=0.01,
     push_to_hub=False,
 )
-class_weights = Counter(tokenized_datasets['train']['label'])
-class_weights = [
-    (sum(class_weights.values()) - class_weights[0]) / (2 *sum(class_weights.values())),
-    (sum(class_weights.values()) - class_weights[1]) / (2 * sum(class_weights.values())),
-    (sum(class_weights.values()) - class_weights[2]) / (2 * sum(class_weights.values()))
-]
+class_weights = Counter(tokenized_datasets['train']['labels'])
+import numpy as np
+class_weights = (1 - np.array(list(class_weights.values())) / sum(class_weights.values())).astype('float')
+# class_weights = [
+#     (sum(class_weights.values()) - class_weights[0]) / (2 *sum(class_weights.values())),
+#     (sum(class_weights.values()) - class_weights[1]) / (2 * sum(class_weights.values())),
+#     (sum(class_weights.values()) - class_weights[2]) / (2 * sum(class_weights.values()))
+# ]
 
 
 # %%
@@ -99,12 +115,12 @@ data_collator = default_data_collator
 
 class MyTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False):
-        labels = torch.tensor(inputs.get("labels")).to(model.device)
+        labels = torch.tensor(inputs.get("labels")).to(self.model.device)
         # forward pass
         outputs = model(**inputs)
         logits = outputs.get("logits")
         # compute custom loss (suppose one has 3 labels with different weights)
-        loss_fct = nn.CrossEntropyLoss(weight=torch.tensor(class_weights).to(model.device))
+        loss_fct = nn.CrossEntropyLoss(weight=torch.tensor(class_weights).float().to(self.model.device))
         loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels)
         return (loss, outputs) if return_outputs else loss
 
