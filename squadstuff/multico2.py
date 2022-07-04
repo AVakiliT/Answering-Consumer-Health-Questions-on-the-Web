@@ -11,7 +11,8 @@ from datasets import Dataset, DatasetDict, concatenate_datasets
 from torch import nn
 from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingArguments, Trainer, \
     default_data_collator, AutoModelForSequenceClassification, DataCollatorForTokenClassification, \
-    AutoModelForTokenClassification, TrainerCallback, IntervalStrategy
+    AutoModelForTokenClassification, TrainerCallback, IntervalStrategy, BigBirdForTokenClassification
+
 #%%
 
 # %%
@@ -26,16 +27,17 @@ doc_stride = 128  # The authorized overlap between two part of the context when 
 # model_checkpoint = 'l-yohai/bigbird-roberta-base-mnli'
 model_checkpoint = 'google/bigbird-roberta-base'
 model_name = model_checkpoint.split("/")[-1]
-# model_checkpoint_save = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/best"
+out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-sep-finetuned"
 # model_checkpoint = 'distilbert-base-uncased'
 # model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
-# tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
-# model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=2, ignore_mismatched_sizes=True)
-
-
-model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
-model = BigBirdPegasusForTokenClassification.from_pretrained(model_checkpoint, num_labels=2, ignore_mismatched_sizes=True)
+model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=2, ignore_mismatched_sizes=True)
+model2 = BigBirdForTokenClassification.from_pretrained(f"{out_dir}/best", num_labels=2, ignore_mismatched_sizes=True)
+
+
+# model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
+# tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
+# model = BigBirdPegasusForTokenClassification.from_pretrained(model_checkpoint, num_labels=2, ignore_mismatched_sizes=True)
 
 if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
@@ -96,13 +98,14 @@ tokenized_datasets = DatasetDict({split: ds for split, ds in zip(splits, [Datase
 # tokenized_datasets = DatasetDict.load_from_disk(disk_path)
 # %%
 batch_size = 2
-out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-sep-finetuned"
+
 args = TrainingArguments(
     out_dir,
     learning_rate=2e-5,
+    tf32=True,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
-    num_train_epochs=5,
+    num_train_epochs=4,
     weight_decay=0.01,
     push_to_hub=False,
     load_best_model_at_end=True,
@@ -188,6 +191,9 @@ trainer.add_callback(evaluation_callback)
 
 #%%
 trainer.train()
-trainer.save_model(f"{out_dir}/best")
+trainer.save_model(f"{out_dir}/best2")
 # trainer.evaluate(tokenized_datasets['test'])
 # p = trainer.predict(tokenized_datasets['test'])
+
+#%%
+pred_train = model2.predict(tokenized_datasets["train"])

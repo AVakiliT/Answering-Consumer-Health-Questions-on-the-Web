@@ -42,7 +42,7 @@ doc_stride = 128  # The authorized overlap between two part of the context when 
 model_checkpoint = 'google/bigbird-roberta-base'
 model_name = model_checkpoint.split("/")[-1]
 # model_checkpoint = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/best"
-model_checkpoint_best = out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-tokenchain-finetuned/best"
+model_checkpoint_best = out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-sep-finetuned/best"
 # model_checkpoint = 'distilbert-base-uncased'
 # model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)

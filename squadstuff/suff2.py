@@ -1,5 +1,6 @@
 from collections import Counter
 
+import spacy
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, classification_report
 
 import json
@@ -7,7 +8,8 @@ import json
 from pathlib import Path
 
 import pandas as pd
-
+import numpy as np
+from tqdm import tqdm
 import torch
 
 from datasets import Dataset, DatasetDict, concatenate_datasets
@@ -25,11 +27,12 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingA
 #     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25").reset_index(),
 #     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p").reset_index()
 # ])
-# df = pd.read_parquet("data/Top1kBM25.snappy.parquet")
+
 # topics = pd.read_csv('./data/topics_fixed_extended.tsv.txt', sep='\t')
 # df = df.merge(topics['topic description'.split()], on='topic', how='inner')
 # df = df.sort_values("topic score".split(), ascending=[True, False])
 # df.to_parquet("data/Top1kBM25.snappy.parquet")
+df = pd.read_parquet("data/Top1kBM25.snappy.parquet")
 # %%
 
 max_length = 4096  # The maximum length of a feature (question and context)
@@ -52,75 +55,51 @@ if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
 # %%
-
-# def f(examples):
-#     # examples["question"] = [q.lstrip() for q in examples["question"]]
-#     # ss = tokenizer(examples['sentences'], add_epscial_toekns=False)
-#     # q = tokenizer(examples['question'])
-#     # sl = [len(s) for s in ss]
-#     tokenized_examples = tokenizer.batch_encode(
-#         examples["description"],
-#         examples["text"],
-#         truncation="only_second",
+# from multiprocessing import  Pool
+# def parallelize_dataframe(df, func, n_cores=25):
+#     df_split = np.array_split(df, n_cores * 8)
+#     pool = Pool(n_cores)
+#     df = pd.concat(pool.imap(func, tqdm(df_split)))
+#     pool.close()
+#     pool.join()
+#     return df
+#
+# nlp = spacy.blank('en')
+#
+# nlp.add_pipe("sentencizer")
+# def ff(_df):
+#     return _df.apply(lambda x: ' [SEP] '.join([sent.sent.text.strip() for sent in nlp(x).sents]))
+# xx = parallelize_dataframe(df.text, ff)
+# df.text = xx
+# # yy = df.apply(lambda row: f"[CLS] {row.description} [SEP] {row.text} [SEP]", axis=1)
+#
+# k = 10000
+# xs = []
+# from tqdm import trange
+# for i in trange(0, df.shape[0], k):
+#     x = tokenizer(
+#         df.description[i:i + k].to_list(),
+#         df.text[i:i + k].to_list(),
 #         max_length=max_length,
-#         padding="max_length",
-#         stride=doc_stride,
+#         truncation="only_second",
 #         return_overflowing_tokens=True,
 #         return_offsets_mapping=True,
+#         # add_special_tokens=False
 #     )
-#     return tokenized_examples
-
-
-# dataset = Dataset.from_pandas(df['description text'.split()])
-# df = df.sort_values("topic score".split(), ascending=[True, False])
-k = 10000
-xs = []
-from tqdm import trange
-for i in trange(0, df.shape[0], k):
-    x = tokenizer(
-        df.description[i:i + k].to_list(), df.text[i:i + k].to_list(),
-        truncation="only_second",
-        max_length=max_length,
-        padding="max_length",
-        stride=doc_stride,
-        return_overflowing_tokens=True,
-        return_offsets_mapping=True,
-    )
-    xx = pd.DataFrame.from_dict({i: x[i] for i in x.keys()})
-    xx["topic"] = xx.overflow_to_sample_mapping.apply(lambda x: df.topic.iloc[i + x])
-    xx["docno"] = xx.overflow_to_sample_mapping.apply(lambda x: df.docno.iloc[i + x])
-    xx['overflow_to_sample_mapping'] = xx['overflow_to_sample_mapping'] + i
-    xs.append(xx)
-
-xs = pd.concat(xs)
-xs[['input_ids', 'attention_mask',
-       'overflow_to_sample_mapping', 'topic', 'docno']].to_parquet('data/Top1kBM25_plus_description.tokenized.bigbird.4096.parquet')
-# import spacy
-# nlp = spacy.blank('en')
-# nlp.add_pipe("sentencizer")
-# docs = nlp.pipe(df.text.to_list(), n_process=28)
+#     xx = pd.DataFrame.from_dict({i: x[i] for i in x.keys()})
+#     xx["topic"] = xx.overflow_to_sample_mapping.apply(lambda x: df.topic.iloc[i + x])
+#     xx["docno"] = xx.overflow_to_sample_mapping.apply(lambda x: df.docno.iloc[i + x])
+#     xx['overflow_to_sample_mapping'] = xx['overflow_to_sample_mapping'] + i
+#     xs.append(xx)
 #
-# temp = [' [SEP] '.join([sent.sent.text.strip() for sent in doc.sents]) for doc in tqdm(docs, total=df.shape[0])]
-# def sentencize(text):
-#
-#     sentences =
-#     return ' [SEP] '.join(sentences)
+# x = pd.concat(xs)
+# x[['input_ids', 'attention_mask',
+#        'overflow_to_sample_mapping', 'topic', 'docno']].to_parquet('data/Top1kBM25_plus_description.sep_tokenized.bigbird.4096.parquet')
+# # tokenizer.decode(x.input_ids.iloc[123])
+x = pd.read_parquet('data/Top1kBM25_plus_description.sep_tokenized.bigbird.4096.parquet')
 
-# x = tokenizer(
-#     df.description.to_list(), df.text.to_list(),
-#     truncation="only_second",
-#     max_length=max_length,
-#     # padding="max_length",
-#     stride=doc_stride,
-#     return_overflowing_tokens=True,
-#     return_offsets_mapping=True,
-# )
-# x = pd.DataFrame.from_dict({i: x[i] for i in x.keys() if i != 'offset_mapping'})
-# x.offset_mapping = x.offset_mapping.apply(lambda y: list(map(list,y)))
-# x = pd.concat([pd.DataFrame.from_dict({i : x[i] for i in x.keys()}) for x in xs])
-x.to_parquet('data/Top1kBM25_plus_description.tokenized.bigbird.4096.parquet')
 # %%
-x = pd.read_parquet('data/Top1kBM25_plus_description.tokenized.bigbird.4096.parquet')
+# x = pd.read_parquet('data/Top1kBM25_plus_description.tokenized.bigbird.4096.parquet')
 tokenized_datasets = Dataset.from_pandas(x)
 # tokenized_dataset = concatenate_datasets([Dataset.from_dict(x) for x in tqdm(xs)])
 # %%
@@ -150,9 +129,32 @@ from tqdm import tqdm, trange
 import re
 from collections import defaultdict
 
-passages = defaultdict(list)
+passages = defaultdict(lambda: defaultdict(list))
+hs = defaultdict(lambda: defaultdict(list))
+# hs= defaultdict(list)
 for pred, example in tqdm(zip(pred_x.predictions, tokenized_datasets), total=len(pred_x.predictions)):
-    passage = tokenizer.decode(np.array(example['input_ids'])[pred.argmax(-1) == 1])
-    passages[example['overflow_to_sample_mapping']].append(passage)
+    h = [False] * 4096
+    current = False
+    l = np.array(example['input_ids'] + ([0] * (4096 - len(example['input_ids']))))
+    for i, (t, p) in enumerate(zip(l, pred.argmax(-1))):
+        if t == 0:
+            current = False
+        elif t == 66 and p == 1:
+            current = True
+        elif t == 66 and p == 0:
+            current = False
+        elif t != 66:
+            pass
+        h[i] = current
+    passage = tokenizer.decode(l[h])
+    if len(passage):
+        passages[example['topic']][example['docno']].append(passage)
+    hs[example['topic']][example['docno']].append(h)
 
+aa = []
+for topic, ps in tqdm(passages.items()):
+    for docno, ss in ps.items():
+       aa.append((topic, docno, ' '.join(ss)))
+
+pd.DataFrame(aa, columns="topic docno passage".split()).to_parquet("bigbird2_passages")
 torch.save(passages, 'tmp_bigbird2')
