@@ -60,4 +60,5 @@ for topic in tqdm(topics_subset):
 
     run_df = run_df.sort_values("topic score".split(), ascending=[True, False])
 
-    run_df.to_parquet(f"data/RunBM25.1k.passages_{window}_{step}.top_mt5/{topic}.snappy.parquet")
+    # run_df.to_parquet(f"data/RunBM25.1k.passages_{window}_{step}.top_mt5/{topic}.snappy.parquet")
+    run_df.to_parquet(f"data/RunBM25.1k.passages_bigbird.top_mt5/{topic}.snappy.parquet")
