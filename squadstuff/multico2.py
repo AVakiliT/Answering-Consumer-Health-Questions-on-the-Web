@@ -155,7 +155,7 @@ trainer: Trainer = MyTrainer(
     model,
     args,
     train_dataset=tokenized_datasets["train"],
-    eval_dataset=tokenized_datasets["val"],
+    eval_dataset=tokenized_datasets["test"],
     data_collator=data_collator,
     tokenizer=tokenizer,
     compute_metrics=compute_metrics,
