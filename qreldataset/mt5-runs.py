@@ -16,7 +16,7 @@ from timeit import default_timer as timer
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--n", type=int, default=0)
-parser.add_argument("--k", type=int, default=5)
+parser.add_argument("--k", type=int, default=25)
 args = parser.parse_known_args()
 k = args[0].k
 n = args[0].n
