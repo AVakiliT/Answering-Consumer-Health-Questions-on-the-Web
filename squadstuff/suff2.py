@@ -1,4 +1,5 @@
 from collections import Counter
+from multiprocess.managers import BaseManager, DictProxy
 
 import spacy
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, classification_report
@@ -6,7 +7,7 @@ from sklearn.metrics import accuracy_score, precision_recall_fscore_support, cla
 import json
 
 from pathlib import Path
-
+from multiprocess import Pool
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -55,7 +56,7 @@ if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
 # %%
-# from multiprocessing import  Pool
+
 # def parallelize_dataframe(df, func, n_cores=25):
 #     df_split = np.array_split(df, n_cores * 8)
 #     pool = Pool(n_cores)
@@ -121,40 +122,66 @@ trainer: Trainer = Trainer(
     tokenizer=tokenizer,
 )
 
-pred_x = trainer.predict(tokenized_datasets)
-torch.save(pred_x, 'tmp_bigbird', pickle_protocol=4)
+# pred_x = trainer.predict(tokenized_datasets)
+# torch.save(pred_x.predictions, 'tmp_bigbird', pickle_protocol=4)
+pred_x = torch.load('tmp_bigbird')
 # %%
+
 import numpy as np
 from tqdm import tqdm, trange
 import re
 from collections import defaultdict
 
-passages = defaultdict(lambda: defaultdict(list))
-hs = defaultdict(lambda: defaultdict(list))
-# hs= defaultdict(list)
-for pred, example in tqdm(zip(pred_x.predictions, tokenized_datasets), total=len(pred_x.predictions)):
-    h = [False] * 4096
+pool = Pool(processes=10)
+
+
+from scipy.special import softmax
+
+stuff = []
+for pred, example in tqdm(zip(pred_x.predictions, x['topic input_ids docno'.split()].itertuples()), total=pred_x.predictions.shape[0]):
+    token_idx = [False] * 4096
+    sentence_idx = [False] * 4096
     current = False
-    l = np.array(example['input_ids'] + ([0] * (4096 - len(example['input_ids']))))
+    s = softmax(pred, -1)[:, -1]
+    l = np.array(list(example.input_ids) + ([0] * (4096 - len(example.input_ids))))
     for i, (t, p) in enumerate(zip(l, pred.argmax(-1))):
         if t == 0:
             current = False
         elif t == 66 and p == 1:
             current = True
+            sentence_idx[i] = True
         elif t == 66 and p == 0:
             current = False
         elif t != 66:
             pass
-        h[i] = current
-    passage = tokenizer.decode(l[h])
-    if len(passage):
-        passages[example['topic']][example['docno']].append(passage)
-    hs[example['topic']][example['docno']].append(h)
+        token_idx[i] = current
+    passage = tokenizer.decode(l[token_idx])
+    passage_sentence_scores = s[sentence_idx]
+    stuff.append((example.topic, example.docno, passage, passage_sentence_scores))
+# stuff = map(func, tqdm(zip(pred_x.predictions, tokenized_datasets), total=pred_x.predictions.shape[0]))
+pool.close()
+pool.join()
+
+
+
+
+passages = defaultdict(lambda: defaultdict(list))
+for topic, docno, passage, score_list in stuff:
+    passages[topic][docno].append((passage, score_list))
 
 aa = []
-for topic, ps in tqdm(passages.items()):
-    for docno, ss in ps.items():
-       aa.append((topic, docno, ' '.join(ss)))
+for topic, ps in tqdm((passages.items())):
+    for docno, temp in ps.items():
+        sentences = [x[0] for x in temp]
+        sentence_scores = [x[1] for x in temp]
+        aa.append((topic, docno, ' '.join(sentences), sum(map(list,sentence_scores), [])))
 
-pd.DataFrame(aa, columns="topic docno passage".split()).to_parquet("bigbird2_passages")
-torch.save(passages, 'tmp_bigbird2')
+df2 = pd.DataFrame(aa, columns="topic docno passage sentence_scores".split())
+df2.to_parquet("bigbird3_passages")
+df2 = pd.read_parquet("bigbird3_passages")
+df3 = df2.merge(df, on="topic docno".split())
+df3.to_parquet("data/Top1kBM25.bigbird_passages.snappy.parquet")
+df3 = pd.read_parquet("data/Top1kBM25.bigbird_passages.snappy.parquet")
+# torch.save(passages, 'tmp_bigbird2')
+
+#%%

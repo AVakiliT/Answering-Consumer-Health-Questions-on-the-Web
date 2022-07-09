@@ -16,7 +16,7 @@ from timeit import default_timer as timer
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--n", type=int, default=0)
-parser.add_argument("--k", type=int, default=25)
+parser.add_argument("--k", type=int, default=5)
 args = parser.parse_known_args()
 k = args[0].k
 n = args[0].n
@@ -28,7 +28,7 @@ import pandas as pd
 # window, step = 12, 6
 # df = pd.read_parquet("qreldataset/2019qrels.passages.parquet")
 # df_all = pd.read_parquet(f"data/RunBM25.1k.passages_{window}_{step}/")
-df_all = pd.read_parquet(f"data/bigbird2_passages.snappy.parquet")
+df_all = pd.read_parquet(f"data/Top1kBM25.bigbird_passages.snappy.parquet")
 df_all = df_all.rename(columns={"score": "bm25"})
 for topic in tqdm(topics_subset):
     df = df_all[df_all.topic.eq(topic)]

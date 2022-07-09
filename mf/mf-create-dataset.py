@@ -61,97 +61,97 @@ if __name__ == '__main__':
     y = df[df.pred.ne(0)].pred.to_numpy()
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=.8)
     #%%
-    from torch import from_numpy
-    from torch.utils.data import DataLoader
-    from torch.utils.data import TensorDataset
-    from torch.utils.data import BatchSampler
-    from torch.utils.data import RandomSampler
-
-    def dataloader(*arrs, batch_size=32):
-        dataset = TensorDataset(*arrs)
-        bs = BatchSampler(RandomSampler(dataset),
-                          batch_size=batch_size, drop_last=False)
-        return DataLoader(dataset, batch_sampler=bs, num_workers=8)
-
-
-    train = dataloader(from_numpy(X_train), from_numpy(y_train))
-    test = dataloader(from_numpy(X_test), from_numpy(y_test))
-
-
-    #%%
-    def l2_regularize(array):
-        return torch.sum(array ** 2.0)
-
-
-    class MF(AbstractModel):
-        def __init__(self, n_user, n_item, k=18, c_vector=1.0, batch_size=128):
-            super().__init__()
-            # These are simple hyperparameters
-            self.k = k
-            self.n_user = n_user
-            self.n_item = n_item
-            self.c_vector = c_vector
-            self.batch_size = batch_size
-            self.save_hyperparameters()
-
-            # These are learned and fit by PyTorch
-            self.user = nn.Embedding(n_user, k)
-            self.item = nn.Embedding(n_item, k)
-
-        def forward(self, inputs):
-            # This is the most import function in this script
-            # These are the user indices, and correspond to "u" variable
-            user_id = inputs[:, 0]
-            # Item indices, correspond to the "i" variable
-            item_id = inputs[:, 1]
-            # vector user = p_u
-            vector_user = self.user(user_id)
-            # equivalent:
-            # self.user.weight[user_id, :]
-            # vector item = q_i
-            vector_item = self.item(item_id)
-            # this is a dot product & a user-item interaction: p_u * q_i
-            # shape vector_user is (batch_size, k)
-            # vector_user * vector_item is shape (batch_size, k)
-            # sum(vector_user * vector_item is shape, dim=1) (batch_size)
-            ui_interaction = torch.sum(vector_user * vector_item, dim=1)
-            return ui_interaction
-
-        def loss(self, prediction, target):
-            # MSE error between target = R_ui and prediction = p_u * q_i
-            # target is (batchsize, 1)
-            # target.squeeze (batchsize, )
-            loss_mse = F.mse_loss(prediction, target.squeeze())
-            return loss_mse, {"mse": loss_mse}
-
-        def reg(self):
-            # Compute L2 reularization over user (P) and item (Q) matrices
-            reg_user = l2_regularize(self.user.weight) * self.c_vector
-            reg_item = l2_regularize(self.item.weight) * self.c_vector
-            # Add up the MSE loss + user & item regularization
-            log = {"reg_user": reg_user, "reg_item": reg_item}
-            total = reg_user + reg_item
-            return total, log
-
-    n_user = df.host.cat.categories.__len__()
-    n_item = df.topic.max() + 1
-    batch_size = 1024
-    k = 32
-    c_vector = 1e-5
-    model = MF(n_user, n_item, k=k, c_vector=c_vector,
-              batch_size=batch_size)
-
-    trainer = pl.Trainer(max_epochs=100,
-                         gpus=0,
-                         log_every_n_steps=1,
-                         progress_bar_refresh_rate=1,
-                         )
-
-    #%%
-    trainer.fit(model, train, test)
+    # from torch import from_numpy
+    # from torch.utils.data import DataLoader
+    # from torch.utils.data import TensorDataset
+    # from torch.utils.data import BatchSampler
+    # from torch.utils.data import RandomSampler
+    #
+    # def dataloader(*arrs, batch_size=32):
+    #     dataset = TensorDataset(*arrs)
+    #     bs = BatchSampler(RandomSampler(dataset),
+    #                       batch_size=batch_size, drop_last=False)
+    #     return DataLoader(dataset, batch_sampler=bs, num_workers=8)
+    #
+    #
+    # train = dataloader(from_numpy(X_train), from_numpy(y_train))
+    # test = dataloader(from_numpy(X_test), from_numpy(y_test))
+    #
+    #
+    # #%%
+    # def l2_regularize(array):
+    #     return torch.sum(array ** 2.0)
+    #
+    #
+    # class MF(AbstractModel):
+    #     def __init__(self, n_user, n_item, k=18, c_vector=1.0, batch_size=128):
+    #         super().__init__()
+    #         # These are simple hyperparameters
+    #         self.k = k
+    #         self.n_user = n_user
+    #         self.n_item = n_item
+    #         self.c_vector = c_vector
+    #         self.batch_size = batch_size
+    #         self.save_hyperparameters()
+    #
+    #         # These are learned and fit by PyTorch
+    #         self.user = nn.Embedding(n_user, k)
+    #         self.item = nn.Embedding(n_item, k)
+    #
+    #     def forward(self, inputs):
+    #         # This is the most import function in this script
+    #         # These are the user indices, and correspond to "u" variable
+    #         user_id = inputs[:, 0]
+    #         # Item indices, correspond to the "i" variable
+    #         item_id = inputs[:, 1]
+    #         # vector user = p_u
+    #         vector_user = self.user(user_id)
+    #         # equivalent:
+    #         # self.user.weight[user_id, :]
+    #         # vector item = q_i
+    #         vector_item = self.item(item_id)
+    #         # this is a dot product & a user-item interaction: p_u * q_i
+    #         # shape vector_user is (batch_size, k)
+    #         # vector_user * vector_item is shape (batch_size, k)
+    #         # sum(vector_user * vector_item is shape, dim=1) (batch_size)
+    #         ui_interaction = torch.sum(vector_user * vector_item, dim=1)
+    #         return ui_interaction
+    #
+    #     def loss(self, prediction, target):
+    #         # MSE error between target = R_ui and prediction = p_u * q_i
+    #         # target is (batchsize, 1)
+    #         # target.squeeze (batchsize, )
+    #         loss_mse = F.mse_loss(prediction, target.squeeze())
+    #         return loss_mse, {"mse": loss_mse}
+    #
+    #     def reg(self):
+    #         # Compute L2 reularization over user (P) and item (Q) matrices
+    #         reg_user = l2_regularize(self.user.weight) * self.c_vector
+    #         reg_item = l2_regularize(self.item.weight) * self.c_vector
+    #         # Add up the MSE loss + user & item regularization
+    #         log = {"reg_user": reg_user, "reg_item": reg_item}
+    #         total = reg_user + reg_item
+    #         return total, log
+    #
+    # n_user = df.host.cat.categories.__len__()
+    # n_item = df.topic.max() + 1
+    # batch_size = 1024
+    # k = 32
+    # c_vector = 1e-5
+    # model = MF(n_user, n_item, k=k, c_vector=c_vector,
+    #           batch_size=batch_size)
+    #
+    # trainer = pl.Trainer(max_epochs=100,
+    #                      gpus=0,
+    #                      log_every_n_steps=1,
+    #                      progress_bar_refresh_rate=1,
+    #                      )
 
     #%%
-    results = trainer.test(model, test)
+    # trainer.fit(model, train, test)
+
+    #%%
+    # results = trainer.test(model, test)
 
 #%%
 from sklearn.linear_model import LogisticRegression, Lasso
@@ -171,11 +171,11 @@ y = df[df.efficacy.ne(0)].groupby("topic").efficacy.max().clip(lower=0).to_numpy
 
 # df.topic = df.topic.astype(int)
 
-# train_index = topics.index[topics.astype(int).ge(1000) | topics.astype(int).le(51)]
-# test_index = topics.index[topics.astype(int).ge(101) & topics.astype(int).le(150)]
+train_index = topics.index[topics.astype(int).ge(1000) | topics.astype(int).le(51)]
+test_index = topics.index[topics.astype(int).ge(101) & topics.astype(int).le(150)]
 
-train_index = topics.index[topics.astype(int).ge(1000) | topics.astype(int).ge(101)]
-test_index = topics.index[topics.astype(int).ge(1) & topics.astype(int).le(51)]
+# train_index = topics.index[topics.astype(int).ge(1000) | topics.astype(int).ge(101)]
+# test_index = topics.index[topics.astype(int).ge(1) & topics.astype(int).le(51)]
 
 X_train = m[train_index]
 y_train = y[train_index]
