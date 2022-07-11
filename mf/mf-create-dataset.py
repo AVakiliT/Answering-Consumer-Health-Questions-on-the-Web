@@ -221,7 +221,7 @@ for train_index, test_index in kf.split(m,y):
     clf.fit(X_train, y_train)
     a.append(clf.score(X_test, y_test))
 
-np.mean(a)
+print(np.mean(a))
 
 #%%
 clf = LogisticRegression()
