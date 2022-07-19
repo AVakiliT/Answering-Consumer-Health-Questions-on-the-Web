@@ -21,10 +21,10 @@ df_topic_host = df_topic_host.sort_values("topic score".split(), ascending=[True
 df_sentence_logits = pd.read_parquet("./data/run.passages_bigbird.qapubmed_sep-logits")
 df_sentence_logits = df_sentence_logits.rename(columns={"sentence_scores": "sentence_score", "sentences": "sentence"})
 df_sentence_logits = df_sentence_logits.merge(dfo["topic docno host".split()], on="topic docno".split(), how="inner")
-df_sentence_logits = df_sentence_logits.drop(df_sentence_logits[df_sentence_logits.sentence_score.lt(0.85)].index)
+df_sentence_logits = df_sentence_logits.drop(df_sentence_logits[df_sentence_logits.sentence_score.lt(0.80)].index)
 #%%
 xxx = df_sentence_logits.groupby("topic docno".split())
-func = lambda x: x.loc[x.prob_neg.idxmax()]["prob_pos prob_may prob_neg sentence_score".split()]
+func = lambda x: x.loc[x.sentence_score.idxmax()]["prob_pos prob_may prob_neg sentence_score".split()]
 # func = lambda x: pd.Series(
 #     {
 #         "prob_pos": ((x.sentence_score) * (x.prob_pos)).mean(),
@@ -50,12 +50,26 @@ df.prob_may = df.prob_may.fillna(1)
 #%%
 # df["pred"] = df.apply(lambda x: np.array([x.prob_neg, x.prob_pos]).argmax(), axis=1)
 # df["pred"] = df.apply(lambda x: x.prob_pos.gt(.33), axis=1)
-df["pred"] = df.prob_neg.gt(.33).mul(2).add(-1).apply(lambda x: -x)
-a = df[df.efficacy.eq(-1)].groupby("host").apply(lambda x: x.pred.eq(x.efficacy).astype('float').sum()).sort_values(ascending=False)
-b = df[df.efficacy.eq(-1)].groupby("host").apply(lambda x: x.pred.eq(x.efficacy).astype('float').sum() * x.pred.eq(x.efficacy).astype('float').mean()).sort_values(ascending=False)
-df["a_pred"] = df.progress_apply(lambda x: x.pred * a.get(x.host, 0), axis=1).fillna(0)
-df["b_pred"] = df.progress_apply(lambda x: x.pred * b.get(x.host, 0), axis=1).fillna(0)
-c = df.groupby("topic").apply(lambda x: pd.Series([x.b_pred.mean(), x.efficacy.max(), (x.b_pred.mean() > 0) * 2 - 1 == x.efficacy.max()]))
+# df["pred"] = df.prob_neg.gt(.33).mul(2).add(-1).apply(lambda x: -x)
+topics_2019 = list(range(1, 51 + 1))
+topics_2022 = list(range(101, 150 + 1))
+topics_rw = list(range(1001, 1090 + 1))
+
+df = df.groupby("topic").apply(lambda x: x.iloc[:50]).reset_index(drop=True)
+
+df["m_norm_score"] = df.groupby("topic").apply(lambda x: (x.score - x.score.min())/(x.score.max() - x.score.min())).reset_index(drop=True)
+df["z_norm_score"] = df.groupby("topic").apply(lambda x: (x.score - x.score.mean())/(x.score.std() - x.score.mean())).reset_index(drop=True)
+
+# df["pred"] = df.prob_neg.gt(.33).sub(1).astype("float")#.mul(2).add(-1).apply(lambda x: -x)
+# df["pred"] = df.prob_neg.gt(.33).astype("float").mul(2).add(-1)
+df["pred"] = -df.prob_neg.gt(.2).astype("float") + df.prob_pos.gt(.33).astype("float")
+a = df[df.efficacy.eq(-1) & df.topic.isin( topics_rw)].groupby("host").apply(lambda x: x.pred.eq(x.efficacy).astype('float').sum()).sort_values(ascending=False)
+b = df[df.efficacy.eq(-1) & df.topic.isin(topics_rw )].groupby("host").apply(lambda x: x.pred.eq(x.efficacy).astype('float').sum() * x.pred.eq(x.efficacy).astype('float').mean()).sort_values(ascending=False)
+# df["a_pred"] = df.progress_apply(lambda x: (x.prob_pos * 2 - 1) * a.get(x.host, 0.1) * x.sentence_score * x.m_norm_score ** 3, axis=1).fillna(0)
+df["b_pred"] = df.progress_apply(lambda x: ((x.prob_pos-x.prob_neg) * 2 - 1) * b.get(x.host, 0.1) * x.sentence_score ** 3, axis=1).fillna(0)
+c = df[df.topic.isin(topics_2019 + topics_2022)].groupby("topic description".split()).apply(lambda x: pd.Series([x.b_pred.mean(), x.efficacy.max(), (x.b_pred.mean() > 0) * 2 - 1 == x.efficacy.max()])).dropna()
+print(c[2].mean())
+c = df[df.topic.isin(topics_2022)].groupby("topic").apply(lambda x: pd.Series([x.b_pred.mean(), x.efficacy.max(), (x.b_pred.mean() > 0) * 2 - 1 == x.efficacy.max()])).dropna()
 print(c[2].mean())
 # df.pred = ((df.prob_pos* 2 -1))
 # df.pred = df.pred * df.apply(lambda x: np.array([x.prob_neg, x.prob_pos]).max(), axis=1)
@@ -135,7 +149,7 @@ for train_index, test_index in kf.split(m,y):
 
 print(np.mean(a))
 
-#%%
+    #%%
 # clf = LogisticRegression()
 # clf.fit(m,y)
 # a = pd.DataFrame(sorted(list(zip((np.std(m, 0)*clf.coef_)[0].tolist(),df.host.cat.categories)), key=lambda x: abs(x[0]), reverse=True))
