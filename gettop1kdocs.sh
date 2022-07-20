@@ -12,7 +12,7 @@
 #  /project/6004803/smucker/group-data/runs/trec2021-misinfo/automatic/run.c4.noclean.bm25.topics.2021.10K.fixed_docno.txt
 
 module load gcc arrow python scipy-stack
-python gettop1kdocs.py $SLURM_ARRAY_TASK_ID 128 Top1k_2022_BM25 \
+python gettop1kdocs.py $SLURM_ARRAY_TASK_ID 128 Top1kBM25_2022 \
   /project/6004803/smucker/group-data/tools/anserini/runs/run.c4noclean.bm25.topics.2022.hits.1k.txt
 
 #python gettop1kdocs.py $SLURM_ARRAY_TASK_ID 128 Top1kBM25_2019 \
