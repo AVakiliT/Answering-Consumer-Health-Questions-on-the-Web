@@ -26,6 +26,7 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingA
 # df = pd.concat([
 #     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25_2019").reset_index(),
 #     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25").reset_index(),
+#     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25_2022").reset_index(),
 #     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p").reset_index()
 # ])
 

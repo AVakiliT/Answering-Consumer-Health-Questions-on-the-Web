@@ -22,4 +22,4 @@ for i in trange(start * n, (start+1) * n):
         continue
     collection_m = df.join(docnos, "docno", "inner")
     print(collection_m.count())
-    collection_m.to_parquet(output_dir + "_32p/" + files[i].split("/")[-1], index="docno")
+    collection_m.to_parquet("data/" + output_dir + "_32p/" + files[i].split("/")[-1], index="docno")
