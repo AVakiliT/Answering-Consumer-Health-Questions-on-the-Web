@@ -23,17 +23,18 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingA
     AutoModelForTokenClassification, TrainerCallback, IntervalStrategy
 
 # %%
+# temp = pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25_2019").reset_index()
+# temp2 = pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25").reset_index()
+# temp3 = pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25_2022_32p").reset_index()
+# temp4 = pd.read_parquet("/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p").reset_index()
 # df = pd.concat([
-#     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25_2019").reset_index(),
-#     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25").reset_index(),
-#     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25_2022").reset_index(),
-#     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p").reset_index()
+# temp,temp2,temp3, temp4
 # ])
 
 # topics = pd.read_csv('./data/topics_fixed_extended.tsv.txt', sep='\t')
-# df = df.merge(topics['topic description'.split()], on='topic', how='inner')
-# df = df.sort_values("topic score".split(), ascending=[True, False])
-# df.to_parquet("data/Top1kBM25.snappy.parquet")
+# df2 = df.merge(topics['topic description'.split()], on='topic', how='inner')
+# df2 = df2.sort_values("topic score".split(), ascending=[True, False])
+# df2 .to_parquet("data/Top1kBM25.snappy.parquet")
 df = pd.read_parquet("data/Top1kBM25.snappy.parquet")
 # %%
 
@@ -57,48 +58,48 @@ if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
 # %%
+if False:
+    def parallelize_dataframe(df, func, n_cores=25):
+        df_split = np.array_split(df, n_cores * 8)
+        pool = Pool(n_cores)
+        df = pd.concat(pool.imap(func, tqdm(df_split)))
+        pool.close()
+        pool.join()
+        return df
 
-# def parallelize_dataframe(df, func, n_cores=25):
-#     df_split = np.array_split(df, n_cores * 8)
-#     pool = Pool(n_cores)
-#     df = pd.concat(pool.imap(func, tqdm(df_split)))
-#     pool.close()
-#     pool.join()
-#     return df
-#
-# nlp = spacy.blank('en')
-#
-# nlp.add_pipe("sentencizer")
-# def ff(_df):
-#     return _df.apply(lambda x: ' [SEP] '.join([sent.sent.text.strip() for sent in nlp(x).sents]))
-# xx = parallelize_dataframe(df.text, ff)
-# df.text = xx
-# # yy = df.apply(lambda row: f"[CLS] {row.description} [SEP] {row.text} [SEP]", axis=1)
-#
-# k = 10000
-# xs = []
-# from tqdm import trange
-# for i in trange(0, df.shape[0], k):
-#     x = tokenizer(
-#         df.description[i:i + k].to_list(),
-#         df.text[i:i + k].to_list(),
-#         max_length=max_length,
-#         truncation="only_second",
-#         return_overflowing_tokens=True,
-#         return_offsets_mapping=True,
-#         # add_special_tokens=False
-#     )
-#     xx = pd.DataFrame.from_dict({i: x[i] for i in x.keys()})
-#     xx["topic"] = xx.overflow_to_sample_mapping.apply(lambda x: df.topic.iloc[i + x])
-#     xx["docno"] = xx.overflow_to_sample_mapping.apply(lambda x: df.docno.iloc[i + x])
-#     xx['overflow_to_sample_mapping'] = xx['overflow_to_sample_mapping'] + i
-#     xs.append(xx)
-#
-# x = pd.concat(xs)
-# x[['input_ids', 'attention_mask',
-#        'overflow_to_sample_mapping', 'topic', 'docno']].to_parquet('data/Top1kBM25_plus_description.sep_tokenized.bigbird.4096.parquet')
-# # tokenizer.decode(x.input_ids.iloc[123])
-print("reading tokenized data...")
+    nlp = spacy.blank('en')
+
+    nlp.add_pipe("sentencizer")
+    def ff(_df):
+        return _df.apply(lambda x: ' [SEP] '.join([sent.sent.text.strip() for sent in nlp(x).sents]))
+    xx = parallelize_dataframe(df.text, ff)
+    df.text = xx
+    # yy = df.apply(lambda row: f"[CLS] {row.description} [SEP] {row.text} [SEP]", axis=1)
+
+    k = 10000
+    xs = []
+    from tqdm import trange
+    for i in trange(0, df.shape[0], k):
+        x = tokenizer(
+            df.description[i:i + k].to_list(),
+            df.text[i:i + k].to_list(),
+            max_length=max_length,
+            truncation="only_second",
+            return_overflowing_tokens=True,
+            return_offsets_mapping=True,
+            # add_special_tokens=False
+        )
+        xx = pd.DataFrame.from_dict({i: x[i] for i in x.keys()})
+        xx["topic"] = xx.overflow_to_sample_mapping.apply(lambda x: df.topic.iloc[i + x])
+        xx["docno"] = xx.overflow_to_sample_mapping.apply(lambda x: df.docno.iloc[i + x])
+        xx['overflow_to_sample_mapping'] = xx['overflow_to_sample_mapping'] + i
+        xs.append(xx)
+
+    x = pd.concat(xs)
+    x[['input_ids', 'attention_mask',
+           'overflow_to_sample_mapping', 'topic', 'docno']].to_parquet('data/Top1kBM25_plus_description.sep_tokenized.bigbird.4096.parquet')
+    # # tokenizer.decode(x.input_ids.iloc[123])
+    print("reading tokenized data...")
 x = pd.read_parquet('data/Top1kBM25_plus_description.sep_tokenized.bigbird.4096.parquet')
 
 # %%
@@ -106,26 +107,26 @@ x = pd.read_parquet('data/Top1kBM25_plus_description.sep_tokenized.bigbird.4096.
 tokenized_datasets = Dataset.from_pandas(x)
 # tokenized_dataset = concatenate_datasets([Dataset.from_dict(x) for x in tqdm(xs)])
 # %%
-# batch_size = 32
-#
-# args = TrainingArguments(
-#     out_dir,
-#     per_device_train_batch_size=batch_size,
-#     per_device_eval_batch_size=batch_size,
-# )
-#
-# data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
-#
-# trainer: Trainer = Trainer(
-#     model,
-#     args,
-#     train_dataset=tokenized_datasets,
-#     data_collator=data_collator,
-#     tokenizer=tokenizer,
-# )
-#
-# pred_x = trainer.predict(tokenized_datasets)
-# torch.save(pred_x.predictions, 'tmp_bigbird', pickle_protocol=4)
+batch_size = 32
+
+args = TrainingArguments(
+    out_dir,
+    per_device_train_batch_size=batch_size,
+    per_device_eval_batch_size=batch_size,
+)
+
+data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
+
+trainer: Trainer = Trainer(
+    model,
+    args,
+    train_dataset=tokenized_datasets,
+    data_collator=data_collator,
+    tokenizer=tokenizer,
+)
+
+pred_x = trainer.predict(tokenized_datasets)
+torch.save(pred_x.predictions, 'tmp_bigbird', pickle_protocol=4)
 pred_x = torch.load('tmp_bigbird')
 # %%
 
@@ -140,7 +141,7 @@ from collections import defaultdict
 from scipy.special import softmax
 
 stuff = []
-for pred, example in tqdm(zip(pred_x.predictions, x['topic input_ids docno'.split()].itertuples()), total=pred_x.predictions.shape[0]):
+for pred, example in tqdm(zip(pred_x, x['topic input_ids docno'.split()].itertuples()), total=pred_x.shape[0]):
     token_idx = [False] * 4096
     sentence_idx = [False] * 4096
     current = False

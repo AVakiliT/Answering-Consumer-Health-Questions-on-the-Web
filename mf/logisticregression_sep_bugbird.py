@@ -11,7 +11,7 @@ tqdm.pandas()
 #%%
 from utils.util import url2host
 
-dfo = pd.read_parquet(f"data/RunBM25.1k.passages_bigbird.top_mt5")
+df_sentence_logits = pd.read_parquet(f"data/RunBM25.1k.passages_bigbird.top_mt5")
 dfo = dfo[dfo.efficacy != 0]
 dfo["host"] = dfo.url.apply(url2host)
 df_topic_host = dfo.groupby("topic host".split()).progress_apply(lambda x: x.loc[x.score.idxmax()])
@@ -58,19 +58,22 @@ topics_2019 = list(range(1, 51 + 1))
 topics_2022 = list(range(101, 150 + 1))
 topics_rw = list(range(1001, 1090 + 1))
 
-df = df.groupby("topic").apply(lambda x: x.iloc[:50]).reset_index(drop=True)
-
-df["m_norm_score"] = df.groupby("topic").apply(lambda x: (x.score - x.score.min())/(x.score.max() - x.score.min())).reset_index(drop=True)
-df["z_norm_score"] = df.groupby("topic").apply(lambda x: (x.score - x.score.mean())/(x.score.std() - x.score.mean())).reset_index(drop=True)
 
 # df["pred"] = df.prob_neg.gt(.33).sub(1).astype("float")#.mul(2).add(-1).apply(lambda x: -x)
 # df["pred"] = df.prob_neg.gt(.33).astype("float").mul(2).add(-1)
 df["pred"] = -df.prob_neg.gt(.33).astype("float") + df.prob_pos.gt(.33).astype("float")
 a = df[df.efficacy.eq(-1) & df.topic.isin( topics_rw)].groupby("host").apply(lambda x: x.pred.eq(x.efficacy).astype('float').sum()).sort_values(ascending=False)
 b = df[df.efficacy.eq(-1) & df.topic.isin(topics_rw )].groupby("host").apply(lambda x: (x.pred.eq(x.efficacy).astype('float').sum() * x.pred.eq(x.efficacy).astype('float').mean())).fillna(0).sort_values(ascending=False)
+
+df = df.groupby("topic").apply(lambda x: x.iloc[:50]).reset_index(drop=True)
+
+df["m_norm_score"] = df.groupby("topic").apply(lambda x: (x.score - x.score.min())/(x.score.max() - x.score.min())).reset_index(drop=True)
+df["z_norm_score"] = df.groupby("topic").apply(lambda x: (x.score - x.score.mean())/(x.score.std() - x.score.mean())).reset_index(drop=True)
+
+
 # df["a_pred"] = df.progress_apply(lambda x: (x.prob_pos * 2 - 1) * a.get(x.host, 0.1) * x.sentence_score * x.m_norm_score ** 3, axis=1).fillna(0)
 df["b_pred"] = df.progress_apply(lambda x: abs(x.pred) * ((x.prob_pos-x.prob_neg) - .5) * b.get(x.host, 0.00) ** 1 * x.sentence_score ** 0 * x.m_norm_score ** 0, axis=1)
-df["b_pred"] = df.progress_apply(lambda x: max(abs(x.pred),0.01) * ((x.prob_pos-x.prob_neg) - .5) * b.get(x.host) ** 1 * x.sentence_score ** 0 * x.m_norm_score ** 0, axis=1)
+# df["b_pred"] = df.progress_apply(lambda x: max(abs(x.pred),0.01) * ((x.prob_pos-x.prob_neg) - .5) * b.get(x.host) ** 1 * x.sentence_score ** 0 * x.m_norm_score ** 0, axis=1)
 c = df[df.topic.isin(topics_2019)].groupby("topic description".split()).apply(lambda x: pd.Series([x.b_pred.mean(), x.efficacy.max(), (x.b_pred.mean() > 0) * 2 - 1 == x.efficacy.max()])).dropna()
 print(c[2].mean())
 c = df[df.topic.isin(topics_2022)].groupby("topic").apply(lambda x: pd.Series([x.b_pred.mean(), x.efficacy.max(), (x.b_pred.mean() > 0) * 2 - 1 == x.efficacy.max()])).dropna()

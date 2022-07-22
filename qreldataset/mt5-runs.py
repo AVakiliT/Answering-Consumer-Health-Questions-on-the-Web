@@ -21,8 +21,11 @@ args = parser.parse_known_args()
 k = args[0].k
 n = args[0].n
 # topic = 1001
-topics = list(chain(range(1, 51 + 1), range(101, 150 + 1), range(1001, 1090 + 1)))
-topics_subset = topics[n * k: n * k + k]
+topics = list(chain(range(1, 51 + 1), range(101, 150 + 1), range(151, 200 + 1), range(1001, 1090 + 1)))
+# topics = list(chain(range(151, 200 + 1)))
+# topics_subset = topics[n * k: n * k + k]
+topics_subset = list(range(151,201))
+# topics = to
 import pandas as pd
 
 # window, step = 12, 6
