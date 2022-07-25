@@ -34,7 +34,8 @@ MAX_LENGTH = 512
 
 df["host"] = df.url.progress_apply(url2host)
 df["text_in"] = df.progress_apply(
-    lambda x: f"{x.host} {' '.join([sent for sent, score in zip(x.sentences, x.sentence_scores) if score > 0.75])}",
+    # lambda x: f"{x.host} {' '.join([sent for sent, score in zip(x.sentences, x.sentence_scores) if score > 0.75])}",
+    lambda x: f"{' '.join([sent for sent, score in zip(x.sentences, x.sentence_scores) if score > 0.75])}",
     axis=1)
 
 
@@ -71,10 +72,11 @@ dl = DataLoader(Dataset.from_pandas(ds_top[ds_top.topic.isin(topics_rw)]), batch
 dl_v = DataLoader(Dataset.from_pandas(ds_top[ds_top.topic.isin(topics_2021)]), batch_size=batch_size, collate_fn=dc, shuffle=False)
 
 model = model.cuda()
+bias = nn.parameter.Parameter(torch.zeros(1).squeeze().cuda())
 criterion = nn.BCEWithLogitsLoss()
-optimizer = Adam(model.parameters(),lr=1e-5)
+optimizer = Adam([dict(params=model.parameters(),lr=1e-5),dict(params=bias, lr=1e-3)])
 
-for i_epoch in range(10):
+for i_epoch in range(20):
     losses = []
     accs = []
     pbar = tqdm(dl)
@@ -84,7 +86,7 @@ for i_epoch in range(10):
         batchc = {k: v.cuda() for k, v in batch.items()}
         output = model(batchc['input_ids'], batchc['token_type_ids'], batchc['attention_mask'])
         probs = output.logits.mean(0)
-        final = probs[2] - probs[0]
+        final = probs[2] - probs[0] + bias
         loss = criterion(final, batchc["labels"][0].clamp(min=0))
         loss.backward()
         optimizer.step()
@@ -102,7 +104,7 @@ for i_epoch in range(10):
             batchc = {k: v.cuda() for k, v in batch.items()}
             output = model(batchc['input_ids'], batchc['token_type_ids'], batchc['attention_mask'])
             probs = output.logits.mean(0)
-            final = probs[2] - probs[0]
+            final = probs[2] - probs[0] + bias
             loss = criterion(final, batchc["labels"][0].clamp(min=0))
             loss_item = loss.detach().item()
             losses.append(loss_item)
