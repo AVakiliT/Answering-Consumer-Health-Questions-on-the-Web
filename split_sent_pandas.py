@@ -116,9 +116,9 @@ import torch.multiprocessing as mp
 
 def run_inference(rank, world_size, topic):
     dist.init_process_group("gloo", rank=rank, world_size=world_size)
-    reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-base-med-msmarco")
-    reranker.model.eval()
-    reranker.model.to(rank)
+    model = MonoT5.get_model(pretrained_model_name_or_path=f"castorini/monot5-base-med-msmarco", device=rank)
+    model.eval()
+    reranker =  MonoT5(model=model)
     df = pd.read_parquet(
         f"data/RunBM25.1k.passages_6_3_t/topic_{topic}.snappy.parquet")
     topics = pd.read_csv("./data/topics_fixed_extended.tsv.txt", sep="\t")
