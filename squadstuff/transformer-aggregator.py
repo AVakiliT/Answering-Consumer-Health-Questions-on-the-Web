@@ -34,8 +34,8 @@ MAX_LENGTH = 512
 
 df["host"] = df.url.progress_apply(url2host)
 df["text_in"] = df.progress_apply(
-    # lambda x: f"{x.host} {' '.join([sent for sent, score in zip(x.sentences, x.sentence_scores) if score > 0.75])}",
-    lambda x: f"{' '.join([sent for sent, score in zip(x.sentences, x.sentence_scores) if score > 0.75])}",
+    lambda x: f"{x.host} {' '.join([sent for sent, score in zip(x.sentences, x.sentence_scores) if score > 0.75])}",
+    # lambda x: f"{' '.join([sent for sent, score in zip(x.sentences, x.sentence_scores) if score > 0.75])}",
     axis=1)
 
 
@@ -76,7 +76,7 @@ bias = nn.parameter.Parameter(torch.zeros(1).squeeze().cuda())
 criterion = nn.BCEWithLogitsLoss()
 optimizer = Adam([dict(params=model.parameters(),lr=1e-5),dict(params=bias, lr=1e-3)])
 
-for i_epoch in range(20):
+for i_epoch in range(12):
     losses = []
     accs = []
     pbar = tqdm(dl)

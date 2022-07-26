@@ -6,6 +6,8 @@ from itertools import chain
 
 from tqdm import tqdm
 
+
+
 try:
     from mt5lib import Query, Text, MonoT5
 except:
@@ -68,7 +70,9 @@ for topic in tqdm(topics_subset):
 
 
 #%%
+import pandas as pd
+from utils.util import fixdocno
 dfx = pd.read_parquet(f"data/RunBM25.1k.passages_bigbird.top_mt5")
 dfx["ranking"] = list(range(1,1001)) * 241
-run = dfx.apply(lambda x: f"{x.topic} Q0 {x.docno} {x.ranking} {x.score} WatS-Bigbird-MT5", axis=1)
+run = dfx.apply(lambda x: f"{x.topic} Q0 {fixdocno(x.docno)} {x.ranking} {x.score} WatS-Bigbird-MT5", axis=1)
 run.to_csv("runs/WatS-Bigbird-MT5.all", index=False, header=False)

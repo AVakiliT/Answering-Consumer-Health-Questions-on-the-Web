@@ -11,3 +11,6 @@ def url2host(url):
 def url2domain(url):
     e = extract(url)
     return f"{e.domain}.{e.suffix}"
+
+def fixdocno(x):
+    return f"en.noclean.c4-train.0{x[3:7]}-of-07168.{int(x[8:])}"
