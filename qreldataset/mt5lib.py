@@ -40,7 +40,7 @@ def greedy_decode(model: PreTrainedModel,
             use_cache=True)
         # wrapped_model = DataParallel(model, device_ids=[0,1,2,3])
         wrapped_model = model
-        outputs = wrapped_model(model(**model_inputs))  # (batch_size, cur_len, vocab_size)
+        outputs = wrapped_model(**model_inputs)  # (batch_size, cur_len, vocab_size)
         next_token_logits = outputs[0][:, -1, :]  # (batch_size, vocab_size)
         decode_ids = torch.cat([decode_ids,
                                 next_token_logits.max(1)[1].unsqueeze(-1)],

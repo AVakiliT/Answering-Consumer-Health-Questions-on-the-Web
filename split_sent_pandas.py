@@ -8,13 +8,6 @@ import spacy
 # df = spark.read.load("/project/6004803/avakilit/Trec21_Data/data/qrel_2021")
 from tqdm import tqdm
 
-# df = pd.concat([
-#     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25_2019"),
-#     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/data/Top1kBM25"),
-#     pd.read_parquet("/project/6004803/avakilit/Trec21_Data/Top1kRWBM25_32p")
-# ])
-
-
 df = pd.read_parquet("data/Top1kBM25.snappy.parquet")
 
 window_size, step = 6, 3
@@ -29,21 +22,28 @@ else:
     n = 0
 k = 10000
 
+
 def func(df):
     return df.text.apply(sentencize)
+
 
 def func2(df):
     return df.passage.apply(lambda x: pd.Series(dict(passage_index=x[0], passage=x[1])))
 
+
 from multiprocessing import Pool
+
+
 def get_chunks(df, size):
     for i in range(0, len(df), size):
-        yield df.iloc[i:min(i+size, len(df))]
+        yield df.iloc[i:min(i + size, len(df))]
+
 
 def parallelize_dataframe(df, func, n_cores=28):
     with Pool(n_cores) as pool:
-        df_new = pd.concat(pool.imap(func, tqdm(get_chunks(df, k), total=df.shape[0]/k)))
+        df_new = pd.concat(pool.imap(func, tqdm(get_chunks(df, k), total=df.shape[0] / k)))
     return df_new
+
 
 def sentencize(s):
     s = re.sub('\s+', " ", s.strip())
@@ -63,18 +63,19 @@ def wordize(s):
         return [tokens.text.strip()]
     return [tokens[i: i + window_size].text.strip() for i in range(0, len(tokens), step)]
 
+
 tqdm.pandas()
 # x = df[n * k: n * k + k].reset_index()
 # x["passage"] = x.text.progress_apply(sentencize)
 temp = parallelize_dataframe(df, func, 24)
 df["passage"] = temp
 
-
 df = df.explode("passage")
 # df[['docno', 'timestamp', 'url', 'topic', 'score', 'passage']].to_parquet(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}.snappy.parquet")
 temp2 = parallelize_dataframe(df, func2)
 df = df.reset_index(drop=True)
-df = df.drop(columns="passage")
+df = df.drop(columns="passage text".split())
+df = df.rename(columns={"score": "bm25"})
 df_new = pd.concat([df, temp2.reset_index(drop=True)], axis=1)
 # for n, x in enumerate(get_chunks(df_new, 10000)):
 #     x.to_parquet(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}/{n}.snappy.parquet")
@@ -90,10 +91,9 @@ df_new = pd.concat([df, temp2.reset_index(drop=True)], axis=1)
 # with Pool(24) as p:
 #     p.map(func4, func3())
 
-for t in tqdm(list(range(1,52)) + list(range(101,201)) + list(range(1001,1091))):
-    df_new[df_new.topic.eq(t)].to_parquet(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_6_3_t/topic_{t}.snappy.parquet")
-
-
+for t in tqdm(list(range(1, 52)) + list(range(101, 201)) + list(range(1001, 1091))):
+    df_new[df_new.topic.eq(t)].to_parquet(
+        f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_6_3_t/topic_{t}.snappy.parquet")
 
 # df_new = df_new.selectExpr("topic,docno,timestamp,url,usefulness,stance,credibility,explode(passage) as passage".split(','))
 # df_new = df_new.selectExpr('topic,docno,timestamp,url,usefulness,stance,credibility,passage["passage_index"] as passage_index,passage["passage"] as passage'.split(','))
@@ -105,13 +105,15 @@ for t in tqdm(list(range(1,52)) + list(range(101,201)) + list(range(1001,1091)))
 # df_new.repartition(1).write.save(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}",
 #                                  mode="overwrite")
 
-#%%
+# %%
 from qreldataset.mt5lib import MonoT5, Query, Text
 import pandas as pd
 from tqdm import tqdm
+
 reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-base-med-msmarco")
-for topic in tqdm(list(range(1,52)) + list(range(101,201)) + list(range(1001,1091))):
-    df = pd.read_parquet(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_6_3_t/topic_{topic}.snappy.parquet")
+for topic in tqdm(list(range(1, 52)) + list(range(101, 201)) + list(range(1001, 1091))):
+    df = pd.read_parquet(
+        f"data/RunBM25.1k.passages_6_3_t/topic_{topic}.snappy.parquet")
     topics = pd.read_csv("./data/topics_fixed_extended.tsv.txt", sep="\t")
     # df = df.merge(topics["topic description efficacy".split()], on="topic", how="inner")
     df = df.merge(topics["topic efficacy".split()], on="topic", how="inner")
@@ -132,4 +134,3 @@ for topic in tqdm(list(range(1,52)) + list(range(101,201)) + list(range(1001,109
     run_df = pd.DataFrame(run)
 
     run_df = run_df.sort_values("topic score".split(), ascending=[True, False])
-
