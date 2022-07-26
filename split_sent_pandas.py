@@ -109,9 +109,11 @@ for t in tqdm(list(range(1, 52)) + list(range(101, 201)) + list(range(1001, 1091
 from qreldataset.mt5lib import MonoT5, Query, Text
 import pandas as pd
 from tqdm import tqdm
-
+topics = list(range(1, 52)) + list(range(101, 201)) + list(range(1001, 1091))
 reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-base-med-msmarco")
-for topic in tqdm(list(range(1, 52)) + list(range(101, 201)) + list(range(1001, 1091))):
+pbar = tqdm(topics)
+for topic in pbar:
+    pbar.set_description(f"Topic {topic}")
     df = pd.read_parquet(
         f"data/RunBM25.1k.passages_6_3_t/topic_{topic}.snappy.parquet")
     topics = pd.read_csv("./data/topics_fixed_extended.tsv.txt", sep="\t")
@@ -134,3 +136,12 @@ for topic in tqdm(list(range(1, 52)) + list(range(101, 201)) + list(range(1001, 
     run_df = pd.DataFrame(run)
 
     run_df = run_df.sort_values("topic score".split(), ascending=[True, False])
+    run_df.to_parquet(f"data/RunBM25.1k.passages_mt5.top_mt5/{topic}.snappy.parquet")
+
+#%%
+import pandas as pd
+from utils.util import fixdocno
+dfx = pd.read_parquet(f"data/RunBM25.1k.passages_mt5.top_mt5").sort_values("topic score".split(), ascending=[True, False])
+dfx["ranking"] = list(range(1,1001)) * dfx.topic.nunique()
+run = dfx.apply(lambda x: f"{x.topic} Q0 {fixdocno(x.docno)} {x.ranking} {x.score} WatS-MT5-MT5", axis=1)
+run.to_csv("runs/WatS-MT5-MT5.all", index=False, header=False)
