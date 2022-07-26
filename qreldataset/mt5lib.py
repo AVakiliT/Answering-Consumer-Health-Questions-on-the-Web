@@ -6,6 +6,7 @@ from functools import lru_cache
 from typing import List, Mapping, Union, Iterable, Optional, Tuple
 
 from spacy.lang.en import English
+from torch.nn import DataParallel
 from tqdm import tqdm
 from transformers import PreTrainedTokenizer, PreTrainedModel
 import torch
@@ -37,7 +38,8 @@ def greedy_decode(model: PreTrainedModel,
             past=None,
             attention_mask=attention_mask,
             use_cache=True)
-        outputs = model(**model_inputs)  # (batch_size, cur_len, vocab_size)
+        wrapped_model = DataParallel(model, device_ids=[0,1,2,3])
+        outputs = wrapped_model(model(**model_inputs))  # (batch_size, cur_len, vocab_size)
         next_token_logits = outputs[0][:, -1, :]  # (batch_size, vocab_size)
         decode_ids = torch.cat([decode_ids,
                                 next_token_logits.max(1)[1].unsqueeze(-1)],
@@ -333,7 +335,7 @@ class MonoT5(Reranker):
 
     @staticmethod
     def get_tokenizer(pretrained_model_name_or_path: str,
-                      *args, batch_size: int = 8, **kwargs) -> T5BatchTokenizer:
+                      *args, batch_size: int = 128, **kwargs) -> T5BatchTokenizer:
         return T5BatchTokenizer(
             AutoTokenizer.from_pretrained(pretrained_model_name_or_path, use_fast=False, *args, **kwargs),
             batch_size=batch_size

@@ -65,3 +65,10 @@ for topic in tqdm(topics_subset):
 
     # run_df.to_parquet(f"data/RunBM25.1k.passages_{window}_{step}.top_mt5/{topic}.snappy.parquet")
     run_df.to_parquet(f"data/RunBM25.1k.passages_bigbird.top_mt5/{topic}.snappy.parquet")
+
+
+#%%
+dfx = pd.read_parquet(f"data/RunBM25.1k.passages_bigbird.top_mt5")
+dfx["ranking"] = list(range(1,1001)) * 241
+run = dfx.apply(lambda x: f"{x.topic} Q0 {x.docno} {x.ranking} {x.score} WatS-Bigbird-MT5", axis=1)
+run.to_csv("runs/WatS-Bigbird-MT5.all", index=False, header=False)

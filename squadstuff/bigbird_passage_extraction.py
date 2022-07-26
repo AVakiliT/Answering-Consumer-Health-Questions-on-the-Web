@@ -58,7 +58,7 @@ if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
 # %%
-if False:
+if True:
     def parallelize_dataframe(df, func, n_cores=25):
         df_split = np.array_split(df, n_cores * 8)
         pool = Pool(n_cores)
