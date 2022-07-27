@@ -3,11 +3,14 @@
 #SBATCH --ntasks=1
 #SBATCH --mem-per-cpu=16G
 #SBATCH --account=rrg-smucker
-#SBATCH --array=0-10
+#SBATCH --array=10-30
 #SBATCH --time=0:20:0
 # %%
 import os
-os.system('module load StdEnv gcc cuda/11 faiss arrow/8 java')
+
+from utils.util import shell_cmd
+
+shell_cmd('module load StdEnv gcc cuda/11 faiss arrow/8 java')
 
 from pathlib import Path
 

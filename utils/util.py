@@ -17,3 +17,20 @@ def fixdocno(x):
 
 def unfixdocno(s):
     return f"c4-{int(s[21:25]):04}-{int(s.split('.')[-1]):06}"
+
+
+import subprocess
+
+
+def shell_cmd(command):
+    """Executes the given command within terminal and returns the output as a string
+
+    :param command: the command that will be executed in the shell
+    :type command: str
+
+    :return: the output of the command
+    :rtype: str
+    """
+    process = subprocess.run([command], stderr=subprocess.PIPE, shell=True, universal_newlines=True)
+
+    return process
