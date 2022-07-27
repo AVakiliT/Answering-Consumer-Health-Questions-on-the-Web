@@ -1,10 +1,10 @@
 #!/project/6004803/avakilit/PYTORCH/bin/python
-# SBATCH --cpus-per-task=2
-# SBATCH --ntasks=1
-# SBATCH --mem-per-cpu=16G
-# SBATCH --account=rrg-smucker
-# SBATCH --array=0-10
-# SBATCH --time=0:20:0
+#SBATCH --cpus-per-task=2
+#SBATCH --ntasks=1
+#SBATCH --mem-per-cpu=16G
+#SBATCH --account=rrg-smucker
+#SBATCH --array=0-10
+#SBATCH --time=0:20:0
 # %%
 import os
 os.system('module load StdEnv gcc cuda/11 faiss arrow/8 java')
