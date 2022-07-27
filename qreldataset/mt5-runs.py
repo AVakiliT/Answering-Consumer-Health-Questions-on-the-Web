@@ -27,13 +27,14 @@ topics = list(chain(range(1, 51 + 1), range(101, 150 + 1), range(151, 200 + 1), 
 # topics = list(chain(range(151, 200 + 1)))
 # topics_subset = topics[n * k: n * k + k]
 topics_subset = list(range(151,201))
+topics_subset = topics
 # topics = to
 import pandas as pd
 
 # window, step = 12, 6
 # df = pd.read_parquet("qreldataset/2019qrels.passages.parquet")
 # df_all = pd.read_parquet(f"data/RunBM25.1k.passages_{window}_{step}/")
-df_all = pd.read_parquet(f"data/Top1kBM25.bigbird_passages.snappy.parquet")
+df_all = pd.read_parquet(f"data/Top1kBM25.bigbird_passages_85.snappy.parquet")
 df_all = df_all.rename(columns={"score": "bm25"})
 for topic in tqdm(topics_subset):
     df = df_all[df_all.topic.eq(topic)]
@@ -66,13 +67,13 @@ for topic in tqdm(topics_subset):
     run_df = run_df.sort_values("topic score".split(), ascending=[True, False])
 
     # run_df.to_parquet(f"data/RunBM25.1k.passages_{window}_{step}.top_mt5/{topic}.snappy.parquet")
-    run_df.to_parquet(f"data/RunBM25.1k.passages_bigbird.top_mt5/{topic}.snappy.parquet")
+    run_df.to_parquet(f"data/RunBM25.1k.passages_bigbird_85.top_mt5/{topic}.snappy.parquet")
 
 
 #%%
 import pandas as pd
 from utils.util import fixdocno
-dfx = pd.read_parquet(f"data/RunBM25.1k.passages_bigbird.top_mt5").sort_values("topic score".split(), ascending=[True, False])
+dfx = pd.read_parquet(f"data/RunBM25.1k.passages_bigbird_85.top_mt5").sort_values("topic score".split(), ascending=[True, False])
 dfx["ranking"] = list(range(1,1001)) * dfx.topic.nunique()
-run = dfx.apply(lambda x: f"{x.topic} Q0 {fixdocno(x.docno)} {x.ranking} {x.score} WatS-Bigbird-MT5", axis=1)
-run.to_csv("runs/WatS-Bigbird-MT5.all", index=False, header=False)
+run = dfx.apply(lambda x: f"{x.topic} Q0 {fixdocno(x.docno)} {x.ranking} {x.score} WatS-Bigbird_85-MT5", axis=1)
+run.to_csv("runs/WatS-Bigbird_85-MT5.all", index=False, header=False)

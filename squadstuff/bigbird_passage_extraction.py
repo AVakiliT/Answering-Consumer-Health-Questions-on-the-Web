@@ -58,7 +58,7 @@ if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
 # %%
-if True:
+if False:
     def parallelize_dataframe(df, func, n_cores=25):
         df_split = np.array_split(df, n_cores * 8)
         pool = Pool(n_cores)
@@ -108,25 +108,25 @@ tokenized_datasets = Dataset.from_pandas(x)
 # tokenized_dataset = concatenate_datasets([Dataset.from_dict(x) for x in tqdm(xs)])
 # %%
 batch_size = 32
+if False:
+    args = TrainingArguments(
+        out_dir,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size,
+    )
 
-args = TrainingArguments(
-    out_dir,
-    per_device_train_batch_size=batch_size,
-    per_device_eval_batch_size=batch_size,
-)
+    data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
 
-data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
+    trainer: Trainer = Trainer(
+        model,
+        args,
+        train_dataset=tokenized_datasets,
+        data_collator=data_collator,
+        tokenizer=tokenizer,
+    )
 
-trainer: Trainer = Trainer(
-    model,
-    args,
-    train_dataset=tokenized_datasets,
-    data_collator=data_collator,
-    tokenizer=tokenizer,
-)
-
-pred_x = trainer.predict(tokenized_datasets)
-torch.save(pred_x.predictions, 'tmp_bigbird', pickle_protocol=4)
+    pred_x = trainer.predict(tokenized_datasets)
+    torch.save(pred_x.predictions, 'tmp_bigbird', pickle_protocol=4)
 pred_x = torch.load('tmp_bigbird')
 # %%
 
@@ -147,7 +147,7 @@ for pred, example in tqdm(zip(pred_x, x['topic input_ids docno'.split()].itertup
     current = False
     s = softmax(pred, -1)[:, -1]
     l = np.array(list(example.input_ids) + ([0] * (4096 - len(example.input_ids))))
-    for i, (token, token_prediction) in enumerate(zip(l, pred.argmax(-1))):
+    for i, (token, token_prediction) in enumerate(zip(l, softmax(pred, -1)[:,1] >= .85)):
         if token == 0:
             current = False
         elif token == 66 and token_prediction == 1:
@@ -195,13 +195,13 @@ for topic, ps in tqdm((passages.items())):
         aa.append((topic, docno, sum(sentences, []), sum(sentence_scores, [])))
 
 df2 = pd.DataFrame(aa, columns="topic docno passage sentence_scores".split())
-df2.to_parquet("bigbird3_passages")
-df2 = pd.read_parquet("bigbird3_passages")
+# df2.to_parquet("bigbird3_passages")
+# df2 = pd.read_parquet("bigbird3_passages")
 df3 = df2.merge(df, on="topic docno".split())
 df3['sentences'] = df3.passage.apply(lambda x: [i.strip() for i in x])
 df3.passage = df3.sentences.apply(lambda x: ' '.join(x))
-df3.to_parquet("data/Top1kBM25.bigbird_passages.snappy.parquet")
-df3 = pd.read_parquet("data/Top1kBM25.bigbird_passages.snappy.parquet")
+df3.to_parquet("data/Top1kBM25.bigbird_passages_85.snappy.parquet")
+df3 = pd.read_parquet("data/Top1kBM25.bigbird_passages_85.snappy.parquet")
 # torch.save(passages, 'tmp_bigbird2')
 
 #%%
