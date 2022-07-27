@@ -27,6 +27,13 @@ model = AutoModelForSequenceClassification.from_pretrained(MODEL_START_POINT,
                                                            num_labels=3,
                                                            # output_hidden_states=True
                                                            )
+
+
+# special_tokens_dict = {'additional_special_tokens': ['[HON]']}
+# num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
+# model.resize_token_embeddings(len(tokenizer))
+
+
 df = pd.read_parquet(f"data/RunBM25.1k.passages_bigbird.top_mt5")
 df = df.reset_index(drop=True)
 MAX_LENGTH = 512
@@ -37,8 +44,8 @@ df["host"] = df.url.progress_apply(url2host)
 honcode = pd.read_csv("./data/found_HONCode_hosts_no_dups", sep=" ", header=None)[2].to_list()
 df["honcode"] = df.host.isin(honcode).astype("float")
 df["text_in"] = df.progress_apply(
-    # lambda x: f"{x.host} {'honcode' if x.honcode else ''} {' '.join([sent for sent, score in zip(x.sentences, x.sentence_scores) if score > 0.75])}",
-    lambda x: f"{x.host} {' '.join([sent for sent, score in zip(x.sentences, x.sentence_scores) if score > 0.75])}",
+    lambda x: f"{x.host} {'[HON]' if x.honcode else ''} {' '.join([sent for sent, score in zip(x.sentences, x.sentence_scores) if score > 0.75])}",
+    # lambda x: f"{x.host} {' '.join([sent for sent, score in zip(x.sentences, x.sentence_scores) if score > 0.75])}",
     # lambda x: f"{' '.join([sent for sent, score in zip(x.sentences, x.sentence_scores) if score > 0.75])}",
     axis=1)
 

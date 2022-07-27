@@ -58,6 +58,11 @@ model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_la
 if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
+special_tokens_dict = {'additional_special_tokens': ['[SEN]']}
+num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
+
+if model.config.vocab_size < len(tokenizer.get_vocab()):
+    model.resize_token_embeddings(len(tokenizer.get_vocab()))
 
 # model_checkpoint = "t5-large"
 # # model_checkpoint = "razent/SciFive-base-Pubmed"

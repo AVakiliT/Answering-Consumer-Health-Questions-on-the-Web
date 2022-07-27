@@ -3,12 +3,12 @@
 #SBATCH --ntasks=1
 #SBATCH --mem-per-cpu=16G
 #SBATCH --account=rrg-smucker
-#SBATCH --array=10-30
+#SBATCH --array=0-20
 #SBATCH --time=0:20:0
 # %%
 import os
 
-from utils.util import shell_cmd
+from utils.util import shell_cmd, unfixdocno
 
 shell_cmd('module load StdEnv gcc cuda/11 faiss arrow/8 java')
 
@@ -30,6 +30,8 @@ qrels = pd.read_csv("/home/avakilit/resources21/qrels/qrels-35topics.txt",
                     sep=' ')
 
 qrels = qrels.drop(columns="iter".split())
+qrels.docno = qrels.docno.apply(unfixdocno)
+
 n = int(os.environ['SLURM_ARRAY_TASK_ID'])
 files_subset = files[n * 100:n * 100 + 100]
 
