@@ -14,3 +14,6 @@ def url2domain(url):
 
 def fixdocno(x):
     return f"en.noclean.c4-train.0{x[3:7]}-of-07168.{int(x[8:])}"
+
+def unfixdocno(s):
+    return f"c4-{int(s[21:25]):04}-{int(s.split('.')[-1]):06}"
