@@ -6,9 +6,9 @@ import pandas as pd
 from tqdm import tqdm
 all_topics = list(range(1, 52)) + list(range(101, 201)) + list(range(1001, 1091))
 if len(sys.argv) > 1:
-    _topic = sys.argv[1]
+    _topic = int(sys.argv[1])
 else:
-    _topic = 0
+    _topic = 1
 
 reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-base-med-msmarco")
 reranker.model.eval()
