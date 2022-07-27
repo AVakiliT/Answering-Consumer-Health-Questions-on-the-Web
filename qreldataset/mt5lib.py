@@ -379,6 +379,8 @@ class MonoT5(Reranker):
 
 import pandas as pd
 import torch.distributed as dist
+
+from mt5
 def run_inference(rank, world_size, topic):
     dist.init_process_group("gloo", rank=rank, world_size=world_size)
     model = MonoT5.get_model(pretrained_model_name_or_path=f"castorini/monot5-base-med-msmarco", device=rank)

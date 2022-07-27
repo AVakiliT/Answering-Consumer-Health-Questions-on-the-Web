@@ -106,28 +106,6 @@ for t in tqdm(list(range(1, 52)) + list(range(101, 201)) + list(range(1001, 1091
 #                                  mode="overwrite")
 
 # %%
-import torch
-from qreldataset.mt5lib import MonoT5, Query, Text
-
-from tqdm import tqdm
-
-
-import torch.multiprocessing as mp
-
-
-
-
-topics = list(range(1, 52)) + list(range(101, 201)) + list(range(1001, 1091))
-
-pbar = tqdm(topics)
-for topic in pbar:
-    world_size = 4
-    mp.spawn(run_inference,
-             args=(world_size,topic),
-             nprocs=world_size,
-             join=True)
-
-
 
 
 #%%
