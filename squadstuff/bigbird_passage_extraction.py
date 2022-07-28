@@ -49,6 +49,8 @@ model_checkpoint = 'google/bigbird-roberta-base'
 model_name = model_checkpoint.split("/")[-1]
 # model_checkpoint = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/best"
 out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-tokenchain-finetuned"
+out_dir = "checkpoints/bigbird-roberta-base-mash-qa-tokenclassifier-binary-sep-finetuned-specialtoken"
+
 # model_checkpoint = 'distilbert-base-uncased'
 # model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
@@ -58,7 +60,7 @@ if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
 # %%
-if False:
+if True:
     def parallelize_dataframe(df, func, n_cores=25):
         df_split = np.array_split(df, n_cores * 8)
         pool = Pool(n_cores)
@@ -97,10 +99,10 @@ if False:
 
     x = pd.concat(xs)
     x[['input_ids', 'attention_mask',
-           'overflow_to_sample_mapping', 'topic', 'docno']].to_parquet('data/Top1kBM25_plus_description.sep_tokenized.bigbird.4096.parquet')
+           'overflow_to_sample_mapping', 'topic', 'docno']].to_parquet('data/Top1kBM25_plus_description.sep2_tokenized.bigbird.4096.parquet')
     # # tokenizer.decode(x.input_ids.iloc[123])
     print("reading tokenized data...")
-x = pd.read_parquet('data/Top1kBM25_plus_description.sep_tokenized.bigbird.4096.parquet')
+x = pd.read_parquet('data/Top1kBM25_plus_description.sep2_tokenized.bigbird.4096.parquet')
 
 # %%
 # x = pd.read_parquet('data/Top1kBM25_plus_description.tokenized.bigbird.4096.parquet')
@@ -108,7 +110,7 @@ tokenized_datasets = Dataset.from_pandas(x)
 # tokenized_dataset = concatenate_datasets([Dataset.from_dict(x) for x in tqdm(xs)])
 # %%
 batch_size = 32
-if False:
+if True:
     args = TrainingArguments(
         out_dir,
         per_device_train_batch_size=batch_size,
@@ -137,6 +139,7 @@ from collections import defaultdict
 
 # pool = Pool(processes=10)
 
+SEN_TOKEN = tokenizer.additional_special_tokens_ids[0]
 
 from scipy.special import softmax
 
@@ -147,16 +150,16 @@ for pred, example in tqdm(zip(pred_x, x['topic input_ids docno'.split()].itertup
     current = False
     s = softmax(pred, -1)[:, -1]
     l = np.array(list(example.input_ids) + ([0] * (4096 - len(example.input_ids))))
-    for i, (token, token_prediction) in enumerate(zip(l, softmax(pred, -1)[:,1] >= .85)):
+    for i, (token, token_prediction) in enumerate(zip(l, softmax(pred, -1)[:,1] >= .75)):
         if token == 0:
             current = False
-        elif token == 66 and token_prediction == 1:
+        elif token == SEN_TOKEN and token_prediction == 1:
             current = True
             if i != example.input_ids.shape[0] - 1:
                 sentence_idx[i] = True
-        elif token == 66 and token_prediction == 0:
+        elif token == SEN_TOKEN and token_prediction == 0:
             current = False
-        elif token != 66:
+        elif token != SEN_TOKEN:
             pass
         token_idx[i] = current
     passage = tokenizer.decode(l[token_idx])
@@ -200,8 +203,8 @@ df2 = pd.DataFrame(aa, columns="topic docno passage sentence_scores".split())
 df3 = df2.merge(df, on="topic docno".split())
 df3['sentences'] = df3.passage.apply(lambda x: [i.strip() for i in x])
 df3.passage = df3.sentences.apply(lambda x: ' '.join(x))
-df3.to_parquet("data/Top1kBM25.bigbird_passages_85.snappy.parquet")
-df3 = pd.read_parquet("data/Top1kBM25.bigbird_passages_85.snappy.parquet")
+df3.to_parquet("data/Top1kBM25.bigbird2_passages_75.snappy.parquet")
+df3 = pd.read_parquet("data/Top1kBM25.bigbird2_passages_75.snappy.parquet")
 # torch.save(passages, 'tmp_bigbird2')
 
 #%%

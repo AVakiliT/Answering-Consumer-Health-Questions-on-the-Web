@@ -32,7 +32,7 @@ out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-sep-finetune
 # model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
 model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=2, ignore_mismatched_sizes=True)
-model2 = BigBirdForTokenClassification.from_pretrained(f"{out_dir}/best", num_labels=2, ignore_mismatched_sizes=True)
+# model2 = BigBirdForTokenClassification.from_pretrained(f"{out_dir}/best", num_labels=2, ignore_mismatched_sizes=True)
 
 
 # model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
@@ -52,7 +52,9 @@ if model.config.vocab_size < len(tokenizer.get_vocab()):
 from github.EncT5.enc_t5 import EncT5ForSequenceClassification, EncT5Tokenizer
 def get_labels(row):
     ls = [-100] * len(row.input_ids)
-    for l, i in zip(row.sentence_labels, np.where(np.array(row.input_ids) == 66)[0][1:]):
+    sen_tokens = np.where(np.array(row.input_ids) == tokenizer.additional_special_tokens_ids[0])[0]
+    assert (len(sen_tokens) == len(row.sentence_labels)) or sum(row.attention_mask) == max_length, f'{len(sen_tokens)} != {len(row.sentence_labels)}, {sum(row.attention_mask)}'
+    for l, i in zip(row.sentence_labels, sen_tokens):
         ls[i] = l
     return ls
 
@@ -72,8 +74,9 @@ for split in splits:
             span_labels = [1 if sent_number in answer_aspans else 0 for sent_number in range(len(sent_list))]
             stuff.append((query, sent_list, span_labels))
     df = pd.DataFrame(stuff, columns=columns)
-    df['source_text'] = df.apply(lambda x: f"[CLS] {x.question} [SEP]  {' [SEN] '.join(x.sentences)}  [SEP]", axis=1)
-    x = tokenizer(df.source_text.to_list(), max_length=max_length, add_special_tokens=False, truncation=True)
+    # df['source_text'] = df.apply(lambda x: f"[CLS] {x.question} [SEP]  [SEN] {' [SEN] '.join(x.sentences)}  [SEP]", axis=1)
+    df['source_text'] = df.apply(lambda x: f"[SEN] {' [SEN] '.join(x.sentences)}", axis=1)
+    x = tokenizer(df.question.to_list(), df.source_text.to_list(), max_length=max_length, add_special_tokens=True, truncation=True)
     # df['source_text'] = df.apply(lambda x: ' [SEP] '.join(x.sentences), axis=1)
     # x = tokenizer(df.question.to_list(),
     #               df.source_text.to_list(),
@@ -103,7 +106,7 @@ tokenized_datasets = DatasetDict({split: ds for split, ds in zip(splits, [Datase
 # #%%
 # tokenized_datasets = DatasetDict.load_from_disk(disk_path)
 # %%
-batch_size = 2
+batch_size = 4
 
 args = TrainingArguments(
     out_dir,
@@ -197,7 +200,7 @@ trainer.add_callback(evaluation_callback)
 
 #%%
 trainer.train()
-trainer.save_model(f"{out_dir}/best2")
+trainer.save_model(f"{out_dir}/best")
 # trainer.evaluate(tokenized_datasets['test'])
 # p = trainer.predict(tokenized_datasets['test'])
 

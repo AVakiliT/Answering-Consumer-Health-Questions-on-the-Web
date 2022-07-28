@@ -8,7 +8,8 @@ import spacy
 # df = spark.read.load("/project/6004803/avakilit/Trec21_Data/data/qrel_2021")
 from tqdm import tqdm
 
-df = pd.read_parquet("data/Top1kBM25.snappy.parquet")
+# df = pd.read_parquet("data/Top1kBM25.snappy.parquet")
+df = pd.read_parquet('qreldataset/2021-qrels-docs')
 
 window_size, step = 6, 3
 
@@ -77,40 +78,25 @@ df = df.reset_index(drop=True)
 df = df.drop(columns="passage text".split())
 df = df.rename(columns={"score": "bm25"})
 df_new = pd.concat([df, temp2.reset_index(drop=True)], axis=1)
-# for n, x in enumerate(get_chunks(df_new, 10000)):
-#     x.to_parquet(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}/{n}.snappy.parquet")
-#
-# def func3():
-#     for t in tqdm(df_new.topic.unique()):
-#         yield t, df_new[df_new.topic.eq(t)]
 
-# def func4(stuff):
-#     t, x = stuff
-#     x.to_parquet(
-#         f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}_t/topic_{t}.snappy.parquet")
-# with Pool(24) as p:
-#     p.map(func4, func3())
 
-for t in tqdm(list(range(1, 52)) + list(range(101, 201)) + list(range(1001, 1091))):
+
+# for t in tqdm(list(range(1, 52)) + list(range(101, 201)) + list(range(1001, 1091))):
+#     df_new[df_new.topic.eq(t)].to_parquet(
+#         f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_6_3_t/topic_{t}.snappy.parquet")
+for t in df_new.topic.unique():
     df_new[df_new.topic.eq(t)].to_parquet(
-        f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_6_3_t/topic_{t}.snappy.parquet")
+        f"qreldataset/Qrels.2021.passages_6_3_t/topic_{t}.snappy.parquet")
 
-# df_new = df_new.selectExpr("topic,docno,timestamp,url,usefulness,stance,credibility,explode(passage) as passage".split(','))
-# df_new = df_new.selectExpr('topic,docno,timestamp,url,usefulness,stance,credibility,passage["passage_index"] as passage_index,passage["passage"] as passage'.split(','))
-# df_new.repartition(1).write.save(f"/project/6004803/avakilit/Trec21_Data/data/qrels.2021.passages_{window_size}_{step}", mode="overwrite")
 
-# df_new = df_new.selectExpr('topic,docno,timestamp,url,score as bm25,explode(passage) as passage'.split(','))
-# df_new = df_new.selectExpr(
-#     'topic,docno,timestamp,url,bm25,passage["passage_index"] as passage_index,passage["passage"] as passage'.split(','))
-# df_new.repartition(1).write.save(f"/project/6004803/avakilit/Trec21_Data/data/RunBM25.1k.passages_{window_size}_{step}",
-#                                  mode="overwrite")
 
 # %%
 
-
+#mt5-mt5
 #%%
 import pandas as pd
 from utils.util import fixdocno
+dfx = pd.read_parquet(f"data/RunBM25.1k.passages_mt5.top_mt5").sort_values("topic score".split(), ascending=[True, False])
 dfx = pd.read_parquet(f"data/RunBM25.1k.passages_mt5.top_mt5").sort_values("topic score".split(), ascending=[True, False])
 dfx["ranking"] = list(range(1,1001)) * dfx.topic.nunique()
 run = dfx.apply(lambda x: f"{x.topic} Q0 {fixdocno(x.docno)} {x.ranking} {x.score} WatS-MT5-MT5", axis=1)
