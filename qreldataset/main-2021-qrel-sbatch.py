@@ -3,7 +3,7 @@
 #SBATCH --ntasks=1
 #SBATCH --mem-per-cpu=16G
 #SBATCH --account=rrg-smucker
-#SBATCH --array=0-20
+#SBATCH --array=21-73
 #SBATCH --time=0:20:0
 # %%
 import os
