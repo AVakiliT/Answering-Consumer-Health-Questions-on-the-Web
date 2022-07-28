@@ -27,7 +27,7 @@ doc_stride = 128  # The authorized overlap between two part of the context when 
 # model_checkpoint = 'l-yohai/bigbird-roberta-base-mnli'
 model_checkpoint = 'google/bigbird-roberta-base'
 model_name = model_checkpoint.split("/")[-1]
-out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-sep-finetuned-2"
+out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-sep-finetuned-specialtoken"
 # model_checkpoint = 'distilbert-base-uncased'
 # model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
@@ -41,6 +41,12 @@ model2 = BigBirdForTokenClassification.from_pretrained(f"{out_dir}/best", num_la
 
 if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+
+special_tokens_dict = {'additional_special_tokens': ['[SEN]']}
+_ = tokenizer.add_special_tokens(special_tokens_dict)
+
+if model.config.vocab_size < len(tokenizer.get_vocab()):
+    model.resize_token_embeddings(len(tokenizer.get_vocab()))
 
 #%%
 from github.EncT5.enc_t5 import EncT5ForSequenceClassification, EncT5Tokenizer
@@ -66,7 +72,7 @@ for split in splits:
             span_labels = [1 if sent_number in answer_aspans else 0 for sent_number in range(len(sent_list))]
             stuff.append((query, sent_list, span_labels))
     df = pd.DataFrame(stuff, columns=columns)
-    df['source_text'] = df.apply(lambda x: f"[CLS] {x.question} [SEP]  {' [SEP] '.join(x.sentences)}  [SEP]", axis=1)
+    df['source_text'] = df.apply(lambda x: f"[CLS] {x.question} [SEP]  {' [SEN] '.join(x.sentences)}  [SEP]", axis=1)
     x = tokenizer(df.source_text.to_list(), max_length=max_length, add_special_tokens=False, truncation=True)
     # df['source_text'] = df.apply(lambda x: ' [SEP] '.join(x.sentences), axis=1)
     # x = tokenizer(df.question.to_list(),

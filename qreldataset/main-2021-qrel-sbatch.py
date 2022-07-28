@@ -1,4 +1,4 @@
-#!/project/6004803/avakilit/PYTORCH/bin/python
+#!/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/ipykernel/2022a/bin/ipython --ipython-dir=/tmp
 #SBATCH --cpus-per-task=2
 #SBATCH --ntasks=1
 #SBATCH --mem-per-cpu=16G
