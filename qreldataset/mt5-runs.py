@@ -4,7 +4,9 @@
 #SBATCH --gres=gpu:1
 #SBATCH --mem-per-cpu=6GB
 #SBATCH --cpus-per-task=4
-#SBATCH --array=1-51,101-200,1001-1090
+# SBATCH --array=1-51,101-200,1001-1090
+#SBATCH --array=1
+#SBATCH --output=slurm/%A_%a.out
 import os
 
 topic = int(os.environ.get('SLURM_ARRAY_TASK_ID', 1))
