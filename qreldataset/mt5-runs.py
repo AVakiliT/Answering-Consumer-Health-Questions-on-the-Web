@@ -40,7 +40,7 @@ df_all = df_all.rename(columns={"score": "bm25"})
 
 n = int(os.environ.get('SLURM_ARRAY_TASK_ID', 0))
 k = 50
-topics = sorted(df_all.topic.unique().to_list())[n*k:n*k+k]
+topics = sorted(df_all.topic.unique().tolist())[n*k:n*k+k]
 
 
 for topic in tqdm(topics, desc="Looping through topics..."):
