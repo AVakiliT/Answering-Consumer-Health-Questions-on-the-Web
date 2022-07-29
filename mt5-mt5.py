@@ -1,12 +1,12 @@
 #!/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/ipykernel/2022a/bin/ipython --ipython-dir=/tmp
 # SBATCH --time=3:0:0
-#SBATCH --time=0:15:0
+#SBATCH --time=0:55:0
 #SBATCH --account=rrg-smucker
 #SBATCH --gres=gpu:v100l:1
 #SBATCH --mem-per-cpu=6GB
 #SBATCH --cpus-per-task=4
 # SBATCH --array=1-51,101-200,1001-1090
-#SBATCH --array=101-150
+#SBATCH --array=117
 import os
 
 from utils.util import shell_cmd

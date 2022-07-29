@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --time=3:0:0
+#SBATCH --time=0:35:0
 #SBATCH --account=rrg-smucker
 #SBATCH --gres=gpu:v100l:1
 #SBATCH --mem-per-cpu=6GB

@@ -14,7 +14,7 @@
 module load gcc arrow python scipy-stack
  mkdir data/Top1kBM25_2022_32p
 python gettop1kdocs.py $SLURM_ARRAY_TASK_ID 128 Top1kBM25_2022 \
-  /project/6004803/smucker/group-data/tools/anserini/runs/run.c4noclean.bm25.topics.2022.hits.1k.txt
+  /project/6004803/smucker/group-data/tools/anserini/runs/run.c4noclean.bm25.allquestions.2022.hits.1k.txt
 
 #python gettop1kdocs.py $SLURM_ARRAY_TASK_ID 128 Top1kBM25_2019 \
 #/project/6004803/avakilit/test/playground/anserini/runs/run.c4.noclean.bm25.topics.2019.txt

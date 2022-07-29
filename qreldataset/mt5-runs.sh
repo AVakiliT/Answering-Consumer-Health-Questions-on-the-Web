@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-#SBATCH --account=def-smucker
+#SBATCH --account=rrg-smucker
 #SBATCH --time=0-1:00:0
 #SBATCH --array=0-7
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=16G
-#SBATCH --gres=gpu:v100:1
+#SBATCH --gres=gpu:v100l:1
 #SBATCH --output=slurm/%A_%a.out
 
 export TRANSFORMERS_OFFLINE=1
