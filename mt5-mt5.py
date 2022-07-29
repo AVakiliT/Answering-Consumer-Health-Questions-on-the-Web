@@ -19,7 +19,7 @@ from qreldataset.mt5lib import MonoT5, Query, Text
 import pandas as pd
 from tqdm import tqdm, trange
 
-topic = int(os.environ['SLURM_ARRAY_TASK_ID'])
+topic = int(os.environ.get('SLURM_ARRAY_TASK_ID', 101))
 
 reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-base-med-msmarco")
 reranker.model.eval()

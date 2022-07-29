@@ -1,3 +1,12 @@
+#!/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/ipykernel/2022a/bin/ipython --ipython-dir=/tmp
+#SBATCH --time=5:0:0
+#SBATCH --nodes=1
+#SBATCH --account=rrg-smucker
+#SBATCH --mem=0
+#SBATCH --ntasks-per-node=28
+#SBATCH --gres=gpu:v100l:4
+
+
 from collections import Counter
 from multiprocess.managers import BaseManager, DictProxy
 
@@ -48,19 +57,25 @@ doc_stride = 0  # The authorized overlap between two part of the context when sp
 model_checkpoint = 'google/bigbird-roberta-base'
 model_name = model_checkpoint.split("/")[-1]
 # model_checkpoint = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-finetuned/best"
-out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-tokenchain-finetuned"
+# out_dir = f"checkpoints/{model_name}-mash-qa-tokenclassifier-binary-tokenchain-finetuned"
 out_dir = "checkpoints/bigbird-roberta-base-mash-qa-tokenclassifier-binary-sep-finetuned-specialtoken"
 
 # model_checkpoint = 'distilbert-base-uncased'
 # model_checkpoint = 'google/bigbird-pegasus-large-pubmed'
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
+
 model = AutoModelForTokenClassification.from_pretrained(out_dir + '/best', num_labels=2, ignore_mismatched_sizes=True)
 
 if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+special_tokens_dict = {'additional_special_tokens': ['[SEN]']}
+_ = tokenizer.add_special_tokens(special_tokens_dict)
+
+if model.config.vocab_size < len(tokenizer.get_vocab()):
+    model.resize_token_embeddings(len(tokenizer.get_vocab()))
 
 # %%
-if True:
+if False:
     def parallelize_dataframe(df, func, n_cores=25):
         df_split = np.array_split(df, n_cores * 8)
         pool = Pool(n_cores)
@@ -73,7 +88,7 @@ if True:
 
     nlp.add_pipe("sentencizer")
     def ff(_df):
-        return _df.apply(lambda x: ' [SEP] '.join([sent.sent.text.strip() for sent in nlp(x).sents]))
+        return _df.apply(lambda x: ' [SEN] ' + ' [SEN] '.join([sent.sent.text.strip() for sent in nlp(x).sents]))
     xx = parallelize_dataframe(df.text, ff)
     df.text = xx
     # yy = df.apply(lambda row: f"[CLS] {row.description} [SEP] {row.text} [SEP]", axis=1)
@@ -95,14 +110,12 @@ if True:
         xx["topic"] = xx.overflow_to_sample_mapping.apply(lambda x: df.topic.iloc[i + x])
         xx["docno"] = xx.overflow_to_sample_mapping.apply(lambda x: df.docno.iloc[i + x])
         xx['overflow_to_sample_mapping'] = xx['overflow_to_sample_mapping'] + i
-        xs.append(xx)
 
-    x = pd.concat(xs)
-    x[['input_ids', 'attention_mask',
-           'overflow_to_sample_mapping', 'topic', 'docno']].to_parquet('data/Top1kBM25_plus_description.sep2_tokenized.bigbird.4096.parquet')
+        xx[['input_ids', 'attention_mask',
+               'overflow_to_sample_mapping', 'topic', 'docno']].to_parquet(f'data/Top1kBM25_plus_description.sep2_tokenized.bigbird.4096/{i}.snappy.parquet')
     # # tokenizer.decode(x.input_ids.iloc[123])
     print("reading tokenized data...")
-x = pd.read_parquet('data/Top1kBM25_plus_description.sep2_tokenized.bigbird.4096.parquet')
+x = pd.read_parquet('data/Top1kBM25_plus_description.sep2_tokenized.bigbird.4096')
 
 # %%
 # x = pd.read_parquet('data/Top1kBM25_plus_description.tokenized.bigbird.4096.parquet')
