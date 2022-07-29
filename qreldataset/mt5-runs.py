@@ -7,9 +7,6 @@
 #SBATCH --array=1-51,101-200,1001-1090
 import os
 
-from utils.util import shell_cmd
-
-shell_cmd('module load StdEnv gcc cuda/11 faiss arrow/8 java')
 topic = int(os.environ.get('SLURM_ARRAY_TASK_ID', 1))
 
 from torch.cuda import amp
