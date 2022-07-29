@@ -123,7 +123,7 @@ tokenized_datasets = Dataset.from_pandas(x)
 # tokenized_dataset = concatenate_datasets([Dataset.from_dict(x) for x in tqdm(xs)])
 # %%
 batch_size = 32
-if True:
+if False:
     args = TrainingArguments(
         out_dir,
         per_device_train_batch_size=batch_size,
@@ -153,7 +153,7 @@ from collections import defaultdict
 # pool = Pool(processes=10)
 
 SEN_TOKEN = tokenizer.additional_special_tokens_ids[0]
-
+THRESHOLD=0.75
 from scipy.special import softmax
 
 stuff = []
@@ -164,7 +164,7 @@ for pred, example in tqdm(zip(pred_x, x['topic input_ids docno'.split()].itertup
     current = False
     s = softmax(pred, -1)[:, -1]
     l = np.array(list(example.input_ids) + ([0] * (4096 - len(example.input_ids))))
-    for i, (token, token_prediction) in enumerate(zip(l, softmax(pred, -1)[:,1] >= .5)):
+    for i, (token, token_prediction) in enumerate(zip(l, softmax(pred, -1)[:,1] >= THRESHOLD)):
         if token == 0:
             current = False
         elif token == SEN_TOKEN and token_prediction == 1:
@@ -218,8 +218,8 @@ df2 = pd.DataFrame(aa, columns="topic docno passage sentence_scores".split())
 df3 = df2.merge(df, on="topic docno".split())
 df3['sentences'] = df3.passage.apply(lambda x: [i.strip() for i in x])
 df3.passage = df3.sentences.apply(lambda x: ' '.join(x))
-df3.to_parquet("data/Top1kBM25.bigbird2_75_passages.snappy.parquet")
-df3 = pd.read_parquet("data/Top1kBM25.bigbird2_75_passages.snappy.parquet")
+df3.to_parquet(f"data/Top1kBM25.bigbird2_{THRESHOLD*100}_passages.snappy.parquet")
+df3 = pd.read_parquet(f"data/Top1kBM25.bigbird2_{THRESHOLD*100}_passages.snappy.parquet")
 # torch.save(passages, 'tmp_bigbird2')
 
 #%%
