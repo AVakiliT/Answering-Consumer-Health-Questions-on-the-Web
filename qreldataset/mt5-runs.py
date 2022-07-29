@@ -16,7 +16,7 @@ from itertools import chain
 
 from tqdm import tqdm
 
-THRESHOLD = 0.5
+THRESHOLD = 0.75
 from pathlib import Path
 try:
     from mt5lib import Query, Text, MonoT5
