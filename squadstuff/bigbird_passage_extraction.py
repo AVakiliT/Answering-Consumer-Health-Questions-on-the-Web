@@ -116,7 +116,7 @@ if False:
     # # tokenizer.decode(x.input_ids.iloc[123])
     print("reading tokenized data...")
 x = pd.read_parquet('data/Top1kBM25_plus_description.sep2_tokenized.bigbird.4096')
-
+# x = x[x.topic.eq(1)]
 # %%
 # x = pd.read_parquet('data/Top1kBM25_plus_description.tokenized.bigbird.4096.parquet')
 tokenized_datasets = Dataset.from_pandas(x)
@@ -140,8 +140,8 @@ if True:
         tokenizer=tokenizer,
     )
 
-    pred_x = trainer.predict(tokenized_datasets)
-    torch.save(pred_x.predictions, 'tmp_bigbird', pickle_protocol=4)
+    pred = trainer.predict(tokenized_datasets)
+    torch.save(pred.predictions, 'tmp_bigbird', pickle_protocol=4)
 pred_x = torch.load('tmp_bigbird')
 # %%
 
@@ -158,12 +158,13 @@ from scipy.special import softmax
 
 stuff = []
 for pred, example in tqdm(zip(pred_x, x['topic input_ids docno'.split()].itertuples()), total=pred_x.shape[0]):
+
     token_idx = [False] * 4096
     sentence_idx = [False] * 4096
     current = False
     s = softmax(pred, -1)[:, -1]
     l = np.array(list(example.input_ids) + ([0] * (4096 - len(example.input_ids))))
-    for i, (token, token_prediction) in enumerate(zip(l, softmax(pred, -1)[:,1] >= .75)):
+    for i, (token, token_prediction) in enumerate(zip(l, softmax(pred, -1)[:,1] >= .5)):
         if token == 0:
             current = False
         elif token == SEN_TOKEN and token_prediction == 1:
@@ -177,7 +178,7 @@ for pred, example in tqdm(zip(pred_x, x['topic input_ids docno'.split()].itertup
         token_idx[i] = current
     passage = tokenizer.decode(l[token_idx])
     passage_sentence_scores = s[sentence_idx]
-    sentences = passage.split('[SEP]')[1:]
+    sentences = passage.split('[SEN]')[1:]
     len_sentences = [i > 15 for i in map(len,sentences)]
     passage_sentence_scores = [s for s, i in zip(passage_sentence_scores, len_sentences) if i]
     sentences = [s for s, i in zip(sentences, len_sentences) if i]
@@ -192,6 +193,7 @@ for pred, example in tqdm(zip(pred_x, x['topic input_ids docno'.split()].itertup
         break
 
     stuff.append((example.topic, example.docno, sentences, passage_sentence_scores))
+
 # stuff = map(func, tqdm(zip(pred_x.predictions, tokenized_datasets), total=pred_x.predictions.shape[0]))
 # pool.close()
 # pool.join()
@@ -216,8 +218,8 @@ df2 = pd.DataFrame(aa, columns="topic docno passage sentence_scores".split())
 df3 = df2.merge(df, on="topic docno".split())
 df3['sentences'] = df3.passage.apply(lambda x: [i.strip() for i in x])
 df3.passage = df3.sentences.apply(lambda x: ' '.join(x))
-df3.to_parquet("data/Top1kBM25.bigbird2_passages_75.snappy.parquet")
-df3 = pd.read_parquet("data/Top1kBM25.bigbird2_passages_75.snappy.parquet")
+df3.to_parquet("data/Top1kBM25.bigbird2_75_passages.snappy.parquet")
+df3 = pd.read_parquet("data/Top1kBM25.bigbird2_75_passages.snappy.parquet")
 # torch.save(passages, 'tmp_bigbird2')
 
 #%%
