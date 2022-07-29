@@ -16,7 +16,7 @@ from itertools import chain
 
 from tqdm import tqdm
 
-THRESHOLD = 0.50
+THRESHOLD = 0.70
 from pathlib import Path
 try:
     from mt5lib import Query, Text, MonoT5
@@ -43,7 +43,7 @@ k = 50
 topics = sorted(df_all.topic.unique().tolist())[n*k:n*k+k]
 
 
-for topic in tqdm(topics, desc="Looping through topics..."):
+for topic in tqdm(topics):
     df = df_all[df_all.topic.eq(topic)]
     topics = pd.read_csv("./data/topics_fixed_extended.tsv.txt", sep="\t")
     # df = df.merge(topics["topic description efficacy".split()], on="topic", how="inner")
