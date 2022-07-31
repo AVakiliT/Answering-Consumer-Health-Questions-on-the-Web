@@ -21,6 +21,10 @@ def unfixdocno(s):
 
 import subprocess
 
+topics_2019 = list(range(1, 51 + 1))
+topics_2021 = list(range(101, 150 + 1))
+topics_2022 = list(range(151, 200 + 1))
+topics_rw = list(range(1001, 1090 + 1))
 
 def shell_cmd(command):
     """Executes the given command within terminal and returns the output as a string

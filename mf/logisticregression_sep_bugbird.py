@@ -11,7 +11,7 @@ tqdm.pandas()
 #%%
 from utils.util import url2host
 
-df_sentence_logits = pd.read_parquet(f"data/RunBM25.1k.passages_bigbird.top_mt5")
+df_sentence_logits = pd.read_parquet(f"data/RunBM25.1k.passages_bigbird2.top_mt5")
 dfo = dfo[dfo.efficacy != 0]
 dfo["host"] = dfo.url.apply(url2host)
 df_topic_host = dfo.groupby("topic host".split()).progress_apply(lambda x: x.loc[x.score.idxmax()])
