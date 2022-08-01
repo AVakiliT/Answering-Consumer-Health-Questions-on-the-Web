@@ -87,7 +87,7 @@ for row in tqdm(qrels.itertuples(), total=qrels.shape[0]):
                     text2 = clean_page(_html)
                     # text = sent_tokenize(clean_page(_html))
 
-                    a = (row.topic, row.docno, row.usefulness, row.stance, row.credibility, text2, uri)
+                    a = (row.topic, row.docno, row.relevance, row.effectiveness, row.credibility, text2, uri)
                     docs.append(a)
                     continue
     # if len(docs) == 2:
