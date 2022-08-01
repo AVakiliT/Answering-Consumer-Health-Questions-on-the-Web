@@ -93,7 +93,8 @@ for row in tqdm(qrels.itertuples(), total=qrels.shape[0]):
     # if len(docs) == 2:
     #     break
 
-df = pd.DataFrame(docs, columns="topic docno usefulness stance credibility text url".split())
+df = pd.DataFrame(docs, columns="topic docno relevance effectiveness credibility text url".split())
 out_path = f"qreldataset/2019qrels.parquet/{n:02d}.snappy.parquet"
 os.makedirs(os.path.dirname(out_path), exist_ok=True)
 df.to_parquet(out_path)
+print(qrels.shape)
