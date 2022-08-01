@@ -44,7 +44,15 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingA
 # df2 = df.merge(topics['topic description'.split()], on='topic', how='inner')
 # df2 = df2.sort_values("topic score".split(), ascending=[True, False])
 # df2 .to_parquet("data/Top1kBM25.snappy.parquet")
-df = pd.read_parquet("data/Top1kBM25.snappy.parquet")
+
+# Uncomment for BM25 runs
+# df = pd.read_parquet("data/Top1kBM25.snappy.parquet")
+# output_path = "Top1kBM25"
+
+# Uncomment for Qrels
+df = pd.read_parquet("./qreldataset/2021-qrels-docs/")
+df = df.merge(pd.read_csv('./data/topics_fixed_extended.tsv.txt', sep='\t')["topic description".split()], on="topic", how="inner")
+output_name = "Qrel2021"
 # %%
 
 max_length = 4096  # The maximum length of a feature (question and context)
@@ -75,7 +83,9 @@ if model.config.vocab_size < len(tokenizer.get_vocab()):
     model.resize_token_embeddings(len(tokenizer.get_vocab()))
 
 # %%
-if False:
+path=f'data/{output_name}_plus_description.sep2_tokenized.bigbird.4096'
+Path(path).mkdir(parents=True, exist_ok=True)
+if True:
     def parallelize_dataframe(df, func, n_cores=25):
         df_split = np.array_split(df, n_cores * 8)
         pool = Pool(n_cores)
@@ -112,18 +122,20 @@ if False:
         xx['overflow_to_sample_mapping'] = xx['overflow_to_sample_mapping'] + i
 
         xx[['input_ids', 'attention_mask',
-               'overflow_to_sample_mapping', 'topic', 'docno']].to_parquet(f'data/Top1kBM25_plus_description.sep2_tokenized.bigbird.4096/{i}.snappy.parquet')
+               'overflow_to_sample_mapping', 'topic', 'docno']].to_parquet(f'{path}/{i}.snappy.parquet')
     # # tokenizer.decode(x.input_ids.iloc[123])
-    print("reading tokenized data...")
-x = pd.read_parquet('data/Top1kBM25_plus_description.sep2_tokenized.bigbird.4096')
+
+
+x = pd.read_parquet(path)
 # x = x[x.topic.eq(1)]
 # %%
 # x = pd.read_parquet('data/Top1kBM25_plus_description.tokenized.bigbird.4096.parquet')
+print("reading tokenized data...")
 tokenized_datasets = Dataset.from_pandas(x)
 # tokenized_dataset = concatenate_datasets([Dataset.from_dict(x) for x in tqdm(xs)])
 # %%
 batch_size = 32
-if False:
+if True:
     args = TrainingArguments(
         out_dir,
         per_device_train_batch_size=batch_size,
@@ -141,8 +153,8 @@ if False:
     )
 
     pred = trainer.predict(tokenized_datasets)
-    torch.save(pred.predictions, 'tmp_bigbird', pickle_protocol=4)
-pred_x = torch.load('tmp_bigbird')
+    torch.save(pred.predictions, f'tmp/bigbird_{output_name}', pickle_protocol=4)
+pred_x = torch.load(f'tmp/bigbird_{output_name}')
 # %%
 
 import numpy as np
@@ -218,8 +230,10 @@ df2 = pd.DataFrame(aa, columns="topic docno passage sentence_scores".split())
 df3 = df2.merge(df, on="topic docno".split())
 df3['sentences'] = df3.passage.apply(lambda x: [i.strip() for i in x])
 df3.passage = df3.sentences.apply(lambda x: ' '.join(x))
-df3.to_parquet(f"data/Top1kBM25.bigbird2_{THRESHOLD*100}_passages.snappy.parquet")
-df3 = pd.read_parquet(f"data/Top1kBM25.bigbird2_{THRESHOLD*100}_passages.snappy.parquet")
+
+path = f"data/{output_name}.bigbird2_{THRESHOLD * 100}_passages.snappy.parquet"
+df3.to_parquet(path)
+df3 = pd.read_parquet(path)
 # torch.save(passages, 'tmp_bigbird2')
 
 #%%

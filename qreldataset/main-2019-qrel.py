@@ -1,3 +1,9 @@
+#!/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/ipykernel/2022a/bin/ipython --ipython-dir=/tmp
+#SBATCH --array=0-23
+#SBATCH --time=1:00:00
+#SBATCH--mem-per-cpu=8GB
+#SBATCH--cpus-per-task=1
+#SBATCH --account=def-smucker
 import gzip
 import html
 import os
@@ -7,6 +13,9 @@ import sys
 # import spacy
 from lazynlp import parse_html, transliterate
 from warcio import ArchiveIterator
+
+n = int(os.environ.get('SLURM_ARRAY_TASK_ID', 0))
+k = 1000
 
 corp_dir = "/project/6003284/smucker/group-data/corpora/ClueWeb12-B13/DiskB/"
 # p = Path('/home/avakilit/group-data/corpora/ClueWeb12-B13/DiskB/').rglob('*.warc.gz')
@@ -26,9 +35,10 @@ from tqdm import tqdm
 # %%
 import pandas as pd
 
-qrels = pd.read_csv("./data/qrels/2019_qrels.txt", names="topic iter docno usefulness stance credibility".split(),
+# qrels = pd.read_csv("./data/qrels/2019_qrels.txt", names="topic iter docno usefulness stance credibility".split(),
+#                     sep=" ")
+qrels = pd.read_csv("./data/qrels/2019qrels_raw.txt", names="topic iter docno relevance effectiveness credibility".split(),
                     sep=" ")
-
 
 def get_file(docno):
     (_, warc, warc_part, id) = docno.split("-")
@@ -37,9 +47,6 @@ def get_file(docno):
 
 
 qrels["warc_file"] = qrels.docno.apply(get_file)
-
-n = int(sys.argv[1])
-k = int(sys.argv[2])
 
 qrels = qrels.iloc[n * k:n * k + k]
 
@@ -87,6 +94,6 @@ for row in tqdm(qrels.itertuples(), total=qrels.shape[0]):
     #     break
 
 df = pd.DataFrame(docs, columns="topic docno usefulness stance credibility text url".split())
-out_path = f"/project/6003284/avakilit/Trec21_Data/2019qreldataset/2019qrels.parquet/{n:02d}.snappy.parquet"
+out_path = f"qreldataset/2019qrels.parquet/{n:02d}.snappy.parquet"
 os.makedirs(os.path.dirname(out_path), exist_ok=True)
 df.to_parquet(out_path)

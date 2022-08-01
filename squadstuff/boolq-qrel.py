@@ -45,11 +45,13 @@ df1 = df1.rename(columns=dict(text="passage"))
 
 df = pd.concat([df1, df2]).reset_index(drop=True)
 
-train_idx = df.topic.isin(topics_2019).index
-test_idx = df.topic.isin(topics_2021).index
+train_idx = df[df.topic.isin(topics_2019)].index
+test_idx = df[df.topic.isin(topics_2021)].index
+
 # gss = GroupShuffleSplit(n_splits=1, train_size=.5, random_state=42)
 # train_idx, test_idx = gss.split(df, groups=df.topic).__next__()
-
+# train_idx = df.iloc[train_idx].index
+# test_idx = df.iloc[test_idx].index
 # %%
 MAX_LENGTH = 512  # The maximum length of a feature (question and context)
 # MODEL_START_POINT = 'blizrys/biobert-v1.1-finetuned-pubmedqa'
@@ -85,7 +87,7 @@ class_weights = (1 - np.array(list(class_weights.values)) / sum(class_weights.va
 output_dir = 'checkpoints/boolq-qrel2'
 batch_size = 32
 params=dict(
-    learning_rate=2e-5,
+    learning_rate=1e-5,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
     num_train_epochs=5,
