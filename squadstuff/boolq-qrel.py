@@ -11,57 +11,71 @@ import torch
 from squadstuff.boolq_utils import MyTrainer, compute_metrics, EvaluationCallback
 from utils.util import topics_2019, topics_2021
 
-df1 = pd.read_parquet("./qreldataset/2019_mt5_dataset.parquet").reset_index(drop=True)
-df1 = df1.rename(columns={"stance": "credibility", "credibility": "stance"})
-df1 = df1[df1.stance.ge(0)]
-
+df1 = pd.read_parquet("./qreldataset/2019_mt5_dataset.parquet").reset_index(drop=True).drop(columns="stance usefulness credibility".split())
+qrels = pd.read_csv("./data/qrels/2019qrels_raw.txt", names="topic iter docno relevance effectiveness credibility".split(),
+                    sep=" ")
+df1 = df1.merge(qrels, on="topic docno".split(), how="inner")
+df1 = df1[df1.effectiveness.ge(0)]
 def gen_labels(row):
-    if row.stance == 2 or row.stance == 0:
-        return 1
-    if row.stance == 3:
-        return 2
-    if row.stance == 1:
+    if row.effectiveness == 2 or row.effectiveness == 0:
+        # return 1
         return 0
-    return float('nan')
+    if row.effectiveness == 3:
+        return 2
+    if row.effectiveness == 1:
+        return 0
+    raise "on fire yo!"
 df1["labels"] = df1.apply(gen_labels, axis=1)
 
 
-df2 = pd.read_parquet("qreldataset/Qrels.2021.passages_6_3.top_mt5")
 
+# df2 = pd.read_parquet("qreldataset/Qrels.2021.passages_6_3.top_mt5")
+df2 = pd.read_parquet("data/Qrel2021.bigbird2_75.0_passages.snappy.parquet")
+df2 = df2[df2.supportiveness.ge(0)]
 def gen_labels(row):
     if row.supportiveness == 2:
         return 2
     if row.supportiveness == 0:
         return 0
     if row.supportiveness == 1:
-        return 1
-    return float('nan')
-df2 = df2[df2.supportiveness.ge(0)]
-df2["labels"] = df2.apply(gen_labels, axis=1)
+        # return 1
+        return 0
+    raise "on fire yo!"
 
-df2 = df2.rename(columns=dict(supportiveness="stance"))
-df2 = df2.merge(pd.read_csv('./data/topics_fixed_extended.tsv.txt', sep='\t')["topic description".split()], on="topic", how="inner")
-df1 = df1.rename(columns=dict(text="passage"))
+df2["labels"] = df2.apply(gen_labels, axis=1).astype(int)
 
-df = pd.concat([df1, df2]).reset_index(drop=True)
+df1 = df1.rename(columns=dict(text="passage", effectiveness="supportiveness", relevance="usefulness"))
 
-train_idx = df[df.topic.isin(topics_2019)].index
-test_idx = df[df.topic.isin(topics_2021)].index
+df = pd.concat([df1, df2]).reset_index(drop=True)["topic docno description passage supportiveness labels efficacy".split()]
 
-# gss = GroupShuffleSplit(n_splits=1, train_size=.5, random_state=42)
-# train_idx, test_idx = gss.split(df, groups=df.topic).__next__()
-# train_idx = df.iloc[train_idx].index
-# test_idx = df.iloc[test_idx].index
+df.labels = df.labels.map({0:0, 2:1})
+
+# train_idx = df[df.topic.isin(topics_2019)].index
+# test_idx = df[df.topic.isin(topics_2021)].index
+
+gss = GroupShuffleSplit(n_splits=1, train_size=.8, random_state=42)
+train_idx, test_idx = gss.split(df, groups=df.topic).__next__()
+train_idx = df.iloc[train_idx].index
+test_idx = df.iloc[test_idx].index
 # %%
 MAX_LENGTH = 512  # The maximum length of a feature (question and context)
 # MODEL_START_POINT = 'blizrys/biobert-v1.1-finetuned-pubmedqa'
 # MODEL_START_POINT = 'facebook/muppet-roberta-base'
 # MODEL_START_POINT = 'blizrys/biobert-v1.1-finetuned-pubmedqa'
 model_name = "biobert"
-MODEL_START_POINT = f"checkpoints/pubmed_qa-biobert-v1.1-finetuned-pubmedqa/pubmedqa-phase-iii/best"
-tokenizer = AutoTokenizer.from_pretrained(MODEL_START_POINT)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_START_POINT, num_labels=3)
+# MODEL_START_POINT = f"checkpoints/pubmed_qa-biobert-v1.1-finetuned-pubmedqa/pubmedqa-phase-iii/best"
+# tokenizer = AutoTokenizer.from_pretrained(MODEL_START_POINT)
+# model = AutoModelForSequenceClassification.from_pretrained(MODEL_START_POINT, num_labels=3)
+# model = AutoModelForSequenceClassification.from_pretrained(MODEL_START_POINT, num_labels=2, ignore_mismatched_sizes=True)
 
+from github.EncT5.enc_t5 import EncT5ForSequenceClassification, EncT5Tokenizer
+
+model = EncT5ForSequenceClassification.from_pretrained("ozcangundes/T5-base-for-BioQA")
+tokenizer = EncT5Tokenizer.from_pretrained("ozcangundes/T5-base-for-BioQA")
+
+# Resize embedding size as we added bos token
+if model.config.vocab_size < len(tokenizer.get_vocab()):
+    model.resize_token_embeddings(len(tokenizer.get_vocab()))
 
 x = tokenizer(
     df.description.to_list(),
@@ -87,7 +101,7 @@ class_weights = (1 - np.array(list(class_weights.values)) / sum(class_weights.va
 output_dir = 'checkpoints/boolq-qrel2'
 batch_size = 32
 params=dict(
-    learning_rate=1e-5,
+    learning_rate=1e-4,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
     num_train_epochs=5,

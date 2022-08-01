@@ -50,9 +50,14 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, TrainingA
 # output_path = "Top1kBM25"
 
 # Uncomment for Qrels
-df = pd.read_parquet("./qreldataset/2021-qrels-docs/")
-df = df.merge(pd.read_csv('./data/topics_fixed_extended.tsv.txt', sep='\t')["topic description".split()], on="topic", how="inner")
-output_name = "Qrel2021"
+# df = pd.read_parquet("./qreldataset/2021-qrels-docs/")
+# df = df.merge(pd.read_csv('./data/topics_fixed_extended.tsv.txt', sep='\t')["topic description".split()], on="topic", how="inner")
+# output_name = "Qrel2021"
+
+df = pd.read_parquet("./qreldataset/2019qrels.parquet")
+# df = df.merge(pd.read_csv('./data/topics_fixed_extended.tsv.txt', sep='\t')["topic description".split()], on="topic", how="inner")
+output_name = "Qrel2019"
+
 # %%
 
 max_length = 4096  # The maximum length of a feature (question and context)

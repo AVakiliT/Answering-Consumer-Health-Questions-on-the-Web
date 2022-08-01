@@ -159,7 +159,7 @@ b = [1 if i > 0 else -1 for x, i in topic_predictions[101:151]]
 tokenizer = AutoTokenizer.from_pretrained(MODEL_START_POINT)
 model2 = AutoModelForSequenceClassification.from_pretrained(MODEL_START_POINT,
                                                            num_labels=3,
-                                                           # output_hidden_states=True
+                                                           output_hidden_states=True
                                                            )
 
 from squadstuff.boolq_utils import MyTrainer, compute_metrics, EvaluationCallback
@@ -189,7 +189,7 @@ pred_x = trainer.predict(Dataset.from_pandas(temp))
 preds = pred_x.predictions[:, 2] - pred_x.predictions[:, 0]
 #
 # df["prediction"] = preds
-df["prediction"] = preds.clip(max=-1) + preds.clip(min=1)
+# df["prediction"] = preds.clip(max=-1) + preds.clip(min=1)
 df["topic_predictions"] = df.topic.map(dict(topic_predictions))
 
 alpha = .1
@@ -198,7 +198,7 @@ alpha = .1
 def adjust(row):
     return (2 * row.score) / (1 + np.exp( alpha * row.raw_adjustment))
 
-
+df["prediction"] = preds
 df["raw_adjustment"] = (df.topic_predictions * df.prediction)
 df["adjusted_score"] = df.apply(adjust, axis=1)
 

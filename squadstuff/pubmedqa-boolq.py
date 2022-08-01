@@ -22,8 +22,14 @@ datasets_unlabeled = load_dataset(dataset_name, "pqa_unlabeled")  # ["train"].tr
 # %%
 MAX_LENGTH = 512  # The maximum length of a feature (question and context)
 # MODEL_START_POINT = 'blizrys/biobert-v1.1-finetuned-pubmedqa'
-MODEL_START_POINT = 'facebook/muppet-roberta-base'
-tokenizer = AutoTokenizer.from_pretrained(MODEL_START_POINT)
+# MODEL_START_POINT = 'facebook/muppet-roberta-base'
+MODEL_START_POINT = 't5-base'
+# tokenizer = AutoTokenizer.from_pretrained(MODEL_START_POINT)
+
+from github.EncT5.enc_t5 import EncT5ForSequenceClassification, EncT5Tokenizer
+
+tokenizer = EncT5Tokenizer.from_pretrained(MODEL_START_POINT)
+
 model_name = MODEL_START_POINT.split("/")[-1]
 
 
@@ -61,8 +67,9 @@ def setup(tokenized_datasets, checkpoint, n_epochs, experiment_name):
         num_labels = Counter(tokenized_datasets['train']['labels']).keys().__len__()
     else:
         num_labels = 3
-    model = AutoModelForSequenceClassification.from_pretrained(
-        checkpoint, num_labels=num_labels, ignore_mismatched_sizes=True)
+    # model = AutoModelForSequenceClassification.from_pretrained(
+    #     checkpoint, num_labels=num_labels, ignore_mismatched_sizes=True)
+    model = EncT5ForSequenceClassification.from_pretrained(MODEL_START_POINT, num_labels=num_labels, ignore_mismatched_sizes=True)
     batch_size = 32
     args = TrainingArguments(
         output_dir,

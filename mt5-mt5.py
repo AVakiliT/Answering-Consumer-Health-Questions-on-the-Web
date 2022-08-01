@@ -5,8 +5,8 @@
 #SBATCH --gres=gpu:v100l:1
 #SBATCH --mem-per-cpu=6GB
 #SBATCH --cpus-per-task=4
-# SBATCH --array=1-51,101-200,1001-1090
-#SBATCH --array=117
+#SBATCH --array=1-51,101-200
+# SBATCH --array=117
 import os
 
 from utils.util import shell_cmd
@@ -24,8 +24,8 @@ topic = int(os.environ.get('SLURM_ARRAY_TASK_ID', 101))
 reranker = MonoT5(pretrained_model_name_or_path=f"castorini/monot5-base-med-msmarco")
 reranker.model.eval()
 df = pd.read_parquet(
-    # f"data/RunBM25.1k.passages_6_3_t/topic_{topic}.snappy.parquet"
-    f"qreldataset/Qrels.2021.passages_6_3_t/topic_{topic}.snappy.parquet"
+    f"data/RunBM25.1k.passages_6_3_t/topic_{topic}.snappy.parquet"
+    # f"qreldataset/Qrels.2021.passages_6_3_t/topic_{topic}.snappy.parquet"
 )
 topics = pd.read_csv("./data/topics_fixed_extended.tsv.txt", sep="\t")
 # df = df.merge(topics["topic description efficacy".split()], on="topic", how="inner")
@@ -48,6 +48,6 @@ run_df = pd.DataFrame(run)
 
 run_df = run_df.sort_values("topic score".split(), ascending=[True, False])
 run_df.to_parquet(
-    # f"data/RunBM25.1k.passages_mt5.top_mt5/{topic}.snappy.parquet"
-    f"qreldataset/Qrels.2021.passages_6_3.top_mt5/topic_{topic}.snappy.parquet"
+    f"data/RunBM25.1k.passages_mt5.top_mt5/{topic}.snappy.parquet"
+    # f"qreldataset/Qrels.2021.passages_6_3.top_mt5/topic_{topic}.snappy.parquet"
 )
