@@ -74,7 +74,7 @@ def clean_page(page):
 
 docs = []
 for row in tqdm(qrels.itertuples(), total=qrels.shape[0]):
-
+    print("", end="", flush=True)
     with gzip.open(row.warc_file, 'rb') as stream:
         for i, record in enumerate(ArchiveIterator(stream)):
             if record.rec_type == 'response':
